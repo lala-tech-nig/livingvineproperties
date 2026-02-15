@@ -1,39 +1,30 @@
-import { Geist, Geist_Mono, Playfair_Display } from "next/font/google"; // Added Playfair Display
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
   subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({ // Configure Playfair Display
-  variable: "--font-playfair-display", // Updated variable name to be consistent
-  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
 });
 
 export const metadata = {
-  title: "Living Vine Properties & Investments Ltd", // Updated title
-  description: "Premium Real Estate Investment & Development", // Updated description
+  title: "Living Vine Properties | Indigenous Excellence in Real Estate",
+  description: "Secure land ownership and high-yield property development in Nigeria. Trusted by hundreds of investors.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased bg-background text-foreground`} // Added font variable and background/text colors
+        className={`${inter.variable} ${playfair.variable} antialiased font-sans`}
       >
-        <Navbar />
-        <main className="min-h-screen">
-          {children}
-        </main>
-        <Footer />
+        {children}
       </body>
     </html>
   );

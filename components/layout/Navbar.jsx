@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS, COMPANY_NAME } from "@/data";
 import { Button } from "@/components/ui/Button";
@@ -30,17 +29,20 @@ const Navbar = () => {
     return (
         <nav
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent",
+                "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
                 scrolled
-                    ? "bg-background/80 backdrop-blur-md border-white/10 py-4 shadow-lg"
-                    : "bg-transparent py-6"
+                    ? "bg-white border-gray-200 shadow-sm py-4"
+                    : "bg-white/95 border-transparent py-6"
             )}
         >
             <div className="container mx-auto px-4 flex justify-between items-center">
                 {/* Logo */}
-                <Link href="/" className="font-serif text-2xl font-bold tracking-tighter text-primary">
-                    Living Vine
-                    <span className="text-foreground text-sm block font-sans tracking-widest uppercase opacity-80">Properties</span>
+                <Link href="/" className="font-serif text-2xl font-bold tracking-tighter flex items-center gap-2">
+                    <span className="text-primary text-3xl">LV</span>
+                    <div className="flex flex-col leading-none">
+                        <span className="text-lg text-foreground">Living Vine</span>
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Properties</span>
+                    </div>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -50,25 +52,25 @@ const Navbar = () => {
                             key={link.href}
                             href={link.href}
                             className={cn(
-                                "text-sm font-medium transition-colors hover:text-primary relative group",
-                                pathname === link.href ? "text-primary" : "text-foreground/80"
+                                "text-sm font-medium transition-colors relative group",
+                                "text-foreground hover:text-primary",
+                                pathname === link.href ? "text-primary font-bold" : ""
                             )}
                         >
                             {link.label}
-                            <span className={cn(
-                                "absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full",
-                                pathname === link.href ? "w-full" : ""
-                            )} />
                         </Link>
                     ))}
-                    <Button variant="default" size="sm" asChild>
+                    <Button
+                        size="sm"
+                        asChild
+                    >
                         <Link href="/contact">Get Started</Link>
                     </Button>
                 </div>
 
                 {/* Mobile Toggle */}
                 <button
-                    className="md:hidden text-foreground p-2"
+                    className="md:hidden p-2 text-foreground"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label="Toggle menu"
                 >
@@ -77,34 +79,29 @@ const Navbar = () => {
             </div>
 
             {/* Mobile Menu */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden bg-background border-b border-white/10 overflow-hidden"
-                    >
-                        <div className="container mx-auto px-4 py-6 flex flex-col space-y-4">
-                            {NAV_LINKS.map((link) => (
-                                <Link
-                                    key={link.href}
-                                    href={link.href}
-                                    className={cn(
-                                        "text-lg font-medium py-2 border-b border-white/5",
-                                        pathname === link.href ? "text-primary" : "text-foreground"
-                                    )}
-                                >
-                                    {link.label}
-                                </Link>
-                            ))}
-                            <Button className="w-full mt-4" asChild>
-                                <Link href="/contact">Get Started</Link>
-                            </Button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {isOpen && (
+                <div
+                    className="md:hidden bg-white border-b border-gray-200 shadow-xl absolute top-full left-0 right-0"
+                >
+                    <div className="container mx-auto px-4 py-6 flex flex-col space-y-4">
+                        {NAV_LINKS.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className={cn(
+                                    "text-lg font-medium py-3 border-b border-gray-50 text-foreground",
+                                    pathname === link.href ? "text-primary" : "text-gray-600"
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                        <Button className="w-full mt-4" asChild>
+                            <Link href="/contact">Invest Now</Link>
+                        </Button>
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };

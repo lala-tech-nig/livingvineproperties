@@ -1,43 +1,50 @@
-import { Crown, Handshake, Landmark, TrendingUp } from "lucide-react";
-
-export const COMPANY_NAME = "Living Vine Properties & Investments Ltd";
-
 export const NAV_LINKS = [
-    { href: "/", label: "Home" },
-    { href: "/about", label: "About Us" },
-    { href: "/services", label: "Services" },
-    { href: "/contact", label: "Contact" },
+    { label: "Home", href: "/" },
+    { label: "About Us", href: "/about" },
+    { label: "Investments", href: "/investments" },
+    { label: "Projects", href: "/projects" },
+    { label: "Contact", href: "/contact" },
+];
+
+export const CONTACT_INFO = {
+    address: "15, Admiralty Way, Lekki Phase 1, Lagos, Nigeria",
+    phone: "+234 800 123 4567",
+    email: "invest@livingvineproperties.com",
+    whatsapp: "https://wa.me/2348001234567",
+};
+
+export const SOCIAL_LINKS = [
+    { platform: "Instagram", url: "#" },
+    { platform: "LinkedIn", url: "#" },
+    { platform: "Twitter", url: "#" },
+    { platform: "Facebook", url: "#" },
 ];
 
 export const SERVICES = [
     {
-        title: "Investment Schemes",
-        description: "Secure real estate investment opportunities with guaranteed returns.",
-        icon: TrendingUp,
-        href: "/services#investment",
+        title: "Land Banking",
+        description: "Secure high-value land assets in rapidly developing areas for maximum capital appreciation.",
+        icon: "LandPlot", // Lucide icon name
+        href: "/investments#land-banking"
     },
     {
-        title: "Joint Ventures",
-        description: "Strategic partnerships for property development and wealth creation.",
-        icon: Handshake,
-        href: "/services#joint-ventures",
+        title: "Property Development",
+        description: "Partner with us in developing premium residential and commercial structures.",
+        icon: "Building2",
+        href: "/investments#development"
     },
     {
-        title: "Land Acquisition",
-        description: "Acquiring prime land assets for appreciation or development.",
-        icon: Landmark,
-        href: "/services#land-acquisition",
+        title: "Real Estate Advisory",
+        description: "Expert guidance for navigating the Nigerian real estate market with confidence.",
+        icon: "Briefcase",
+        href: "/services#advisory"
     },
     {
-        title: "Real Estate Finance",
-        description: "Equity-based financing models for robust property development.",
-        icon: Crown,
-        href: "/services#finance",
-    },
+        title: "Digital Investment",
+        description: "Invest in fractional real estate ownership through our upcoming digital platform.",
+        icon: "Smartphone",
+        href: "/app"
+    }
 ];
 
-export const CONTACT_INFO = {
-    address: "Block 10, Flat 3, B Close, 22 Road, Festac Town, Lagos.",
-    phone: "+234 803 308 8888", // Placeholder, need to check site
-    email: "info@livingvineproperties.com.ng",
-};
+export const COMPANY_NAME = "Living Vine Properties";
