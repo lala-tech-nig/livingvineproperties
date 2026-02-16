@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_LINKS, COMPANY_NAME } from "@/data";
+import { NAV_LINKS } from "@/data";
 import { Button } from "@/components/ui/Button";
 
 const Navbar = () => {
@@ -21,7 +21,6 @@ const Navbar = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Close mobile menu on route change
     useEffect(() => {
         setIsOpen(false);
     }, [pathname]);
@@ -60,12 +59,23 @@ const Navbar = () => {
                             {link.label}
                         </Link>
                     ))}
-                    <Button
-                        size="sm"
-                        asChild
-                    >
-                        <Link href="/contact">Get Started</Link>
-                    </Button>
+
+                    {/* Auth Buttons */}
+                    <div className="flex items-center gap-2 ml-4">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                        >
+                            <Link href="/login">Login</Link>
+                        </Button>
+                        <Button
+                            size="sm"
+                            asChild
+                        >
+                            <Link href="/register">Get Started</Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Mobile Toggle */}
@@ -81,7 +91,7 @@ const Navbar = () => {
             {/* Mobile Menu */}
             {isOpen && (
                 <div
-                    className="md:hidden bg-white border-b border-gray-200 shadow-xl absolute top-full left-0 right-0"
+                    className="md:hidden bg-white border-b border-gray-200 shadow-xl absolute top-full left-0 right-0 animate-in slide-in-from-top-5"
                 >
                     <div className="container mx-auto px-4 py-6 flex flex-col space-y-4">
                         {NAV_LINKS.map((link) => (
@@ -96,9 +106,14 @@ const Navbar = () => {
                                 {link.label}
                             </Link>
                         ))}
-                        <Button className="w-full mt-4" asChild>
-                            <Link href="/contact">Invest Now</Link>
-                        </Button>
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            <Button variant="outline" asChild>
+                                <Link href="/login">Login</Link>
+                            </Button>
+                            <Button asChild>
+                                <Link href="/register">Register</Link>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -1,12 +1,14 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import Hero from "@/components/sections/Hero";
+import HeroCarousel from "@/components/sections/HeroCarousel";
 import TrustStrip from "@/components/sections/TrustStrip";
 import AboutSnippet from "@/components/sections/AboutSnippet";
 import ServiceGrid from "@/components/sections/ServiceGrid";
 import ProjectsGallery from "@/components/sections/ProjectsGallery";
 import AppTeaser from "@/components/sections/AppTeaser";
 import CTA from "@/components/sections/CTA";
+import FloatingElements from "@/components/ui/FloatingElements";
+import WhatsAppButton from "@/components/ui/WhatsAppButton";
 
 export default function Home() {
   return (
@@ -14,11 +16,11 @@ export default function Home() {
       <Navbar />
 
       <main>
-        <Hero />
+        <HeroCarousel />
         <TrustStrip />
 
-        {/* Floating Elements Removed for Corporate Cleanliness */}
         <div className="relative">
+          <FloatingElements />
           <AboutSnippet />
           <ServiceGrid />
         </div>
@@ -29,6 +31,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }
