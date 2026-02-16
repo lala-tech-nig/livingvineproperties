@@ -14,7 +14,7 @@ const AboutSnippet = () => {
                     <div className="relative z-10 h-[600px] w-full rounded-2xl overflow-hidden shadow-2xl skew-y-3 border-8 border-white group">
                         <div
                             className="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571266028243-3716050216dd?q=80&w=2670&auto=format&fit=crop')" }} // Lagos Skyline
+                            style={{ backgroundImage: "url('/lagos.jpg')" }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
