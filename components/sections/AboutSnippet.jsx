@@ -33,7 +33,7 @@ const AboutSnippet = () => {
                         Who We Are
                     </div>
                     <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
-                        Proudly Indigenous. <br /> Globablly Standards.
+                        Proudly Indigenous. <br /> Global Standards.
                     </h2>
                     <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                         Living Vine Properties isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.
