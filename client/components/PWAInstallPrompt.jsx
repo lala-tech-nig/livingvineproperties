@@ -8,8 +8,8 @@ export default function PWAInstallPrompt() {
     const [showPrompt, setShowPrompt] = useState(false);
 
     useEffect(() => {
-        // Check local storage if user already dismissed
-        const hasDismissed = localStorage.getItem('pwa_dismissed');
+        // Check local storage if user already dismissed (using new key to force display)
+        const hasDismissed = localStorage.getItem('pwa_dismissed_v2');
 
         const ready = (e) => {
             e.preventDefault();
@@ -38,7 +38,7 @@ export default function PWAInstallPrompt() {
     };
 
     const handleDismiss = () => {
-        localStorage.setItem('pwa_dismissed', 'true');
+        localStorage.setItem('pwa_dismissed_v2', 'true');
         setShowPrompt(false);
     };
 
@@ -49,7 +49,7 @@ export default function PWAInstallPrompt() {
                     initial={{ opacity: 0, scale: 0.9, y: 50 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 50 }}
-                    className="fixed bottom-4 left-4 right-4 md:bottom-10 md:left-1/2 md:-translate-x-1/2 md:max-w-md bg-white rounded-2xl shadow-2xl p-6 z-50 border border-gray-100 flex flex-col items-center text-center isolate"
+                    className="fixed bottom-20 left-4 right-4 md:bottom-10 md:left-1/2 md:-translate-x-1/2 md:max-w-md bg-white rounded-2xl shadow-2xl p-6 z-[60] border border-gray-100 flex flex-col items-center text-center isolate"
                 >
                     <div className="w-16 h-16 bg-[#de1f25]/10 text-[#de1f25] rounded-2xl flex items-center justify-center mb-4 shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>

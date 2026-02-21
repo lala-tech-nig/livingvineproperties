@@ -61,23 +61,14 @@ export default function DashboardLayout({ children }) {
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
-            {/* Mobile sidebar backdrop */}
-            {isSidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
-                    onClick={() => setIsSidebarOpen(false)}
-                />
-            )}
+            {/* Mobile sidebar backdrop - Removed since we use bottom tabs now */}
 
-            {/* Sidebar */}
+            {/* Sidebar (Desktop Only) */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-white border-r border-gray-200 transform lg:translate-x-0 lg:static lg:w-72 transition-transform duration-300 flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                className="hidden lg:flex fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 lg:static w-72 flex-col"
             >
-                <div className="h-16 flex items-center px-6 border-b border-gray-100 flex-shrink-0 justify-between">
+                <div className="h-16 flex items-center px-6 border-b border-gray-100 flex-shrink-0 justify-center lg:justify-start">
                     <span className="text-xl font-bold text-orange-900 font-serif">Living Vine</span>
-                    <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-500">
-                        <X size={24} />
-                    </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
@@ -117,17 +108,11 @@ export default function DashboardLayout({ children }) {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+            <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden pb-16 lg:pb-0">
                 {/* Top Header */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 z-10">
+                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 z-10 hidden lg:flex">
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="text-gray-500 hover:text-gray-700 lg:hidden"
-                        >
-                            <Menu size={24} />
-                        </button>
-                        <h1 className="text-lg font-semibold text-gray-900 capitalize hidden sm:block">
+                        <h1 className="text-lg font-semibold text-gray-900 capitalize">
                             {pathname.split('/')[1] || 'Dashboard'}
                         </h1>
                     </div>
@@ -142,10 +127,41 @@ export default function DashboardLayout({ children }) {
                 {/* Page Content */}
                 <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto">
+                        {/* Mobile Header (replaces standard header on small screens) */}
+                        <div className="lg:hidden flex items-center justify-between mb-6">
+                            <span className="text-xl font-bold text-orange-900 font-serif">Living Vine</span>
+                            <div className="flex items-center gap-4">
+                                <button className="relative p-2 text-gray-400 hover:text-[#de1f25] transition-colors">
+                                    <Bell size={20} />
+                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                </button>
+                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#b0181d] font-bold">
+                                    {user?.firstName?.charAt(0)}
+                                </div>
+                            </div>
+                        </div>
+
                         {children}
                     </div>
                 </div>
             </main>
+
+            {/* Mobile Bottom Navigation Bar */}
+            <nav className="lg:hidden fixed bottom-0 left-0 flex items-center justify-around w-full h-16 bg-white border-t border-gray-200 z-50 px-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                {navigation.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${isActive ? 'text-[#de1f25]' : 'text-gray-500 hover:text-gray-900'}`}
+                        >
+                            <item.icon size={20} className={isActive ? 'text-[#de1f25]' : 'text-gray-500'} />
+                            <span className="text-[10px] font-medium truncate max-w-[70px] text-center">{item.name}</span>
+                        </Link>
+                    );
+                })}
+            </nav>
         </div>
     );
 }
