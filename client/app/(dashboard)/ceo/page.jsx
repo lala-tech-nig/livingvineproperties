@@ -52,7 +52,7 @@ export default function CEODashboard() {
 
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
                     <div className="flex items-center gap-3 mb-2 text-gray-500">
-                        <ShieldAlert size={20} className="text-blue-600" />
+                        <ShieldAlert size={20} className="text-[#de1f25]" />
                         <h3 className="font-medium">Total Portfolios</h3>
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{investments.length}</p>

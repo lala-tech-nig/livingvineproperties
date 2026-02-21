@@ -54,7 +54,7 @@ export default function LoginPage() {
 
     return (
         <div className="flex min-h-screen bg-gray-50 flex-col md:flex-row">
-            <div className="hidden md:flex w-1/2 bg-blue-900 relative overflow-hidden items-center justify-center">
+            <div className="hidden md:flex w-1/2 bg-orange-900 relative overflow-hidden items-center justify-center">
                 {/* Placeholder for nice image */}
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
                 <div className="relative z-10 p-12 text-white max-w-lg">
@@ -69,7 +69,7 @@ export default function LoginPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-xl text-blue-100"
+                        className="text-xl text-[#de1f25]/20"
                     >
                         Manage your investments seamlessly and watch your wealth grow with confidence.
                     </motion.p>
@@ -96,7 +96,7 @@ export default function LoginPage() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors bg-gray-50 focus:bg-white text-gray-900"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] transition-colors bg-gray-50 focus:bg-white text-gray-900"
                                 placeholder="Enter your email"
                             />
                         </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                         <div>
                             <div className="flex justify-between mb-1 items-center">
                                 <label className="block text-sm font-medium text-gray-700">Password</label>
-                                <Link href="#" className="text-sm font-semibold text-blue-600 hover:text-blue-500">
+                                <Link href="#" className="text-sm font-semibold text-[#de1f25] hover:text-[#de1f25]">
                                     Forgot password?
                                 </Link>
                             </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors bg-gray-50 focus:bg-white text-gray-900"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] transition-colors bg-gray-50 focus:bg-white text-gray-900"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -122,7 +122,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/40 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:transform-none"
+                            className="w-full bg-[#de1f25] hover:bg-[#b0181d] text-white font-medium py-3 rounded-xl shadow-lg shadow-[#de1f25]/20 transition-all hover:shadow-[#de1f25]/40 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:transform-none"
                         >
                             {loading ? 'Signing in...' : 'Sign in'}
                         </button>
@@ -130,7 +130,7 @@ export default function LoginPage() {
 
                     <p className="mt-8 text-center text-gray-600 text-sm">
                         Don't have an account?{' '}
-                        <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-500">
+                        <Link href="/register" className="font-semibold text-[#de1f25] hover:text-[#de1f25]">
                             Register now
                         </Link>
                     </p>

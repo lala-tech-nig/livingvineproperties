@@ -86,32 +86,32 @@ export default function NewInvestment() {
             >
                 {/* Personal Details */}
                 <section className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[#de1f25]"></div>
                     <h3 className="text-lg font-bold text-gray-900 mb-6">1. Investor Information</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                             <input required type="text" name="name" value={formData.name} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900"
                                 placeholder="John Doe" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
                             <input required type="email" name="email" value={formData.email} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900"
                                 placeholder="john@example.com" />
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Contact Address</label>
                             <input required type="text" name="contactAddress" value={formData.contactAddress} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900"
                                 placeholder="123 Living Vine St., Lagos" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                             <input required type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900"
                                 placeholder="+234 800..." />
                         </div>
                     </div>
@@ -122,20 +122,20 @@ export default function NewInvestment() {
                     <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-bold text-gray-900">2. Investment Plan Details</h3>
-                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 flex items-center gap-1 rounded-full font-medium border border-green-200"><Info size={14} /> Returns up to 40%</span>
+                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 flex items-center gap-1 rounded-full font-medium border border-green-200"><Info size={14} /> Returns up to 26%</span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Amount to Invest (₦)</label>
                             <input required type="number" min="100000" name="amountToInvest" value={formData.amountToInvest} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900 text-lg font-semibold"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900 text-lg font-semibold"
                                 placeholder="0.00" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Duration (Months)</label>
                             <select required name="durationInMonths" value={formData.durationInMonths} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900 text-lg">
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900 text-lg">
                                 <option value="6">6 Months</option>
                                 <option value="12">12 Months (1 Year)</option>
                                 <option value="24">24 Months (2 Years)</option>
@@ -144,7 +144,7 @@ export default function NewInvestment() {
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Principal Action After Maturity</label>
                             <select required name="principalActionAfterMaturity" value={formData.principalActionAfterMaturity} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900">
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900">
                                 <option value="rollover_all">Rollover Capital + ROI</option>
                                 <option value="withdraw_roi">Withdraw ROI, Rollover Capital</option>
                                 <option value="liquidate_all">Liquidate completely</option>
@@ -162,12 +162,12 @@ export default function NewInvestment() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">NIN (National Identity Number)</label>
                             <input required type="text" name="nin" value={formData.nin} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900 tracking-widest font-mono" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900 tracking-widest font-mono" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">BVN (Bank Verification Number)</label>
                             <input required type="text" name="bvn" value={formData.bvn} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900 tracking-widest font-mono" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900 tracking-widest font-mono" />
                         </div>
                     </div>
 
@@ -176,47 +176,47 @@ export default function NewInvestment() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
                             <input required type="text" name="accountDetails.bankName" value={formData.accountDetails.bankName} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
                             <input required type="text" name="accountDetails.accountNumber" value={formData.accountDetails.accountNumber} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900 font-mono tracking-widest" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900 font-mono tracking-widest" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Account Name</label>
                             <input required type="text" name="accountDetails.accountName" value={formData.accountDetails.accountName} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900" />
                         </div>
                     </div>
                 </section>
 
                 {/* Next of Kin */}
                 <section className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[#de1f25]"></div>
                     <h3 className="text-lg font-bold text-gray-900 mb-6">4. Next of Kin Details</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                             <input required type="text" name="nextOfKin.fullName" value={formData.nextOfKin.fullName} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Relationship</label>
                             <input required type="text" name="nextOfKin.relationship" value={formData.nextOfKin.relationship} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900"
                                 placeholder="e.g. Spouse / Sibling" />
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Residential Address</label>
                             <input required type="text" name="nextOfKin.address" value={formData.nextOfKin.address} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                             <input required type="tel" name="nextOfKin.phoneNumber" value={formData.nextOfKin.phoneNumber} onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-gray-50 focus:bg-white text-gray-900" />
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900" />
                         </div>
                     </div>
                 </section>
@@ -227,7 +227,7 @@ export default function NewInvestment() {
                     </Link>
                     <button
                         type="submit" disabled={loading}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-1 transform flex items-center justify-center gap-2"
+                        className="flex-1 bg-[#de1f25] hover:bg-[#b0181d] text-white font-bold py-4 rounded-xl shadow-xl shadow-[#de1f25]/20 transition-all hover:-translate-y-1 transform flex items-center justify-center gap-2"
                     >
                         {loading ? 'Submitting Application...' : 'Submit Investment Application'}
                     </button>

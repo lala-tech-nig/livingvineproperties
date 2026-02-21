@@ -44,7 +44,7 @@ export default function InvestorDashboard() {
                 </div>
                 <Link
                     href="/investor/new-investment"
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-md shadow-blue-600/20"
+                    className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-md shadow-[#de1f25]/20"
                 >
                     <PlusCircle size={20} />
                     Start New Investment
@@ -58,7 +58,7 @@ export default function InvestorDashboard() {
                     className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"
                 >
                     <div className="flex items-center gap-3 mb-2 text-gray-500">
-                        <Wallet size={20} className="text-blue-600" />
+                        <Wallet size={20} className="text-[#de1f25]" />
                         <h3 className="font-medium">Total Invested</h3>
                     </div>
                     <p className="text-3xl font-bold text-gray-900">₦{totalInvested.toLocaleString()}</p>
@@ -82,10 +82,10 @@ export default function InvestorDashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-gradient-to-br from-blue-900 to-blue-800 p-6 rounded-2xl border border-blue-800 shadow-lg text-white flex flex-col justify-center relative overflow-hidden"
+                    className="bg-gradient-to-br from-orange-900 to-orange-800 p-6 rounded-2xl border border-orange-800 shadow-lg text-white flex flex-col justify-center relative overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-700 rounded-full blur-2xl opacity-50"></div>
-                    <h3 className="font-medium text-blue-200 mb-1 relative z-10">Active Portfolios</h3>
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-orange-700 rounded-full blur-2xl opacity-50"></div>
+                    <h3 className="font-medium text-orange-200 mb-1 relative z-10">Active Portfolios</h3>
                     <p className="text-3xl font-bold relative z-10">{investments.filter(i => i.status !== 'liquidated').length}</p>
                 </motion.div>
             </div>
@@ -103,7 +103,7 @@ export default function InvestorDashboard() {
                         <p className="mb-4">You have no active investments yet.</p>
                         <Link
                             href="/investor/new-investment"
-                            className="text-blue-600 font-medium hover:text-blue-700"
+                            className="text-[#de1f25] font-medium hover:text-[#b0181d]"
                         >
                             Start your first investment →
                         </Link>
@@ -141,7 +141,7 @@ export default function InvestorDashboard() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <Link href={`/investor/investment/${inv._id}`} className="text-blue-600 hover:text-blue-900 text-sm font-medium">View details</Link>
+                                            <Link href={`/investor/investment/${inv._id}`} className="text-[#de1f25] hover:text-orange-900 text-sm font-medium">View details</Link>
                                         </td>
                                     </tr>
                                 ))}

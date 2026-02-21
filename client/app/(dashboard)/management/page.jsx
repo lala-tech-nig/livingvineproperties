@@ -46,7 +46,7 @@ export default function ManagementDashboard() {
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-3 mb-2 text-gray-500">
-                        <Briefcase size={20} className="text-blue-600" />
+                        <Briefcase size={20} className="text-[#de1f25]" />
                         <h3 className="font-medium">Total Portfolios</h3>
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{investments.length}</p>
@@ -86,7 +86,7 @@ export default function ManagementDashboard() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         {/* Reusing the same detailed view since it encompasses comment chat */}
-                                        <Link href={`/investor/investment/${inv._id}`} className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                                        <Link href={`/investor/investment/${inv._id}`} className="inline-flex items-center gap-1 text-sm font-medium text-[#de1f25] hover:text-orange-800 bg-[#de1f25]/10 px-3 py-1.5 rounded-lg transition-colors">
                                             <Eye size={16} /> Inspect
                                         </Link>
                                     </td>

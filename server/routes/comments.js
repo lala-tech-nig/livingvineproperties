@@ -8,7 +8,7 @@ const { protect } = require('../middlewares/authMiddleware');
 // @access  Private
 router.post('/:investmentId', protect, async (req, res) => {
     try {
-        const { message } = req.body;
+        const { message, isPrivate } = req.body;
 
         if (!message) {
             return res.status(400).json({ message: 'Comment missing' });
@@ -18,7 +18,8 @@ router.post('/:investmentId', protect, async (req, res) => {
             investmentId: req.params.investmentId,
             userId: req.user._id,
             message,
-            role: req.user.role
+            role: req.user.role,
+            isPrivate: isPrivate || false
         });
 
         // Populate user to get name/profile info on frontend
@@ -35,7 +36,13 @@ router.post('/:investmentId', protect, async (req, res) => {
 // @access  Private
 router.get('/:investmentId', protect, async (req, res) => {
     try {
-        const comments = await Comment.find({ investmentId: req.params.investmentId })
+        // If the user is an investor, hide private comments
+        const query = { investmentId: req.params.investmentId };
+        if (req.user.role === 'investor') {
+            query.isPrivate = { $ne: true };
+        }
+
+        const comments = await Comment.find(query)
             .populate('userId', 'firstName surname profileImage')
             .sort('createdAt');
 

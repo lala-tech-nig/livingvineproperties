@@ -19,6 +19,10 @@ const commentSchema = new mongoose.Schema({
         // to easily distinguish if comment is from investor, management, or ceo without populating 
         type: String,
         enum: ['investor', 'management', 'ceo']
+    },
+    isPrivate: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

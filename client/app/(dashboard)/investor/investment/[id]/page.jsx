@@ -17,7 +17,12 @@ export default function InvestmentDetails() {
     const [investment, setInvestment] = useState(null);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
+    const [isPrivate, setIsPrivate] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    // CEO Bank Form State
+    const [showBankForm, setShowBankForm] = useState(false);
+    const [bankDetails, setBankDetails] = useState({ bankName: '', accountNumber: '', accountName: '' });
 
     useEffect(() => {
         fetchData();
@@ -42,7 +47,7 @@ export default function InvestmentDetails() {
         e.preventDefault();
         if (!newComment.trim()) return;
         try {
-            const { data } = await api.post(`/comments/${id}`, { message: newComment });
+            const { data } = await api.post(`/comments/${id}`, { message: newComment, isPrivate });
             setComments([...comments, data]);
             setNewComment('');
         } catch (error) {
@@ -163,24 +168,15 @@ export default function InvestmentDetails() {
                         {user?.role === 'management' && investment.status !== 'liquidated' && (
                             <>
                                 <button onClick={() => handleStatusUpdate('reviewing')} className="bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold hover:bg-yellow-100 border border-yellow-200">Flag for Review</button>
-                                <button onClick={() => handleStatusUpdate('retreated')} className="bg-orange-50 text-orange-700 px-6 py-3 rounded-xl font-bold hover:bg-orange-100 border border-orange-200">Retreat (Needs rework)</button>
+                                <button onClick={() => handleStatusUpdate('retreated')} className="bg-[#de1f25]/10 text-[#b0181d] px-6 py-3 rounded-xl font-bold hover:bg-orange-100 border border-[#de1f25]/20">Retreat (Needs rework)</button>
                                 <button onClick={() => handleStatusUpdate('declined')} className="bg-red-50 text-red-700 px-6 py-3 rounded-xl font-bold hover:bg-red-100 border border-red-200">Decline</button>
                             </>
                         )}
 
-                        {user?.role === 'ceo' && investment.status !== 'liquidated' && (
+                        {user?.role === 'ceo' && investment.status !== 'liquidated' && !showBankForm && (
                             <>
                                 <button
-                                    onClick={() => {
-                                        const bankName = prompt("Enter Target Bank Name:");
-                                        if (!bankName) return;
-                                        const accountNumber = prompt("Enter Target Account Number:");
-                                        if (!accountNumber) return;
-                                        const accountName = prompt("Enter Target Account Name:");
-                                        if (!accountName) return;
-
-                                        handleStatusUpdate('approved', { bankName, accountNumber, accountName });
-                                    }}
+                                    onClick={() => setShowBankForm(true)}
                                     className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 shadow-md shadow-green-600/20"
                                 >
                                     Approve & Supply Account
@@ -188,13 +184,34 @@ export default function InvestmentDetails() {
                                 <button onClick={() => handleStatusUpdate('declined')} className="bg-red-50 text-red-700 px-6 py-3 rounded-xl font-bold hover:bg-red-100 border border-red-200">Decline Application</button>
                             </>
                         )}
+
+                        {showBankForm && (
+                            <div className="w-full bg-white p-6 rounded-2xl border border-gray-200 shadow-lg mt-4 animate-in slide-in-from-bottom-4">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-bold text-gray-900 text-lg">Provide Deposit Account</h3>
+                                    <button onClick={() => setShowBankForm(false)} className="text-gray-400 hover:text-gray-600"><XCircle size={20} /></button>
+                                </div>
+                                <div className="space-y-4">
+                                    <input type="text" placeholder="Bank Name (e.g. Zenith Bank)" value={bankDetails.bankName} onChange={e => setBankDetails({ ...bankDetails, bankName: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500" />
+                                    <input type="text" placeholder="Account Number" value={bankDetails.accountNumber} onChange={e => setBankDetails({ ...bankDetails, accountNumber: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 font-mono tracking-widest" />
+                                    <input type="text" placeholder="Account Name" value={bankDetails.accountName} onChange={e => setBankDetails({ ...bankDetails, accountName: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500" />
+                                    <button
+                                        disabled={!bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.accountName}
+                                        onClick={() => handleStatusUpdate('approved', bankDetails)}
+                                        className="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                        Confirm Approval & Send Details
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Right Column: Communications */}
                 <div className="flex flex-col h-[600px] bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                        <MessageSquare className="text-blue-600" size={20} />
+                        <MessageSquare className="text-[#de1f25]" size={20} />
                         <h3 className="font-bold text-gray-900">Activity & Comments</h3>
                     </div>
 
@@ -204,11 +221,14 @@ export default function InvestmentDetails() {
                         ) : (
                             comments.map((msg, i) => (
                                 <div key={i} className={`flex flex-col ${msg.userId?._id === user?.id ? 'items-end' : 'items-start'}`}>
-                                    <span className="text-[10px] text-gray-400 mb-1 ml-1 uppercase">{msg.role}</span>
+                                    <span className="text-[10px] text-gray-400 mb-1 ml-1 uppercase flex items-center gap-1">
+                                        {msg.role}
+                                        {msg.isPrivate && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded flex items-center">🔒 Private Note</span>}
+                                    </span>
                                     <div className={`px-4 py-3 rounded-2xl max-w-[85%] ${msg.userId?._id === user?.id
-                                        ? 'bg-blue-600 text-white rounded-tr-sm'
+                                        ? 'bg-[#de1f25] text-white rounded-tr-sm'
                                         : msg.role === 'management' || msg.role === 'ceo'
-                                            ? 'bg-slate-800 text-white rounded-tl-sm'
+                                            ? msg.isPrivate ? 'bg-red-50 text-red-900 border border-red-100 rounded-tl-sm' : 'bg-slate-800 text-white rounded-tl-sm'
                                             : 'bg-gray-100 text-gray-900 rounded-tl-sm'
                                         }`}>
                                         <p className="text-sm">{msg.message}</p>
@@ -220,15 +240,24 @@ export default function InvestmentDetails() {
                     </div>
 
                     <div className="p-4 border-t border-gray-100 bg-white">
-                        <form onSubmit={handleComment} className="flex gap-2">
-                            <input
-                                type="text" value={newComment} onChange={e => setNewComment(e.target.value)}
-                                placeholder="Drop a comment or instruction..."
-                                className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-                            />
-                            <button disabled={!newComment.trim()} type="submit" className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0">
-                                <Send size={18} className="ml-0.5" />
-                            </button>
+                        <form onSubmit={handleComment} className="flex flex-col gap-2">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text" value={newComment} onChange={e => setNewComment(e.target.value)}
+                                    placeholder="Drop a comment or instruction..."
+                                    className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:ring-2 focus:ring-[#de1f25] focus:outline-none text-sm"
+                                />
+                                <button disabled={!newComment.trim()} type="submit" className="p-2 bg-[#de1f25] text-white rounded-full hover:bg-[#b0181d] disabled:opacity-50 transition-colors shrink-0">
+                                    <Send size={18} className="ml-0.5" />
+                                </button>
+                            </div>
+
+                            {user?.role !== 'investor' && (
+                                <label className="flex items-center gap-2 text-xs text-gray-500 ml-2 cursor-pointer w-fit mt-1 select-none">
+                                    <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="rounded text-[#de1f25] focus:ring-[#de1f25]" />
+                                    Make comment private (Hidden from Investor)
+                                </label>
+                            )}
                         </form>
                     </div>
                 </div>

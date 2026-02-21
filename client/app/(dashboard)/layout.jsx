@@ -74,7 +74,7 @@ export default function DashboardLayout({ children }) {
                 className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-white border-r border-gray-200 transform lg:translate-x-0 lg:static lg:w-72 transition-transform duration-300 flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 <div className="h-16 flex items-center px-6 border-b border-gray-100 flex-shrink-0 justify-between">
-                    <span className="text-xl font-bold text-blue-900 font-serif">Living Vine</span>
+                    <span className="text-xl font-bold text-orange-900 font-serif">Living Vine</span>
                     <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-500">
                         <X size={24} />
                     </button>
@@ -87,9 +87,9 @@ export default function DashboardLayout({ children }) {
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive ? 'bg-[#de1f25]/10 text-[#b0181d] font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                             >
-                                <item.icon size={20} className={isActive ? 'text-blue-600' : 'text-gray-400'} />
+                                <item.icon size={20} className={isActive ? 'text-[#de1f25]' : 'text-gray-400'} />
                                 {item.name}
                             </Link>
                         );
@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }) {
 
                 <div className="p-4 border-t border-gray-100 flex-shrink-0">
                     <div className="flex items-center gap-3 mb-4 px-2">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#b0181d] font-bold shrink-0">
                             {user?.firstName?.charAt(0)}{user?.surname?.charAt(0)}
                         </div>
                         <div className="truncate">
@@ -132,7 +132,7 @@ export default function DashboardLayout({ children }) {
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="relative p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                        <button className="relative p-2 text-gray-400 hover:text-[#de1f25] transition-colors">
                             <Bell size={20} />
                             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                         </button>

@@ -14,10 +14,8 @@ router.post('/', protect, async (req, res) => {
             accountDetails, nextOfKin, date
         } = req.body;
 
-        // Calculate expected ROI placeholder - logic depends on business rules
-        // For now, let's assume a static 10% per month for demonstration
-        const roiRate = 0.10;
-        const expectedROI = amountToInvest * (1 + (roiRate * durationInMonths));
+        // Set expected ROI to a flat 26% (Total Returns = Capital + 26% Profit)
+        const expectedROI = amountToInvest * 1.26;
 
         const investment = await Investment.create({
             user: req.user._id,
