@@ -96,7 +96,8 @@ export default function DashboardLayout({ children }) {
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
-            {/* Mobile sidebar backdrop - Removed since we use bottom tabs now */}
+            <div className="flex-1 flex overflow-hidden">
+                {/* Mobile sidebar backdrop - Removed since we use bottom tabs now */}
 
             {/* Sidebar (Desktop Only) */}
             <aside
@@ -180,6 +181,7 @@ export default function DashboardLayout({ children }) {
                     </div>
                 </div>
             </main>
+        </div>
 
             {/* Mobile Bottom Navigation Bar */}
             <nav className="lg:hidden fixed bottom-0 left-0 flex items-center justify-around w-full h-16 bg-white border-t border-gray-200 z-50 px-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
