@@ -23,11 +23,20 @@ const authRoutes = require('./routes/auth');
 const investmentRoutes = require('./routes/investments');
 const userRoutes = require('./routes/users');
 const commentRoutes = require('./routes/comments');
+const crmRoutes = require('./routes/crm');
+const taskRoutes = require('./routes/tasks');
+const hrRoutes = require('./routes/hr');
+
+// Initialize Cron Jobs
+require('./services/cronJobs');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/investments', investmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/crm', crmRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/hr', hrRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['investor', 'management', 'ceo'],
+        enum: ['investor', 'sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin'],
         default: 'investor',
     },
     profileImage: {
@@ -33,6 +33,13 @@ const userSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true,
+    },
+    dob: {
+        type: Date,
+    },
+    joiningDate: {
+        type: Date,
+        default: Date.now,
     }
 }, { timestamps: true });
 

@@ -28,18 +28,53 @@ export default function DashboardLayout({ children }) {
     if (!mounted || !isAuthenticated) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
     const getNavigation = (role) => {
+        const baseNav = [
+            { name: 'Dashboard', href: `/${role}`, icon: BarChart3 },
+            { name: 'Tasks', href: `/${role}/tasks`, icon: PlusCircle },
+            { name: 'Messages', href: `/${role}/messages`, icon: MessageSquare },
+        ];
+
         switch (role) {
+            case 'superadmin':
+                return [
+                    { name: 'Admin Dashboard', href: '/superadmin', icon: BarChart3 },
+                    { name: 'User Management', href: '/superadmin/users', icon: ShieldAlert },
+                    { name: 'CRM Overview', href: '/superadmin/crm', icon: Users },
+                    { name: 'Payroll & HR', href: '/superadmin/hr', icon: History },
+                ];
             case 'ceo':
                 return [
                     { name: 'Dashboard', href: '/ceo', icon: BarChart3 },
                     { name: 'Team Management', href: '/ceo/team', icon: ShieldAlert },
+                    { name: 'Company CRM', href: '/ceo/crm', icon: Users },
                     { name: 'Notifications', href: '/ceo/notifications', icon: Bell },
                 ];
             case 'management':
                 return [
                     { name: 'Dashboard', href: '/management', icon: BarChart3 },
                     { name: 'Users', href: '/management/users', icon: Users },
+                    { name: 'CRM', href: '/management/crm', icon: Users },
                     { name: 'Notifications', href: '/management/notifications', icon: Bell },
+                ];
+            case 'sales':
+                return [
+                    { name: 'Sales Dash', href: '/sales', icon: BarChart3 },
+                    { name: 'Customers', href: '/sales/customers', icon: Users },
+                    { name: 'Leads', href: '/sales/leads', icon: PlusCircle },
+                    { name: 'Tasks', href: '/sales/tasks', icon: History },
+                ];
+            case 'marketing':
+                return [
+                    { name: 'Marketing Dash', href: '/marketing', icon: BarChart3 },
+                    { name: 'Lead Gen', href: '/marketing/leads', icon: PlusCircle },
+                    { name: 'Surveys', href: '/marketing/surveys', icon: MessageSquare },
+                ];
+            case 'hr':
+                return [
+                    { name: 'HR Dashboard', href: '/hr', icon: BarChart3 },
+                    { name: 'Attendance', href: '/hr/attendance', icon: History },
+                    { name: 'Payroll', href: '/hr/payroll', icon: BarChart3 },
+                    { name: 'Staff', href: '/hr/staff', icon: Users },
                 ];
             case 'investor':
             default:
