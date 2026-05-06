@@ -67,6 +67,10 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await bcrypt.compare(password, user.password))) {
+            if (!user.isActive) {
+                return res.status(403).json({ message: 'Account is suspended. Please contact admin.' });
+            }
+
             res.json({
                 _id: user.id,
                 email: user.email,
