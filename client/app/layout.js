@@ -2,7 +2,6 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import TopMarquee from "@/components/TopMarquee";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,7 +26,6 @@ export default function RootLayout({ children }) {
       <body
         className={`${inter.variable} ${playfair.variable} antialiased font-sans`}
       >
-        <TopMarquee />
         <Toaster position="top-right" />
         {children}
         <PWAInstallPrompt />
