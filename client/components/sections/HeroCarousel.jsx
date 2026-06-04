@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import api from "@/lib/axios";
 
-const SLIDES = [
+const STATIC_SLIDES = [
     {
         id: 1,
         image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2670&auto=format&fit=crop",
@@ -28,6 +29,7 @@ const SLIDES = [
 ];
 
 const HeroCarousel = () => {
+    const [slides, setSlides] = useState(STATIC_SLIDES);
     const [current, setCurrent] = useState(0);
     const [amount, setAmount] = useState(1000000);
 
@@ -40,11 +42,28 @@ const HeroCarousel = () => {
     };
 
     useEffect(() => {
+        const fetchSlides = async () => {
+            try {
+                const { data } = await api.get('/website/hero');
+                if (data && data.length > 0) {
+                    setSlides(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch hero slides:", error);
+            }
+        };
+        fetchSlides();
+    }, []);
+
+    useEffect(() => {
+        if (slides.length <= 1) return;
         const timer = setInterval(() => {
-            setCurrent((prev) => (prev + 1) % SLIDES.length);
+            setCurrent((prev) => (prev + 1) % slides.length);
         }, 6000);
         return () => clearInterval(timer);
-    }, []);
+    }, [slides]);
+
+    if (!slides || slides.length === 0) return null;
 
     return (
         <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-black">
@@ -61,7 +80,7 @@ const HeroCarousel = () => {
                     <div className="absolute inset-0 bg-black/60 z-10" />
                     <div
                         className="w-full h-full bg-cover bg-center"
-                        style={{ backgroundImage: `url('${SLIDES[current].image}')` }}
+                        style={{ backgroundImage: `url('${slides[current]?.image}')` }}
                     />
                 </motion.div>
             </AnimatePresence>
@@ -77,10 +96,10 @@ const HeroCarousel = () => {
                         className="text-center lg:text-left lg:col-span-3"
                     >
                         <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 leading-tight">
-                            {SLIDES[current].title}
+                            {slides[current]?.title}
                         </h1>
                         <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl font-light leading-relaxed">
-                            {SLIDES[current].subtitle}
+                            {slides[current]?.subtitle}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                             <Button size="lg" className="h-14 px-8 text-base" asChild>
@@ -157,17 +176,19 @@ const HeroCarousel = () => {
             </div>
 
             {/* Indicators */}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-3">
-                {SLIDES.map((_, index) => (
-                    <button
-                        key={index}
-                        onClick={() => setCurrent(index)}
-                        className={`w-3 h-3 rounded-full transition-all duration-300 ${index === current ? "bg-primary w-8" : "bg-white/50 hover:bg-white"
-                            }`}
-                        aria-label={`Go to slide ${index + 1}`}
-                    />
-                ))}
-            </div>
+            {slides.length > 1 && (
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-3">
+                    {slides.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setCurrent(index)}
+                            className={`w-3 h-3 rounded-full transition-all duration-300 ${index === current ? "bg-primary w-8" : "bg-white/50 hover:bg-white"
+                                }`}
+                            aria-label={`Go to slide ${index + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
         </section>
     );
 };

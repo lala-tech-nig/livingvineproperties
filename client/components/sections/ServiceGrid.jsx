@@ -1,11 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { ArrowRight, LandPlot, Building2, Briefcase, Smartphone } from "lucide-react";
+import { ArrowRight, LandPlot, Building2, Briefcase, Smartphone, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import { SERVICES } from "@/data";
+import api from "@/lib/axios";
 
 const iconMap = {
     LandPlot: LandPlot,
@@ -14,7 +15,50 @@ const iconMap = {
     Smartphone: Smartphone,
 };
 
+const STATIC_SERVICES = [
+    {
+        title: "Land Banking",
+        description: "Secure high-value land assets in rapidly developing areas for maximum capital appreciation.",
+        icon: "LandPlot",
+        href: "/investments#land-banking"
+    },
+    {
+        title: "Property Development",
+        description: "Partner with us in developing premium residential and commercial structures.",
+        icon: "Building2",
+        href: "/investments#development"
+    },
+    {
+        title: "Real Estate Advisory",
+        description: "Expert guidance for navigating the Nigerian real estate market with confidence.",
+        icon: "Briefcase",
+        href: "/investments#advisory"
+    },
+    {
+        title: "Digital Investment",
+        description: "Invest in fractional real estate ownership through our upcoming digital platform.",
+        icon: "Smartphone",
+        href: "/investments#digital"
+    }
+];
+
 const ServiceGrid = () => {
+    const [services, setServices] = useState(STATIC_SERVICES);
+
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const { data } = await api.get('/website/services');
+                if (data && data.length > 0) {
+                    setServices(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch website services:", error);
+            }
+        };
+        fetchServices();
+    }, []);
+
     return (
         <SectionWrapper className="bg-muted/30">
             <div className="text-center max-w-2xl mx-auto mb-16">
@@ -30,8 +74,8 @@ const ServiceGrid = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {SERVICES.map((service, index) => {
-                    const Icon = iconMap[service.icon];
+                {services.map((service, index) => {
+                    const Icon = iconMap[service.icon] || HelpCircle;
                     return (
                         <Card key={index} className="group border-border hover:border-primary/30 transition-all duration-500">
                             <CardHeader>
@@ -49,7 +93,7 @@ const ServiceGrid = () => {
                             </CardContent>
                             <CardFooter>
                                 <Button variant="link" className="p-0 text-primary group-hover:translate-x-2 transition-transform duration-300" asChild>
-                                    <Link href={service.href}>
+                                    <Link href={service.href || '/investments'}>
                                         Learn More <ArrowRight className="ml-1 w-4 h-4" />
                                     </Link>
                                 </Button>

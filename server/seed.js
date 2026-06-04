@@ -5,6 +5,11 @@ const User = require('./models/User');
 const Customer = require('./models/Customer');
 const Lead = require('./models/Lead');
 const Task = require('./models/Task');
+const WebsiteHero = require('./models/WebsiteHero');
+const WebsiteService = require('./models/WebsiteService');
+const WebsiteProject = require('./models/WebsiteProject');
+const WebsiteSetting = require('./models/WebsiteSetting');
+const WebsiteInquiry = require('./models/WebsiteInquiry');
 
 dotenv.config();
 
@@ -60,6 +65,124 @@ const seedData = async () => {
         await Task.deleteMany({});
         await Task.insertMany(tasks);
         console.log('Seeded Tasks.');
+
+        // 5. Seed Website Hero Carousel
+        const websiteHeroes = [
+            {
+                title: "Build Wealth With Living Vine",
+                subtitle: "Your trusted partner for secure land ownership and high-yield property development in Nigeria.",
+                image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2670&auto=format&fit=crop"
+            },
+            {
+                title: "Luxury Defined by Nature",
+                subtitle: "Experience serenity in our eco-friendly estates located in prime Lagos neighborhoods.",
+                image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2670&auto=format&fit=crop"
+            },
+            {
+                title: "Invest in Solid Foundations",
+                subtitle: "From land banking to commercial structures, we build assets that stand the test of time.",
+                image: "https://images.unsplash.com/photo-1460472178825-e5240623afd5?q=80&w=2669&auto=format&fit=crop"
+            }
+        ];
+        await WebsiteHero.deleteMany({});
+        await WebsiteHero.insertMany(websiteHeroes);
+        console.log('Seeded Website Heroes.');
+
+        // 6. Seed Website Services
+        const websiteServices = [
+            {
+                title: "Land Banking",
+                description: "Secure high-value land assets in rapidly developing areas for maximum capital appreciation.",
+                icon: "LandPlot",
+                href: "/investments#land-banking"
+            },
+            {
+                title: "Property Development",
+                description: "Partner with us in developing premium residential and commercial structures.",
+                icon: "Building2",
+                href: "/investments#development"
+            },
+            {
+                title: "Real Estate Advisory",
+                description: "Expert guidance for navigating the Nigerian real estate market with confidence.",
+                icon: "Briefcase",
+                href: "/investments#advisory"
+            },
+            {
+                title: "Digital Investment",
+                description: "Invest in fractional real estate ownership through our upcoming digital platform.",
+                icon: "Smartphone",
+                href: "/investments#digital"
+            }
+        ];
+        await WebsiteService.deleteMany({});
+        await WebsiteService.insertMany(websiteServices);
+        console.log('Seeded Website Services.');
+
+        // 7. Seed Website Projects
+        const websiteProjects = [
+            {
+                title: "The Ambiance",
+                location: "Lekki Phase 1, Lagos",
+                status: "Sold Out",
+                image: "https://images.unsplash.com/photo-1600596542815-e32870033baf?q=80&w=2674&auto=format&fit=crop",
+                category: "Completed",
+                description: "A masterpiece of modern architecture featuring 4-bedroom terrace duplexes with smart home integration."
+            },
+            {
+                title: "Greenfield Estate",
+                location: "Epe, Lagos",
+                status: "Selling Fast",
+                image: "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?q=80&w=2670&auto=format&fit=crop",
+                category: "Ongoing",
+                description: "Affordable land banking plots located in the heart of the new Lagos manufacturing hub."
+            },
+            {
+                title: "Empire Heights",
+                location: "Ikoyi, Lagos",
+                status: "Coming Soon",
+                image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2670&auto=format&fit=crop",
+                category: "Future",
+                description: "Ultra-luxury high-rise apartments overlooking the Lagos lagoon."
+            },
+            {
+                title: "Vine Courts",
+                location: "Sangotedo, Lagos",
+                status: "Selling Fast",
+                image: "https://images.unsplash.com/photo-1592595896551-12b371d546d5?q=80&w=2670&auto=format&fit=crop",
+                category: "Ongoing",
+                description: "A serene residential community with paved roads, electricity, and recreational parks."
+            }
+        ];
+        await WebsiteProject.deleteMany({});
+        await WebsiteProject.insertMany(websiteProjects);
+        console.log('Seeded Website Projects.');
+
+        // 8. Seed Website Setting (Global)
+        await WebsiteSetting.deleteMany({});
+        await WebsiteSetting.create({
+            address: "15, Admiralty Way, Lekki Phase 1, Lagos, Nigeria",
+            phone: "+234 800 123 4567",
+            email: "invest@livingvineproperties.com",
+            whatsapp: "https://wa.me/2348001234567",
+            facebook: "#",
+            twitter: "#",
+            instagram: "#",
+            linkedin: "#"
+        });
+        console.log('Seeded Website Settings.');
+
+        // 9. Seed a dummy website contact inquiry
+        await WebsiteInquiry.deleteMany({});
+        await WebsiteInquiry.create({
+            name: "Emeka Obi",
+            email: "emeka@example.com",
+            phone: "08033334444",
+            interest: "Land Banking",
+            message: "I am interested in land banking in Lekki. Can I get a callback?",
+            status: "new"
+        });
+        console.log('Seeded Website Inquiry.');
 
         console.log('\nSeeding Complete! You can now log in with any of the accounts above.');
         process.exit();

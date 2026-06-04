@@ -1,9 +1,47 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail, MapPin, Phone, Instagram, Facebook, Linkedin, Twitter, ArrowRight } from "lucide-react";
 import { NAV_LINKS, CONTACT_INFO, SERVICES } from "@/data";
 import { Button } from "@/components/ui/Button";
+import api from "@/lib/axios";
 
 const Footer = () => {
+    const [settings, setSettings] = useState(null);
+    const [services, setServices] = useState(SERVICES);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data) setSettings(data);
+            } catch (e) {
+                console.error("Failed to load settings in Footer:", e);
+            }
+        };
+
+        const fetchServices = async () => {
+            try {
+                const { data } = await api.get('/website/services');
+                if (data && data.length > 0) setServices(data);
+            } catch (e) {
+                console.error("Failed to load services in Footer:", e);
+            }
+        };
+
+        fetchSettings();
+        fetchServices();
+    }, []);
+
+    // Helper to resolve social links
+    const socialLinks = [
+        { platform: "Instagram", url: settings?.instagram || "#" },
+        { platform: "LinkedIn", url: settings?.linkedin || "#" },
+        { platform: "Twitter", url: settings?.twitter || "#" },
+        { platform: "Facebook", url: settings?.facebook || "#" },
+    ];
+
     return (
         <footer className="bg-secondary text-white pt-20 pb-8 relative overflow-hidden">
             {/* Background elements */}
@@ -21,10 +59,10 @@ const Footer = () => {
                             We are a proudly indigenous real estate investment partner helping you build wealth through secure land ownership and development.
                         </p>
                         <div className="flex space-x-4">
-                            {SOCIAL_LINKS.map((social, idx) => {
+                            {socialLinks.map((social, idx) => {
                                 const Icon = social.platform === "Instagram" ? Instagram : social.platform === "LinkedIn" ? Linkedin : social.platform === "Twitter" ? Twitter : Facebook;
                                 return (
-                                    <a key={idx} href={social.url} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 border border-white/10">
+                                    <a key={idx} href={social.url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 border border-white/10">
                                         <Icon size={18} />
                                     </a>
                                 )
@@ -51,9 +89,9 @@ const Footer = () => {
                     <div>
                         <h4 className="font-serif text-lg font-semibold mb-6 text-primary">Invest With Us</h4>
                         <ul className="space-y-3">
-                            {SERVICES.map((service) => (
+                            {services.slice(0, 4).map((service) => (
                                 <li key={service.title}>
-                                    <Link href={service.href} className="text-sm text-gray-400 hover:text-white transition-colors">
+                                    <Link href={service.href || '/investments'} className="text-sm text-gray-400 hover:text-white transition-colors">
                                         {service.title}
                                     </Link>
                                 </li>
@@ -69,19 +107,19 @@ const Footer = () => {
                                 <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                                     <MapPin size={16} />
                                 </div>
-                                <span>{CONTACT_INFO.address}</span>
+                                <span>{settings?.address || CONTACT_INFO.address}</span>
                             </li>
                             <li className="flex items-center gap-4 text-sm text-gray-300 group">
                                 <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                                     <Phone size={16} />
                                 </div>
-                                <span>{CONTACT_INFO.phone}</span>
+                                <span>{settings?.phone || CONTACT_INFO.phone}</span>
                             </li>
                             <li className="flex items-center gap-4 text-sm text-gray-300 group">
                                 <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                                     <Mail size={16} />
                                 </div>
-                                <span>{CONTACT_INFO.email}</span>
+                                <span>{settings?.email || CONTACT_INFO.email}</span>
                             </li>
                         </ul>
                     </div>
@@ -98,12 +136,5 @@ const Footer = () => {
         </footer>
     );
 };
-
-const SOCIAL_LINKS = [
-    { platform: "Instagram", url: "#" },
-    { platform: "LinkedIn", url: "#" },
-    { platform: "Twitter", url: "#" },
-    { platform: "Facebook", url: "#" },
-];
 
 export default Footer;

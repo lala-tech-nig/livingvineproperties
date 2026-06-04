@@ -67,13 +67,13 @@ const Navbar = () => {
                             size="sm"
                             asChild
                         >
-                            <Link href="/login">Login</Link>
+                            <Link href="/investor/login">Login</Link>
                         </Button>
                         <Button
                             size="sm"
                             asChild
                         >
-                            <Link href="/register">Get Started</Link>
+                            <Link href="/investor/register">Get Started</Link>
                         </Button>
                     </div>
                 </div>
@@ -108,10 +108,10 @@ const Navbar = () => {
                         ))}
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <Button variant="outline" asChild>
-                                <Link href="/login">Login</Link>
+                                <Link href="/investor/login">Login</Link>
                             </Button>
                             <Button asChild>
-                                <Link href="/register">Register</Link>
+                                <Link href="/investor/register">Register</Link>
                             </Button>
                         </div>
                     </div>

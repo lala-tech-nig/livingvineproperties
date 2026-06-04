@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import api from "@/lib/axios";
 
-const PROJECTS = [
+const STATIC_PROJECTS = [
     {
         title: "The Ambiance",
         location: "Lekki Phase 1",
@@ -27,6 +29,22 @@ const PROJECTS = [
 ];
 
 const ProjectsGallery = () => {
+    const [projects, setProjects] = useState(STATIC_PROJECTS);
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const { data } = await api.get('/website/projects');
+                if (data && data.length > 0) {
+                    setProjects(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch website projects:", error);
+            }
+        };
+        fetchProjects();
+    }, []);
+
     return (
         <SectionWrapper className="bg-white">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12">
@@ -42,7 +60,7 @@ const ProjectsGallery = () => {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
-                {PROJECTS.map((project, index) => (
+                {projects.slice(0, 3).map((project, index) => (
                     <div key={index} className="group relative h-[500px] rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500">
                         {/* Background Image */}
                         <div

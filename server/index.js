@@ -26,6 +26,7 @@ const commentRoutes = require('./routes/comments');
 const crmRoutes = require('./routes/crm');
 const taskRoutes = require('./routes/tasks');
 const hrRoutes = require('./routes/hr');
+const websiteRoutes = require('./routes/website');
 
 // Initialize Cron Jobs
 require('./services/cronJobs');
@@ -37,7 +38,13 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/hr', hrRoutes);
+app.use('/api/website', websiteRoutes);
+
+// Error Handler Middleware
+const errorHandler = require('./middlewares/errorMiddleware');
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
