@@ -19,6 +19,8 @@ export default function InvestorLayout({ children }) {
     const { user, isAuthenticated, initializeAuth, logout } = useAuthStore();
     const [mounted, setMounted] = useState(false);
 
+    const isPublicPage = pathname === '/investor/login' || pathname === '/investor/register';
+
     useEffect(() => {
         initializeAuth();
         setMounted(true);
@@ -26,6 +28,7 @@ export default function InvestorLayout({ children }) {
 
     useEffect(() => {
         if (!mounted) return;
+        if (isPublicPage) return;
         if (!isAuthenticated) {
             router.push('/investor/login');
             return;
@@ -34,7 +37,11 @@ export default function InvestorLayout({ children }) {
         if (user && user.role !== 'investor') {
             router.push('/investor/login');
         }
-    }, [mounted, isAuthenticated, user, router]);
+    }, [mounted, isAuthenticated, user, router, pathname, isPublicPage]);
+
+    if (isPublicPage) {
+        return <>{children}</>;
+    }
 
     if (!mounted || !isAuthenticated || (user && user.role !== 'investor')) {
         return (

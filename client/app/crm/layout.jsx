@@ -63,6 +63,8 @@ export default function CRMLayout({ children }) {
     const { user, isAuthenticated, initializeAuth, logout } = useAuthStore();
     const [mounted, setMounted] = useState(false);
 
+    const isLoginPage = pathname === '/crm/login';
+
     useEffect(() => {
         initializeAuth();
         setMounted(true);
@@ -70,9 +72,14 @@ export default function CRMLayout({ children }) {
 
     useEffect(() => {
         if (!mounted) return;
+        if (isLoginPage) return;
         if (!isAuthenticated) { router.push('/crm/login'); return; }
         if (user && !CRM_ROLES.includes(user.role)) { router.push('/crm/login'); }
-    }, [mounted, isAuthenticated, user, router]);
+    }, [mounted, isAuthenticated, user, router, pathname, isLoginPage]);
+
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
 
     if (!mounted || !isAuthenticated || (user && !CRM_ROLES.includes(user.role))) {
         return (

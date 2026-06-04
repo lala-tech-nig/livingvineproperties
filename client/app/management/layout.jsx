@@ -22,6 +22,8 @@ export default function ManagementLayout({ children }) {
     const { user, isAuthenticated, initializeAuth, logout } = useAuthStore();
     const [mounted, setMounted] = useState(false);
 
+    const isLoginPage = pathname === '/management/login';
+
     useEffect(() => {
         initializeAuth();
         setMounted(true);
@@ -29,6 +31,7 @@ export default function ManagementLayout({ children }) {
 
     useEffect(() => {
         if (!mounted) return;
+        if (isLoginPage) return;
         if (!isAuthenticated) {
             router.push('/management/login');
             return;
@@ -36,7 +39,11 @@ export default function ManagementLayout({ children }) {
         if (user && user.role !== 'management') {
             router.push('/management/login');
         }
-    }, [mounted, isAuthenticated, user, router]);
+    }, [mounted, isAuthenticated, user, router, pathname, isLoginPage]);
+
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
 
     if (!mounted || !isAuthenticated || (user && user.role !== 'management')) {
         return (
