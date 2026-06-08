@@ -56,3 +56,10 @@ server/*.tsbuildinfo
 client/next-env.d.ts
 server/next-env.d.ts
 next-env.d.ts
+
+
+
+# large build artifacts / zip exports
+*.zip
+.next.zip
+client.zip
