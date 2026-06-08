@@ -1,12 +1,51 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import api from '@/lib/axios';
+
+// Default values used while loading or if the API fails
+const DEFAULTS = {
+    marqueeTitle: 'Living Vine Properties Investment Limited',
+    marqueeTagline: '"...Quest for uniqueness in service..."',
+    marqueeEmail: 'info@livingvineproperties.com',
+    marqueePhone: '+234 (0) 800 000 0001',
+};
 
 export default function TopMarquee() {
     const pathname = usePathname();
-    
+    const [data, setData] = useState(DEFAULTS);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const { data: settings } = await api.get('/website/settings');
+                if (settings) {
+                    setData({
+                        marqueeTitle: settings.marqueeTitle || DEFAULTS.marqueeTitle,
+                        marqueeTagline: settings.marqueeTagline || DEFAULTS.marqueeTagline,
+                        marqueeEmail: settings.marqueeEmail || DEFAULTS.marqueeEmail,
+                        marqueePhone: settings.marqueePhone || DEFAULTS.marqueePhone,
+                    });
+                }
+            } catch (e) {
+                // Silently fall back to defaults on error
+            }
+        };
+        fetchSettings();
+    }, []);
+
     // Hide the marquee on dashboard pages
-    if (pathname.includes('/(dashboard)') || pathname.startsWith('/ceo') || pathname.startsWith('/admin') || pathname.startsWith('/superadmin') || pathname.startsWith('/hr') || pathname.startsWith('/sales') || pathname.startsWith('/marketing') || pathname.startsWith('/investor')) {
+    if (
+        pathname.includes('/(dashboard)') ||
+        pathname.startsWith('/ceo') ||
+        pathname.startsWith('/admin') ||
+        pathname.startsWith('/superadmin') ||
+        pathname.startsWith('/hr') ||
+        pathname.startsWith('/sales') ||
+        pathname.startsWith('/marketing') ||
+        pathname.startsWith('/investor')
+    ) {
         return null;
     }
 
@@ -18,16 +57,20 @@ export default function TopMarquee() {
                         <div key={i} className="flex gap-16 items-center px-8">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
-                                <span className="font-bold tracking-widest uppercase text-[10px] lg:text-xs">Living Vine Properties Investment Limited</span>
+                                <span className="font-bold tracking-widest uppercase text-[10px] lg:text-xs">
+                                    {data.marqueeTitle}
+                                </span>
                             </div>
-                            <span className="text-orange-300 italic text-xs font-serif">"...Quest for uniqueness in service..."</span>
+                            <span className="text-orange-300 italic text-xs font-serif">
+                                {data.marqueeTagline}
+                            </span>
                             <div className="flex items-center gap-2 text-[10px] lg:text-xs font-medium text-orange-100/80">
                                 <span className="w-1.5 h-1.5 rounded-full bg-orange-500/50"></span>
-                                Email: info@livingvineproperties.com
+                                Email: {data.marqueeEmail}
                             </div>
                             <div className="flex items-center gap-2 text-[10px] lg:text-xs font-medium text-orange-100/80">
                                 <span className="w-1.5 h-1.5 rounded-full bg-orange-500/50"></span>
-                                Phone: +234 (0) 800 000 0001
+                                Phone: {data.marqueePhone}
                             </div>
                         </div>
                     ))}

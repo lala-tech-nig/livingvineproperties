@@ -17,7 +17,8 @@ export default function WebsiteContentEditor() {
     const [projects, setProjects] = useState([]);
     const [settings, setSettings] = useState({
         address: '', phone: '', email: '', whatsapp: '',
-        facebook: '', twitter: '', instagram: '', linkedin: ''
+        facebook: '', twitter: '', instagram: '', linkedin: '',
+        marqueeTitle: '', marqueeTagline: '', marqueeEmail: '', marqueePhone: ''
     });
     const [inquiries, setInquiries] = useState([]);
 
@@ -320,7 +321,7 @@ export default function WebsiteContentEditor() {
 
                 {/* 4. CONTACT SETTINGS TAB */}
                 {activeTab === 'settings' && (
-                    <form onSubmit={handleSettingsSubmit} className="space-y-6 max-w-2xl">
+                    <form onSubmit={handleSettingsSubmit} className="space-y-8 max-w-2xl">
                         <h3 className="text-lg font-bold">Global Contact Details & Social Handles</h3>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -355,6 +356,30 @@ export default function WebsiteContentEditor() {
                             <div>
                                 <label className="block text-sm font-semibold text-gray-300 mb-2">LinkedIn URL</label>
                                 <input type="text" value={settings.linkedin} onChange={e => setSettings({...settings, linkedin: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                            </div>
+                        </div>
+
+                        {/* Marquee Ticker Settings */}
+                        <div className="border-t border-gray-800 pt-6">
+                            <h4 className="text-base font-bold text-amber-400 mb-1">Top Marquee Ticker</h4>
+                            <p className="text-xs text-gray-500 mb-5">Controls the scrolling announcement bar displayed at the very top of every public page.</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Company Display Name</label>
+                                    <input type="text" value={settings.marqueeTitle} onChange={e => setSettings({...settings, marqueeTitle: e.target.value})} placeholder="Living Vine Properties Investment Limited" className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Tagline / Slogan</label>
+                                    <input type="text" value={settings.marqueeTagline} onChange={e => setSettings({...settings, marqueeTagline: e.target.value})} placeholder='"...Quest for uniqueness in service..."' className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Marquee Email</label>
+                                    <input type="text" value={settings.marqueeEmail} onChange={e => setSettings({...settings, marqueeEmail: e.target.value})} placeholder="info@livingvineproperties.com" className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Marquee Phone</label>
+                                    <input type="text" value={settings.marqueePhone} onChange={e => setSettings({...settings, marqueePhone: e.target.value})} placeholder="+234 (0) 800 000 0001" className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
                             </div>
                         </div>
 

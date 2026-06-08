@@ -32,6 +32,22 @@ const websiteSettingSchema = new mongoose.Schema({
     linkedin: {
         type: String,
         default: '#',
+    },
+    marqueeTitle: {
+        type: String,
+        default: 'Living Vine Properties Investment Limited',
+    },
+    marqueeTagline: {
+        type: String,
+        default: '"...Quest for uniqueness in service..."',
+    },
+    marqueeEmail: {
+        type: String,
+        default: 'info@livingvineproperties.com',
+    },
+    marqueePhone: {
+        type: String,
+        default: '+234 (0) 800 000 0001',
     }
 }, { timestamps: true });
 
