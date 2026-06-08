@@ -14,8 +14,8 @@ router.post('/', protect, async (req, res) => {
             accountDetails, nextOfKin, date
         } = req.body;
 
-        // Set expected ROI to a flat 26% (Total Returns = Capital + 26% Profit)
-        const expectedROI = amountToInvest * 1.26;
+        // Set expected ROI to a flat 24% (Total Returns = Capital + 24% Profit)
+        const expectedROI = amountToInvest * 1.24;
 
         const investment = await Investment.create({
             user: req.user._id,

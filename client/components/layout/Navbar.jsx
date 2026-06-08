@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,12 +37,15 @@ const Navbar = () => {
         >
             <div className="container mx-auto px-4 flex justify-between items-center">
                 {/* Logo */}
-                <Link href="/" className="font-serif text-2xl font-bold tracking-tighter flex items-center gap-2">
-                    <span className="text-primary text-3xl">LV</span>
-                    <div className="flex flex-col leading-none">
-                        <span className="text-lg text-foreground">Living Vine</span>
-                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Properties</span>
-                    </div>
+                <Link href="/" className="flex items-center">
+                    <Image
+                        src="/living-logo.png"
+                        alt="Living Vine Properties"
+                        width={160}
+                        height={48}
+                        className="h-10 md:h-12 w-auto object-contain"
+                        priority
+                    />
                 </Link>
 
                 {/* Desktop Nav */}

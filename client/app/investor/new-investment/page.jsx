@@ -122,7 +122,7 @@ export default function NewInvestment() {
                     <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-bold text-gray-900">2. Investment Plan Details</h3>
-                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 flex items-center gap-1 rounded-full font-medium border border-green-200"><Info size={14} /> Returns up to 26%</span>
+                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 flex items-center gap-1 rounded-full font-medium border border-green-200"><Info size={14} /> Returns up to 24%</span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -128,7 +128,7 @@ const HeroCarousel = () => {
                                     </div>
                                     <input
                                         type="range"
-                                        min="500000"
+                                        min="100000"
                                         max="50000000"
                                         step="100000"
                                         value={amount}
@@ -136,14 +136,14 @@ const HeroCarousel = () => {
                                         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
                                     />
                                     <div className="flex justify-between text-xs text-gray-400 mt-2">
-                                        <span>₦500k</span>
+                                        <span>₦100k</span>
                                         <span>₦50M+</span>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-xl">
                                     <div>
-                                        <div className="text-xs text-gray-500 mb-1">ROI (26%)</div>
+                                        <div className="text-xs text-gray-500 mb-1">ROI (24%)</div>
                                         <motion.div
                                             key={roi}
                                             initial={{ scale: 0.8, opacity: 0 }}
@@ -167,7 +167,7 @@ const HeroCarousel = () => {
                                 </div>
 
                                 <p className="text-center text-xs text-gray-400 mt-3">
-                                    *26% ROI projection
+                                    *24% ROI projection
                                 </p>
                             </div>
                         </div>

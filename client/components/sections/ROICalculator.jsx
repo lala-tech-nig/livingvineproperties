@@ -6,7 +6,7 @@ import SectionWrapper from "@/components/ui/SectionWrapper";
 
 const ROICalculator = () => {
     const [amount, setAmount] = useState(1000000); // 1 Million default
-    const ROI_PERCENTAGE = 0.26; // 26%
+    const ROI_PERCENTAGE = 0.24; // 24%
     const DURATION_YEARS = 1;
 
     const roi = amount * ROI_PERCENTAGE;
@@ -42,14 +42,14 @@ const ROICalculator = () => {
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
                         />
                         <div className="flex justify-between text-xs text-gray-400 mt-2">
-                            <span>₦500k</span>
+                            <span>₦100k</span>
                             <span>₦50M+</span>
                         </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-8 bg-gray-50 p-6 rounded-2xl">
                         <div>
-                            <div className="text-sm text-gray-500 mb-1">Guaranteed ROI (26%)</div>
+                            <div className="text-sm text-gray-500 mb-1">Guaranteed ROI (24%)</div>
                             <motion.div
                                 key={roi}
                                 initial={{ scale: 0.8, opacity: 0 }}
