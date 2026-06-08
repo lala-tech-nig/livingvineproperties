@@ -5,11 +5,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
 import {
-    BarChart3, Users, Bell, LogOut, Globe
+    BarChart3, Users, Bell, LogOut, Globe, Briefcase
 } from 'lucide-react';
 
 const MGT_NAV = [
     { name: 'Dashboard', href: '/management', icon: BarChart3 },
+    { name: 'Products', href: '/management/products', icon: Briefcase },
     { name: 'Users', href: '/management/users', icon: Users },
     { name: 'CRM', href: '/management/crm', icon: Users },
     { name: 'Notifications', href: '/management/notifications', icon: Bell },

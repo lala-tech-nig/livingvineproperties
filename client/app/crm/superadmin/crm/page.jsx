@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
 import { Users, Search, Filter, Mail, Phone, Calendar } from 'lucide-react';
 
@@ -13,9 +13,7 @@ export default function SuperadminCRM() {
     useEffect(() => {
         const fetchCustomers = async () => {
             try {
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/crm/customers`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get('/crm/customers');
                 setCustomers(res.data);
             } catch (err) {
                 console.error(err);
@@ -23,7 +21,7 @@ export default function SuperadminCRM() {
                 setLoading(false);
             }
         };
-        fetchCustomers();
+        if (token) fetchCustomers();
     }, [token]);
 
     return (

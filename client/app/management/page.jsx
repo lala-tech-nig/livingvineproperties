@@ -69,23 +69,34 @@ export default function ManagementDashboard() {
                         </thead>
                         <tbody>
                             {investments.map(inv => (
-                                <tr key={inv._id} className="border-b border-gray-50 hover:bg-gray-50">
+                                <tr key={inv._id} className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${inv.status === 'reviewing' ? 'bg-yellow-50/40' : ''}`}>
                                     <td className="px-6 py-4">
                                         <p className="font-bold text-gray-900">{inv.name}</p>
                                         <p className="text-xs text-gray-500">{inv.email}</p>
+                                        <p className="text-[11px] text-gray-400 font-mono">{inv._id}</p>
                                     </td>
                                     <td className="px-6 py-4 font-medium text-gray-900">₦{inv.amountToInvest?.toLocaleString()}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
-                                            ${inv.status === 'reviewing' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
-                                            inv.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                            inv.status === 'retreated' ? 'bg-orange-100 text-orange-800' :
-                                            'bg-gray-100 text-gray-800'}`}>
+                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border 
+                                            ${inv.status === 'reviewing' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                            inv.status === 'approved' ? 'bg-green-100 text-green-800 border-green-200' :
+                                            inv.status === 'active' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                            inv.status === 'declined' ? 'bg-red-100 text-red-800 border-red-200' :
+                                            inv.status === 'retreated' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                                            inv.status === 'liquidated' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                                            'bg-gray-100 text-gray-800 border-gray-200'}`}>
                                             {inv.status.toUpperCase()}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <Link href={`/investor/investment/${inv._id}`} className="inline-flex items-center gap-1 text-sm font-medium text-[#de1f25] hover:text-orange-800 bg-[#de1f25]/10 px-3 py-1.5 rounded-lg transition-colors">
+                                        <Link
+                                            href={`/investor/investment/${inv._id}`}
+                                            className={`inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-xl transition-colors ${
+                                                inv.status === 'reviewing'
+                                                    ? 'bg-[#de1f25] text-white hover:bg-[#b0181d] shadow-md shadow-[#de1f25]/20'
+                                                    : 'text-[#de1f25] hover:text-orange-800 bg-[#de1f25]/10 hover:bg-[#de1f25]/20'
+                                            }`}
+                                        >
                                             <Eye size={16} /> Inspect
                                         </Link>
                                     </td>

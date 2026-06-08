@@ -27,6 +27,8 @@ const crmRoutes = require('./routes/crm');
 const taskRoutes = require('./routes/tasks');
 const hrRoutes = require('./routes/hr');
 const websiteRoutes = require('./routes/website');
+const investmentProductRoutes = require('./routes/investmentProducts');
+const surveyRoutes = require('./routes/surveys');
 
 // Initialize Cron Jobs
 require('./services/cronJobs');
@@ -39,6 +41,8 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/hr', hrRoutes);
 app.use('/api/website', websiteRoutes);
+app.use('/api/investment-products', investmentProductRoutes);
+app.use('/api/surveys', surveyRoutes);
 
 // Error Handler Middleware
 const errorHandler = require('./middlewares/errorMiddleware');

@@ -1,267 +1,384 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import api from '@/lib/axios';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
-import { useAuthStore } from '@/store/authStore';
-import { ChevronLeft, MessageSquare, AlertCircle, CheckCircle, Send, XCircle } from 'lucide-react';
+import {
+    User, Mail, Phone, MapPin, Briefcase, Clock, TrendingUp,
+    CreditCard, Shield, Users, MessageSquare, Send, ChevronLeft,
+    CheckCircle, XCircle, RotateCcw, Banknote, Calendar, Hash,
+    AlertTriangle, Loader2, Building2
+} from 'lucide-react';
 
-export default function InvestmentDetails() {
+/* ── helpers ─────────────────────────────────────────────── */
+const fmt = (n) => n ? `₦${Number(n).toLocaleString()}` : '—';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+
+const maturityLabel = {
+    rollover_all: 'Rollover Capital + ROI',
+    withdraw_roi: 'Withdraw ROI, Rollover Capital',
+    liquidate_all: 'Liquidate Completely',
+};
+
+const STATUS_CONFIG = {
+    reviewing: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-400' },
+    approved:  { color: 'bg-green-100  text-green-800  border-green-200',  dot: 'bg-green-500' },
+    active:    { color: 'bg-blue-100   text-blue-800   border-blue-200',   dot: 'bg-blue-500'  },
+    liquidated:{ color: 'bg-purple-100 text-purple-800 border-purple-200', dot: 'bg-purple-500'},
+    declined:  { color: 'bg-red-100    text-red-800    border-red-200',    dot: 'bg-red-500'   },
+    retreated: { color: 'bg-orange-100 text-orange-800 border-orange-200', dot: 'bg-orange-500'},
+};
+
+/* ── small reusable row ──────────────────────────────────── */
+function InfoRow({ icon: Icon, label, value, mono = false, sensitive = false }) {
+    const [show, setShow] = useState(!sensitive);
+    return (
+        <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
+            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon size={15} className="text-gray-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-gray-400 uppercase tracking-widest font-semibold mb-0.5">{label}</p>
+                {sensitive && !show ? (
+                    <button onClick={() => setShow(true)} className="text-sm text-primary font-medium underline underline-offset-2">
+                        Click to reveal
+                    </button>
+                ) : (
+                    <p className={`text-sm font-medium text-gray-800 break-words ${mono ? 'font-mono tracking-widest' : ''}`}>
+                        {value || '—'}
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+/* ── section card ────────────────────────────────────────── */
+function Section({ title, accent = '#de1f25', children }) {
+    return (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
+                <span className="w-1 h-5 rounded-full" style={{ background: accent }} />
+                <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider">{title}</h3>
+            </div>
+            <div className="px-6 pb-2">{children}</div>
+        </div>
+    );
+}
+
+/* ══════════════════ MAIN PAGE ══════════════════════════════ */
+export default function InvestmentReviewPage() {
     const { id } = useParams();
     const router = useRouter();
     const { user } = useAuthStore();
 
-    const [investment, setInvestment] = useState(null);
+    const [inv, setInv]           = useState(null);
+    const [loading, setLoading]   = useState(true);
     const [comments, setComments] = useState([]);
-    const [newComment, setNewComment] = useState('');
-    const [isPrivate, setIsPrivate] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [msg, setMsg]           = useState('');
+    const [sending, setSending]   = useState(false);
 
-    // CEO Bank Form State
-    const [showBankForm, setShowBankForm] = useState(false);
-    const [bankDetails, setBankDetails] = useState({ bankName: '', accountNumber: '', accountName: '' });
+    // CEO decision state
+    const [newStatus, setNewStatus]   = useState('');
+    const [payAccount, setPayAccount] = useState({ bankName: '', accountNumber: '', accountName: '' });
+    const [deciding, setDeciding]     = useState(false);
 
+    const commentBottom = useRef(null);
+
+    const isCEO        = user?.role === 'ceo' || user?.role === 'superadmin';
+    const isManagement = user?.role === 'management' || isCEO;
+
+    /* fetch investment */
     useEffect(() => {
-        fetchData();
+        const load = async () => {
+            try {
+                const [{ data: invData }, { data: cmtData }] = await Promise.all([
+                    api.get(`/investments/${id}`),
+                    api.get(`/comments/${id}`),
+                ]);
+                setInv(invData);
+                setNewStatus(invData.status);
+                if (invData.ceoPaymentAccount?.bankName) setPayAccount(invData.ceoPaymentAccount);
+                setComments(cmtData);
+            } catch (e) {
+                toast.error('Failed to load investment details');
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (id) load();
     }, [id]);
 
-    const fetchData = async () => {
-        try {
-            const [{ data: invData }, { data: comData }] = await Promise.all([
-                api.get(`/investments/${id}`),
-                api.get(`/comments/${id}`)
-            ]);
-            setInvestment(invData);
-            setComments(comData);
-        } catch (error) {
-            toast.error('Failed to load details');
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        commentBottom.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [comments]);
 
-    const handleComment = async (e) => {
+    /* post comment */
+    const postComment = async (e) => {
         e.preventDefault();
-        if (!newComment.trim()) return;
+        if (!msg.trim()) return;
+        setSending(true);
         try {
-            const { data } = await api.post(`/comments/${id}`, { message: newComment, isPrivate });
-            setComments([...comments, data]);
-            setNewComment('');
-        } catch (error) {
-            toast.error('Failed to send comment');
-        }
+            const { data } = await api.post(`/comments/${id}`, { text: msg });
+            setComments(prev => [...prev, data]);
+            setMsg('');
+        } catch { toast.error('Failed to send message'); }
+        finally { setSending(false); }
     };
 
-    const handleLiquidate = async () => {
-        if (!confirm("Are you sure you want to request liquidation? This might incur early liquidation fees depending on your duration.")) return;
+    /* CEO: update status */
+    const handleDecision = async () => {
+        if (!newStatus) return;
+        setDeciding(true);
         try {
-            await api.put(`/investments/${id}/status`, { status: 'liquidated' });
-            toast.success('Liquidation request sent');
-            fetchData();
-        } catch (error) {
-            toast.error('Failed to request liquidation');
-        }
-    };
-
-    const handleStatusUpdate = async (newStatus, paymentAcc = null) => {
-        try {
-            if (!confirm(`Are you sure you want to mark this investment as ${newStatus.toUpperCase()}?`)) return;
             const payload = { status: newStatus };
-            if (paymentAcc) payload.ceoPaymentAccount = paymentAcc;
-
+            if (isCEO && payAccount.bankName) payload.ceoPaymentAccount = payAccount;
             const { data } = await api.put(`/investments/${id}/status`, payload);
-            setInvestment(data);
-            toast.success(`Investment status updated to ${newStatus}`);
-        } catch (error) {
-            toast.error('Failed to update status');
-        }
+            setInv(data);
+            toast.success(`Investment status updated to "${newStatus}"`);
+        } catch { toast.error('Failed to update status'); }
+        finally { setDeciding(false); }
     };
 
-    if (loading) return <div className="p-10 text-center">Loading...</div>;
-    if (!investment) return <div className="p-10 text-center">Investment not found</div>;
+    /* ── loading ───────────────────────────────────────────── */
+    if (loading) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <Loader2 size={32} className="animate-spin text-primary" />
+            </div>
+        );
+    }
 
+    if (!inv) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center">
+                <AlertTriangle size={40} className="text-yellow-500" />
+                <p className="text-gray-600 font-medium">Investment record not found.</p>
+                <button onClick={() => router.back()} className="text-sm text-primary underline">Go Back</button>
+            </div>
+        );
+    }
+
+    const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG.reviewing;
+
+    /* ── render ─────────────────────────────────────────────── */
     return (
-        <div className="max-w-6xl mx-auto pb-20">
-            <div className="flex items-center gap-4 mb-8">
-                <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors">
-                    <ChevronLeft size={24} />
+        <div className="max-w-5xl mx-auto space-y-6 pb-20">
+
+            {/* ── Page header ── */}
+            <div className="flex items-center gap-4">
+                <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-xl text-gray-500 transition-colors">
+                    <ChevronLeft size={22} />
                 </button>
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        Investment Overview
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${investment.status === 'reviewing' ? 'bg-yellow-100 text-yellow-800' :
-                            investment.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                investment.status === 'declined' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                            }`}>
-                            {investment.status.toUpperCase()}
-                        </span>
+                <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-bold text-gray-900 truncate">
+                        Investment Review — {inv.name}
                     </h2>
-                    <p className="text-gray-500 font-mono text-sm mt-1">REF: {investment._id}</p>
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">ID: {inv._id}</p>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${sc.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+                    {inv.status}
+                </span>
+            </div>
+
+            {/* ── Summary banner ── */}
+            <div className="bg-gradient-to-r from-[#de1f25] to-orange-600 rounded-2xl p-6 text-white flex flex-wrap gap-6">
+                <div>
+                    <p className="text-orange-100 text-xs font-medium mb-1">Capital Invested</p>
+                    <p className="text-3xl font-black">{fmt(inv.amountToInvest)}</p>
+                </div>
+                <div>
+                    <p className="text-orange-100 text-xs font-medium mb-1">Expected ROI (24%)</p>
+                    <p className="text-3xl font-black">{fmt(inv.expectedROI)}</p>
+                </div>
+                <div>
+                    <p className="text-orange-100 text-xs font-medium mb-1">Duration</p>
+                    <p className="text-3xl font-black">{inv.durationInMonths} <span className="text-xl font-semibold">months</span></p>
+                </div>
+                <div>
+                    <p className="text-orange-100 text-xs font-medium mb-1">Start Date</p>
+                    <p className="text-xl font-bold">{fmtDate(inv.startDate)}</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-2 gap-6">
 
-                {/* Left Column: Details */}
-                <div className="lg:col-span-2 space-y-6">
-                    <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center">
+                {/* ── 1. Investor Information ── */}
+                <Section title="Investor Information" accent="#de1f25">
+                    <InfoRow icon={User}    label="Full Name"       value={inv.name} />
+                    <InfoRow icon={Mail}    label="Email Address"   value={inv.email} />
+                    <InfoRow icon={Phone}   label="Phone Number"    value={inv.phoneNumber} />
+                    <InfoRow icon={MapPin}  label="Contact Address" value={inv.contactAddress} />
+                </Section>
+
+                {/* ── 2. Investment Plan ── */}
+                <Section title="Investment Plan Details" accent="#16a34a">
+                    <InfoRow icon={Banknote}  label="Amount to Invest"       value={fmt(inv.amountToInvest)} />
+                    <InfoRow icon={TrendingUp} label="Expected Total Returns" value={fmt(inv.expectedROI)} />
+                    <InfoRow icon={Clock}     label="Duration"               value={`${inv.durationInMonths} months`} />
+                    <InfoRow icon={Calendar}  label="Start Date"             value={fmtDate(inv.startDate)} />
+                    <InfoRow icon={RotateCcw} label="On Maturity"            value={maturityLabel[inv.principalActionAfterMaturity] || inv.principalActionAfterMaturity} />
+                </Section>
+
+                {/* ── 3. Identity & KYC ── */}
+                <Section title="Identity & KYC" accent="#7c3aed">
+                    <InfoRow icon={Hash}   label="NIN" value={inv.nin} mono sensitive />
+                    <InfoRow icon={Shield} label="BVN" value={inv.bvn} mono sensitive />
+                </Section>
+
+                {/* ── 4. Payout Account ── */}
+                <Section title="ROI Domiciliation Account" accent="#0ea5e9">
+                    <InfoRow icon={Building2}   label="Bank Name"       value={inv.accountDetails?.bankName} />
+                    <InfoRow icon={CreditCard}  label="Account Number"  value={inv.accountDetails?.accountNumber} mono sensitive />
+                    <InfoRow icon={User}        label="Account Name"    value={inv.accountDetails?.accountName} />
+                </Section>
+
+                {/* ── 5. Next of Kin ── */}
+                <Section title="Next of Kin" accent="#f59e0b">
+                    <InfoRow icon={User}   label="Full Name"     value={inv.nextOfKin?.fullName} />
+                    <InfoRow icon={Users}  label="Relationship"  value={inv.nextOfKin?.relationship} />
+                    <InfoRow icon={Phone}  label="Phone Number"  value={inv.nextOfKin?.phoneNumber} />
+                    <InfoRow icon={MapPin} label="Address"       value={inv.nextOfKin?.address} />
+                </Section>
+
+                {/* ── 6. CEO Payment Account (if set) ── */}
+                {inv.ceoPaymentAccount?.bankName && (
+                    <Section title="CEO Payment Account (To Investor)" accent="#de1f25">
+                        <InfoRow icon={Building2}  label="Bank Name"       value={inv.ceoPaymentAccount.bankName} />
+                        <InfoRow icon={CreditCard} label="Account Number"  value={inv.ceoPaymentAccount.accountNumber} mono sensitive />
+                        <InfoRow icon={User}       label="Account Name"    value={inv.ceoPaymentAccount.accountName} />
+                    </Section>
+                )}
+            </div>
+
+            {/* ── CEO / Management Decision Panel ── */}
+            {isManagement && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50">
+                        <Shield size={16} className="text-[#de1f25]" />
+                        <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider">
+                            {isCEO ? 'CEO Decision Panel' : 'Management Review'}
+                        </h3>
+                    </div>
+
+                    <div className="p-6 space-y-6">
+                        {/* Status selector */}
                         <div>
-                            <p className="text-gray-500 text-sm mb-1">Total Capital Invested</p>
-                            <h3 className="text-4xl font-bold text-gray-900">₦{investment.amountToInvest?.toLocaleString()}</h3>
-                        </div>
-                        <div className="mt-4 sm:mt-0 text-left sm:text-right">
-                            <p className="text-gray-500 text-sm mb-1">Expected ROI</p>
-                            <h3 className="text-3xl font-bold text-green-600">₦{investment.expectedROI?.toLocaleString()}</h3>
-                            <p className="text-xs text-gray-400 mt-1">{investment.durationInMonths} Months Duration</p>
-                        </div>
-                    </section>
-
-                    {investment.status === 'approved' && investment.ceoPaymentAccount && (
-                        <motion.section
-                            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                            className="bg-green-50 p-6 rounded-2xl border border-green-200"
-                        >
-                            <div className="flex items-start gap-4">
-                                <CheckCircle className="text-green-600 mt-1" size={24} />
-                                <div>
-                                    <h3 className="text-lg font-bold text-green-900 mb-2">Investment Approved! Please Make Payment</h3>
-                                    <p className="text-green-800 mb-4">Transfer your investment capital to the following company account to activate your portfolio completely.</p>
-                                    <div className="bg-white p-4 rounded-xl border border-green-100 shadow-sm inline-block">
-                                        <p className="text-sm text-gray-500 mb-1">Bank Name: <span className="font-bold text-gray-900 ml-2">{investment.ceoPaymentAccount.bankName}</span></p>
-                                        <p className="text-sm text-gray-500 mb-1">Account Number: <span className="font-bold text-gray-900 ml-2 font-mono tracking-widest text-lg">{investment.ceoPaymentAccount.accountNumber}</span></p>
-                                        <p className="text-sm text-gray-500">Account Name: <span className="font-bold text-gray-900 ml-2">{investment.ceoPaymentAccount.accountName}</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.section>
-                    )}
-
-                    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 bg-gray-50">
-                            <h3 className="font-bold text-gray-900">Portfolio Details</h3>
-                        </div>
-                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
-                            <div><p className="text-sm text-gray-500">Investor Name</p><p className="font-medium text-gray-900">{investment.name}</p></div>
-                            <div><p className="text-sm text-gray-500">Action At Maturity</p><p className="font-medium text-gray-900 capitalize">{investment.principalActionAfterMaturity?.replace('_', ' ')}</p></div>
-                            <div><p className="text-sm text-gray-500">Initiation Date</p><p className="font-medium text-gray-900">{new Date(investment.startDate).toLocaleDateString()}</p></div>
-                            <div><p className="text-sm text-gray-500">BVN</p><p className="font-medium text-gray-900 font-mono">*** *** {investment.bvn?.slice(-4)}</p></div>
-                            <div>
-                                <p className="text-sm text-gray-500 mb-1">Your Payout Account</p>
-                                <p className="font-medium text-gray-900 text-sm">{investment.accountDetails?.bankName}</p>
-                                <p className="font-medium text-gray-500 text-xs">{investment.accountDetails?.accountNumber}</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <div className="flex gap-4 flex-wrap">
-                        {user?.role === 'investor' && investment.status !== 'liquidated' && (
-                            <button onClick={handleLiquidate} className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors border border-red-100">
-                                <AlertCircle size={18} />
-                                Request Liquidation
-                            </button>
-                        )}
-
-                        {user?.role === 'management' && investment.status !== 'liquidated' && (
-                            <>
-                                <button onClick={() => handleStatusUpdate('reviewing')} className="bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold hover:bg-yellow-100 border border-yellow-200">Flag for Review</button>
-                                <button onClick={() => handleStatusUpdate('retreated')} className="bg-[#de1f25]/10 text-[#b0181d] px-6 py-3 rounded-xl font-bold hover:bg-orange-100 border border-[#de1f25]/20">Retreat (Needs rework)</button>
-                                <button onClick={() => handleStatusUpdate('declined')} className="bg-red-50 text-red-700 px-6 py-3 rounded-xl font-bold hover:bg-red-100 border border-red-200">Decline</button>
-                            </>
-                        )}
-
-                        {user?.role === 'ceo' && investment.status !== 'liquidated' && !showBankForm && (
-                            <>
-                                <button
-                                    onClick={() => setShowBankForm(true)}
-                                    className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 shadow-md shadow-green-600/20"
-                                >
-                                    Approve & Supply Account
-                                </button>
-                                <button onClick={() => handleStatusUpdate('declined')} className="bg-red-50 text-red-700 px-6 py-3 rounded-xl font-bold hover:bg-red-100 border border-red-200">Decline Application</button>
-                            </>
-                        )}
-
-                        {showBankForm && (
-                            <div className="w-full bg-white p-6 rounded-2xl border border-gray-200 shadow-lg mt-4 animate-in slide-in-from-bottom-4">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-bold text-gray-900 text-lg">Provide Deposit Account</h3>
-                                    <button onClick={() => setShowBankForm(false)} className="text-gray-400 hover:text-gray-600"><XCircle size={20} /></button>
-                                </div>
-                                <div className="space-y-4">
-                                    <input type="text" placeholder="Bank Name (e.g. Zenith Bank)" value={bankDetails.bankName} onChange={e => setBankDetails({ ...bankDetails, bankName: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500" />
-                                    <input type="text" placeholder="Account Number" value={bankDetails.accountNumber} onChange={e => setBankDetails({ ...bankDetails, accountNumber: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 font-mono tracking-widest" />
-                                    <input type="text" placeholder="Account Name" value={bankDetails.accountName} onChange={e => setBankDetails({ ...bankDetails, accountName: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500" />
+                            <label className="block text-sm font-bold text-gray-700 mb-3">Update Investment Status</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['reviewing', 'approved', 'active', 'declined', 'retreated', 'liquidated'].map(s => (
                                     <button
-                                        disabled={!bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.accountName}
-                                        onClick={() => handleStatusUpdate('approved', bankDetails)}
-                                        className="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                                        key={s}
+                                        onClick={() => setNewStatus(s)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                                            newStatus === s
+                                                ? 'bg-gray-900 text-white border-gray-900 shadow-md'
+                                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400'
+                                        }`}
                                     >
-                                        Confirm Approval & Send Details
+                                        {s}
                                     </button>
-                                </div>
+                                ))}
                             </div>
-                        )}
-                    </div>
-                </div>
+                        </div>
 
-                {/* Right Column: Communications */}
-                <div className="flex flex-col h-[600px] bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                        <MessageSquare className="text-[#de1f25]" size={20} />
-                        <h3 className="font-bold text-gray-900">Activity & Comments</h3>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {comments.length === 0 ? (
-                            <p className="text-center text-gray-400 my-10 text-sm">No activities or comments yet.</p>
-                        ) : (
-                            comments.map((msg, i) => (
-                                <div key={i} className={`flex flex-col ${msg.userId?._id === user?.id ? 'items-end' : 'items-start'}`}>
-                                    <span className="text-[10px] text-gray-400 mb-1 ml-1 uppercase flex items-center gap-1">
-                                        {msg.role}
-                                        {msg.isPrivate && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded flex items-center">🔒 Private Note</span>}
-                                    </span>
-                                    <div className={`px-4 py-3 rounded-2xl max-w-[85%] ${msg.userId?._id === user?.id
-                                        ? 'bg-[#de1f25] text-white rounded-tr-sm'
-                                        : msg.role === 'management' || msg.role === 'ceo'
-                                            ? msg.isPrivate ? 'bg-red-50 text-red-900 border border-red-100 rounded-tl-sm' : 'bg-slate-800 text-white rounded-tl-sm'
-                                            : 'bg-gray-100 text-gray-900 rounded-tl-sm'
-                                        }`}>
-                                        <p className="text-sm">{msg.message}</p>
-                                    </div>
-                                    <span className="text-[10px] text-gray-400 mt-1">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                            ))
-                        )}
-                    </div>
-
-                    <div className="p-4 border-t border-gray-100 bg-white">
-                        <form onSubmit={handleComment} className="flex flex-col gap-2">
-                            <div className="flex gap-2">
-                                <input
-                                    type="text" value={newComment} onChange={e => setNewComment(e.target.value)}
-                                    placeholder="Drop a comment or instruction..."
-                                    className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:ring-2 focus:ring-[#de1f25] focus:outline-none text-sm"
-                                />
-                                <button disabled={!newComment.trim()} type="submit" className="p-2 bg-[#de1f25] text-white rounded-full hover:bg-[#b0181d] disabled:opacity-50 transition-colors shrink-0">
-                                    <Send size={18} className="ml-0.5" />
-                                </button>
-                            </div>
-
-                            {user?.role !== 'investor' && (
-                                <label className="flex items-center gap-2 text-xs text-gray-500 ml-2 cursor-pointer w-fit mt-1 select-none">
-                                    <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="rounded text-[#de1f25] focus:ring-[#de1f25]" />
-                                    Make comment private (Hidden from Investor)
+                        {/* CEO payment account */}
+                        {isCEO && (
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-3">
+                                    Company Payment Account <span className="text-gray-400 font-normal">(account we'll pay the investor from)</span>
                                 </label>
-                            )}
-                        </form>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    {[
+                                        { key: 'bankName', label: 'Bank Name', placeholder: 'GTBank' },
+                                        { key: 'accountNumber', label: 'Account Number', placeholder: '0123456789', mono: true },
+                                        { key: 'accountName', label: 'Account Name', placeholder: 'Living Vine Properties' },
+                                    ].map(f => (
+                                        <div key={f.key}>
+                                            <label className="block text-xs text-gray-500 mb-1">{f.label}</label>
+                                            <input
+                                                type="text"
+                                                value={payAccount[f.key]}
+                                                onChange={e => setPayAccount(p => ({ ...p, [f.key]: e.target.value }))}
+                                                placeholder={f.placeholder}
+                                                className={`w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 text-sm outline-none bg-gray-50 ${f.mono ? 'font-mono tracking-widest' : ''}`}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleDecision}
+                            disabled={deciding || newStatus === inv.status}
+                            className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#de1f25]/20"
+                        >
+                            {deciding ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                            {deciding ? 'Saving Decision...' : 'Save Decision'}
+                        </button>
+
+                        {newStatus === inv.status && (
+                            <p className="text-xs text-gray-400">Select a different status above to enable saving.</p>
+                        )}
                     </div>
                 </div>
+            )}
 
+            {/* ── Comments / Messaging ── */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
+                    <MessageSquare size={16} className="text-gray-400" />
+                    <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider">Internal Notes & Messages</h3>
+                    <span className="ml-auto text-xs bg-gray-100 text-gray-500 font-bold px-2 py-0.5 rounded-full">{comments.length}</span>
+                </div>
+
+                {/* Message list */}
+                <div className="px-6 py-4 max-h-72 overflow-y-auto space-y-4">
+                    {comments.length === 0 ? (
+                        <p className="text-sm text-gray-400 text-center py-6">No messages yet. Start the conversation.</p>
+                    ) : comments.map((c, i) => {
+                        const isMe = c.author?._id === user?._id || c.authorName === `${user?.firstName} ${user?.surname}`;
+                        return (
+                            <div key={c._id || i} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isMe ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'}`}>
+                                    {(c.authorName || 'U')[0].toUpperCase()}
+                                </div>
+                                <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                                    <p className={`text-xs text-gray-400 ${isMe ? 'text-right' : ''}`}>
+                                        {c.authorName || 'Unknown'} · {fmtDate(c.createdAt)}
+                                    </p>
+                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-primary text-white rounded-tr-sm' : 'bg-gray-100 text-gray-800 rounded-tl-sm'}`}>
+                                        {c.text}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    <div ref={commentBottom} />
+                </div>
+
+                {/* Message input */}
+                <form onSubmit={postComment} className="px-6 pb-6 pt-2 flex gap-3">
+                    <input
+                        type="text"
+                        value={msg}
+                        onChange={e => setMsg(e.target.value)}
+                        placeholder="Add a note or message..."
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 text-sm outline-none bg-gray-50"
+                    />
+                    <button
+                        type="submit"
+                        disabled={sending || !msg.trim()}
+                        className="bg-[#de1f25] hover:bg-[#b0181d] disabled:opacity-40 text-white px-4 py-2.5 rounded-xl transition-all flex items-center gap-2"
+                    >
+                        {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                    </button>
+                </form>
             </div>
         </div>
     );

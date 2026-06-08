@@ -84,10 +84,11 @@ export default function CEODashboard() {
                         </thead>
                         <tbody>
                             {investments.map(inv => (
-                                <tr key={inv._id} className="border-b border-gray-50 hover:bg-gray-50">
+                                <tr key={inv._id} className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${inv.status === 'reviewing' ? 'bg-yellow-50/50' : ''}`}>
                                     <td className="px-6 py-4">
                                         <p className="font-bold text-gray-900">{inv.name}</p>
-                                        <p className="text-xs text-gray-500 font-mono">{inv._id}</p>
+                                        <p className="text-xs text-gray-400 font-mono">{inv._id}</p>
+                                        <p className="text-xs text-gray-500">{inv.email}</p>
                                     </td>
                                     <td className="px-6 py-4 font-medium text-gray-900">₦{inv.amountToInvest?.toLocaleString()}</td>
                                     <td className="px-6 py-4 text-gray-600">{inv.durationInMonths} Months</td>
@@ -95,13 +96,22 @@ export default function CEODashboard() {
                                         <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider
                                             ${inv.status === 'reviewing' ? 'bg-yellow-100 text-yellow-800' :
                                             inv.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                            inv.status === 'active' ? 'bg-blue-100 text-blue-800' :
                                             inv.status === 'retreated' ? 'bg-orange-100 text-orange-800' :
+                                            inv.status === 'declined' ? 'bg-red-100 text-red-800' :
                                             'bg-gray-100 text-gray-800'}`}>
                                             {inv.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <Link href={`/investor/investment/${inv._id}`} className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-4 py-2 rounded-lg transition-colors">
+                                        <Link
+                                            href={`/investor/investment/${inv._id}`}
+                                            className={`inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-xl transition-colors ${
+                                                inv.status === 'reviewing'
+                                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200'
+                                                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                                            }`}
+                                        >
                                             Review & Decide
                                         </Link>
                                     </td>

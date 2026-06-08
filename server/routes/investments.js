@@ -1,7 +1,46 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const Investment = require('../models/Investment');
+const InvestmentProduct = require('../models/InvestmentProduct');
 const { protect, authorize } = require('../middlewares/authMiddleware');
+
+// @route   GET /api/investments/verify-identity
+// @desc    Verify NIN or BVN using local db.json records
+// @access  Private
+router.get('/verify-identity', protect, async (req, res) => {
+    try {
+        const { type, number } = req.query;
+        if (!type || !number) {
+            return res.status(400).json({ message: 'Type (nin or bvn) and identity number are required.' });
+        }
+
+        const dbPath = path.join(__dirname, '../data/db.json');
+        if (!fs.existsSync(dbPath)) {
+            return res.status(500).json({ message: 'Identity validation registry not found on server.' });
+        }
+
+        const dbContent = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+        let record = null;
+
+        if (type.toLowerCase() === 'nin') {
+            record = dbContent.nins && dbContent.nins[number];
+        } else if (type.toLowerCase() === 'bvn') {
+            record = dbContent.bvns && dbContent.bvns[number];
+        } else {
+            return res.status(400).json({ message: 'Invalid identity type. Must be "nin" or "bvn".' });
+        }
+
+        if (!record) {
+            return res.status(404).json({ message: 'Invalid NIN/BVN. Identity verification failed.' });
+        }
+
+        res.json(record);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
 
 // @route   POST /api/investments
 // @desc    Create a new investment
@@ -11,11 +50,19 @@ router.post('/', protect, async (req, res) => {
         const {
             name, email, contactAddress, phoneNumber, amountToInvest,
             durationInMonths, principalActionAfterMaturity, nin, bvn,
-            accountDetails, nextOfKin, date
+            accountDetails, nextOfKin, date, productId, roiPercent
         } = req.body;
 
-        // Set expected ROI to a flat 24% (Total Returns = Capital + 24% Profit)
-        const expectedROI = amountToInvest * 1.24;
+        // Calculate dynamic expected ROI
+        let actualRoiPercent = roiPercent || 24;
+        if (productId) {
+            const product = await InvestmentProduct.findById(productId);
+            if (product) {
+                actualRoiPercent = product.roiPercent;
+            }
+        }
+        
+        const expectedROI = amountToInvest * (1 + (actualRoiPercent / 100));
 
         const investment = await Investment.create({
             user: req.user._id,

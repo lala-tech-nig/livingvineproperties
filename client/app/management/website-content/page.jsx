@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import api from '@/lib/axios';
 import { 
-    Globe, Image as ImageIcon, Briefcase, Mail, Settings as SettingsIcon, Plus, Trash2, Edit2, CheckCircle2, Archive
+    Globe, Image as ImageIcon, Briefcase, Mail, Settings as SettingsIcon, Plus, Trash2, Edit2, CheckCircle2, Archive, UploadCloud
 } from 'lucide-react';
 
 export default function WebsiteContentEditor() {
     const [activeTab, setActiveTab] = useState('hero');
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
 
     // Dynamic Database States
     const [heroSlides, setHeroSlides] = useState([]);
@@ -18,7 +19,9 @@ export default function WebsiteContentEditor() {
     const [settings, setSettings] = useState({
         address: '', phone: '', email: '', whatsapp: '',
         facebook: '', twitter: '', instagram: '', linkedin: '',
-        marqueeTitle: '', marqueeTagline: '', marqueeEmail: '', marqueePhone: ''
+        marqueeTitle: '', marqueeTagline: '', marqueeEmail: '', marqueePhone: '',
+        aboutTitle: '', aboutSubtitle: '', aboutDescription1: '', aboutDescription2: '',
+        aboutImage: '', aboutFeature1: '', aboutFeature2: '', aboutFeature3: ''
     });
     const [inquiries, setInquiries] = useState([]);
 
@@ -52,13 +55,68 @@ export default function WebsiteContentEditor() {
             setHeroSlides(heroRes);
             setServices(serviceRes);
             setProjects(projectRes);
-            if (settingsRes) setSettings(settingsRes);
+            if (settingsRes) {
+                setSettings({
+                    address: settingsRes.address || '',
+                    phone: settingsRes.phone || '',
+                    email: settingsRes.email || '',
+                    whatsapp: settingsRes.whatsapp || '',
+                    facebook: settingsRes.facebook || '',
+                    twitter: settingsRes.twitter || '',
+                    instagram: settingsRes.instagram || '',
+                    linkedin: settingsRes.linkedin || '',
+                    marqueeTitle: settingsRes.marqueeTitle || '',
+                    marqueeTagline: settingsRes.marqueeTagline || '',
+                    marqueeEmail: settingsRes.marqueeEmail || '',
+                    marqueePhone: settingsRes.marqueePhone || '',
+                    aboutTitle: settingsRes.aboutTitle || '',
+                    aboutSubtitle: settingsRes.aboutSubtitle || '',
+                    aboutDescription1: settingsRes.aboutDescription1 || '',
+                    aboutDescription2: settingsRes.aboutDescription2 || '',
+                    aboutImage: settingsRes.aboutImage || '',
+                    aboutFeature1: settingsRes.aboutFeature1 || '',
+                    aboutFeature2: settingsRes.aboutFeature2 || '',
+                    aboutFeature3: settingsRes.aboutFeature3 || ''
+                });
+            }
             setInquiries(inquiriesRes);
         } catch (error) {
             console.error(error);
             toast.error('Failed to load website content details');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // --- Image Upload Handler ---
+    const handleImageUpload = async (e, type = 'hero') => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        setUploading(true);
+        const toastId = toast.loading('Uploading image to Cloudinary...');
+        try {
+            const { data } = await api.post('/website/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            if (type === 'hero') {
+                setHeroForm(prev => ({ ...prev, image: data.url }));
+            } else if (type === 'project') {
+                setProjectForm(prev => ({ ...prev, image: data.url }));
+            } else if (type === 'about') {
+                setSettings(prev => ({ ...prev, aboutImage: data.url }));
+            }
+            
+            toast.success('Image uploaded successfully!', { id: toastId });
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to upload image', { id: toastId });
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -170,7 +228,7 @@ export default function WebsiteContentEditor() {
     // --- Inquiries Operations ---
     const updateInquiryStatus = async (id, status) => {
         try {
-            const { data } = await api.put(`/website/inquiries/${id}`, { status });
+            const { data } = await api.patch(`/website/inquiries/${id}`, { status });
             setInquiries(inquiries.map(i => i._id === id ? data : i));
             toast.success(`Inquiry marked as ${status}`);
         } catch (e) {
@@ -204,7 +262,7 @@ export default function WebsiteContentEditor() {
                     <Globe size={16} /> Projects
                 </button>
                 <button onClick={() => setActiveTab('settings')} className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'settings' ? 'bg-amber-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}>
-                    <SettingsIcon size={16} /> Contact Settings
+                    <SettingsIcon size={16} /> Contact & About Settings
                 </button>
                 <button onClick={() => setActiveTab('inquiries')} className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'inquiries' ? 'bg-amber-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}>
                     <Mail size={16} /> Enquiries ({inquiries.filter(i => i.status === 'new').length})
@@ -261,7 +319,7 @@ export default function WebsiteContentEditor() {
                                 <div key={svc._id} className="bg-gray-950 border border-gray-800 rounded-xl p-5 shadow-sm flex flex-col justify-between">
                                     <div>
                                         <div className="bg-amber-500/10 text-amber-500 w-10 h-10 rounded-lg flex items-center justify-center mb-3 font-bold">
-                                            {svc.icon[0]}
+                                            {svc.icon ? svc.icon[0] : 'S'}
                                         </div>
                                         <h4 className="font-bold text-white text-base">{svc.title}</h4>
                                         <p className="text-gray-400 text-xs mt-2 leading-relaxed">{svc.description}</p>
@@ -319,9 +377,9 @@ export default function WebsiteContentEditor() {
                     </div>
                 )}
 
-                {/* 4. CONTACT SETTINGS TAB */}
+                {/* 4. CONTACT & ABOUT SETTINGS TAB */}
                 {activeTab === 'settings' && (
-                    <form onSubmit={handleSettingsSubmit} className="space-y-8 max-w-2xl">
+                    <form onSubmit={handleSettingsSubmit} className="space-y-8 max-w-2xl text-white">
                         <h3 className="text-lg font-bold">Global Contact Details & Social Handles</h3>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -339,7 +397,7 @@ export default function WebsiteContentEditor() {
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-gray-300 mb-2">WhatsApp Direct Link/Number</label>
-                                <input type="text" value={settings.whatsapp} onChange={e => setSettings({...settings, whatsapp: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                <input type="text" value={settings.whatsapp} onChange={e => setSettings({...settings, whatsapp: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" placeholder="e.g. +2348031234567 or wa.me Link" />
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-gray-300 mb-2">Facebook URL</label>
@@ -356,6 +414,64 @@ export default function WebsiteContentEditor() {
                             <div>
                                 <label className="block text-sm font-semibold text-gray-300 mb-2">LinkedIn URL</label>
                                 <input type="text" value={settings.linkedin} onChange={e => setSettings({...settings, linkedin: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                            </div>
+                        </div>
+
+                        {/* About Us Snippet Editor */}
+                        <div className="border-t border-gray-800 pt-6 space-y-6">
+                            <h4 className="text-base font-bold text-amber-400 mb-1">About Section Snippet</h4>
+                            <p className="text-xs text-gray-500 mb-5">Controls the Who We Are movement introduction content displayed on the homepage.</p>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-305 mb-2">Who We Are Badge</label>
+                                    <input type="text" value={settings.aboutSubtitle} onChange={e => setSettings({...settings, aboutSubtitle: e.target.value})} placeholder="Who We Are" className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-305 mb-2">Snippet Title</label>
+                                    <input type="text" value={settings.aboutTitle} onChange={e => setSettings({...settings, aboutTitle: e.target.value})} placeholder="Proudly Indigenous. \n Global Standards." className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-305 mb-2">First Paragraph</label>
+                                <textarea value={settings.aboutDescription1} onChange={e => setSettings({...settings, aboutDescription1: e.target.value})} rows={3} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none resize-none" />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-305 mb-2">Second Paragraph</label>
+                                <textarea value={settings.aboutDescription2} onChange={e => setSettings({...settings, aboutDescription2: e.target.value})} rows={3} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none resize-none" />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-305 mb-2">Snippet Highlight Image</label>
+                                <div className="flex gap-3 items-center">
+                                    <input type="text" value={settings.aboutImage} onChange={e => setSettings({...settings, aboutImage: e.target.value})} className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                    <label className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-4 py-3.5 rounded-xl cursor-pointer transition-colors shrink-0">
+                                        {uploading ? 'Uploading...' : 'Upload File'}
+                                        <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'about')} disabled={uploading} className="hidden" />
+                                    </label>
+                                </div>
+                                {settings.aboutImage && (
+                                    <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-800 h-44 max-w-sm">
+                                        <img src={settings.aboutImage} className="w-full h-full object-cover" alt="Preview" />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-305 mb-2">Feature Tag 1</label>
+                                    <input type="text" value={settings.aboutFeature1} onChange={e => setSettings({...settings, aboutFeature1: e.target.value})} placeholder="100% Verified Documentation" className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-305 mb-2">Feature Tag 2</label>
+                                    <input type="text" value={settings.aboutFeature2} onChange={e => setSettings({...settings, aboutFeature2: e.target.value})} placeholder="Strategic Locations Only" className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-305 mb-2">Feature Tag 3</label>
+                                    <input type="text" value={settings.aboutFeature3} onChange={e => setSettings({...settings, aboutFeature3: e.target.value})} placeholder="Guaranteed Capital Appreciation" className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none" />
+                                </div>
                             </div>
                         </div>
 
@@ -420,7 +536,7 @@ export default function WebsiteContentEditor() {
                                             </button>
                                         )}
                                         {inq.status !== 'archived' && (
-                                            <button onClick={() => updateInquiryStatus(inq._id, 'archived')} className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-850 hover:bg-gray-800 border border-gray-800 text-gray-400 text-xs font-bold rounded-lg transition-colors">
+                                            <button onClick={() => updateInquiryStatus(inq._id, 'archived')} className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-850 hover:bg-gray-850 border border-gray-800 text-gray-450 text-xs font-bold rounded-lg transition-colors">
                                                 <Archive size={14} /> Archive
                                             </button>
                                         )}
@@ -438,18 +554,33 @@ export default function WebsiteContentEditor() {
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <form onSubmit={handleHeroSubmit} className="bg-gray-900 border border-gray-800 p-6 rounded-2xl w-full max-w-lg space-y-4 text-white">
                         <h3 className="text-xl font-bold">{heroForm.id ? 'Edit Slide Frame' : 'Create Slide Frame'}</h3>
+                        
                         <div>
                             <label className="block text-xs font-bold text-gray-400 mb-2">Slide Main Title</label>
                             <input type="text" value={heroForm.title} onChange={e => setHeroForm({...heroForm, title: e.target.value})} required className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
                         </div>
+                        
                         <div>
                             <label className="block text-xs font-bold text-gray-400 mb-2">Slide Subtitle / Description</label>
                             <input type="text" value={heroForm.subtitle} onChange={e => setHeroForm({...heroForm, subtitle: e.target.value})} required className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
                         </div>
+                        
                         <div>
                             <label className="block text-xs font-bold text-gray-400 mb-2">Slide Image URL</label>
-                            <input type="text" value={heroForm.image} onChange={e => setHeroForm({...heroForm, image: e.target.value})} required className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
+                            <div className="flex gap-3 items-center">
+                                <input type="text" value={heroForm.image} onChange={e => setHeroForm({...heroForm, image: e.target.value})} required className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="https://example.com/image.jpg" />
+                                <label className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-4 py-3.5 rounded-xl cursor-pointer transition-colors shrink-0">
+                                    {uploading ? 'Uploading...' : 'Upload Image'}
+                                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'hero')} disabled={uploading} className="hidden" />
+                                </label>
+                            </div>
+                            {heroForm.image && (
+                                <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-850 h-28 w-full">
+                                    <img src={heroForm.image} className="w-full h-full object-cover" alt="Preview" />
+                                </div>
+                            )}
                         </div>
+                        
                         <div className="flex justify-end gap-3 pt-4">
                             <button type="button" onClick={() => setShowModal(null)} className="px-5 py-2.5 bg-gray-850 hover:bg-gray-800 rounded-xl text-gray-300 font-semibold transition-all">Cancel</button>
                             <button type="submit" className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 rounded-xl text-white font-semibold transition-all">Save Changes</button>
@@ -508,7 +639,18 @@ export default function WebsiteContentEditor() {
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-400 mb-2">Project Image URL</label>
-                            <input type="text" value={projectForm.image} onChange={e => setProjectForm({...projectForm, image: e.target.value})} required className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
+                            <div className="flex gap-3 items-center">
+                                <input type="text" value={projectForm.image} onChange={e => setProjectForm({...projectForm, image: e.target.value})} required className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
+                                <label className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-4 py-3.5 rounded-xl cursor-pointer transition-colors shrink-0">
+                                    {uploading ? 'Uploading...' : 'Upload Image'}
+                                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'project')} disabled={uploading} className="hidden" />
+                                </label>
+                            </div>
+                            {projectForm.image && (
+                                <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-850 h-28 w-full">
+                                    <img src={projectForm.image} className="w-full h-full object-cover" alt="Preview" />
+                                </div>
+                            )}
                         </div>
                         <div className="flex justify-end gap-3 pt-4">
                             <button type="button" onClick={() => setShowModal(null)} className="px-5 py-2.5 bg-gray-850 hover:bg-gray-800 rounded-xl text-gray-300 font-semibold transition-all">Cancel</button>

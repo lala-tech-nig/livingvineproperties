@@ -1,0 +1,42 @@
+{
+  "nins": {
+    "12345678901": {
+      "name": "Chidi Nwachukwu",
+      "email": "chidi.nwachukwu@gmail.com",
+      "phoneNumber": "+2348031234567",
+      "contactAddress": "12, Adeola Odeku Street, Victoria Island, Lagos"
+    },
+    "23456789012": {
+      "name": "Amina Bello",
+      "email": "amina.bello@yahoo.com",
+      "phoneNumber": "+2348123456789",
+      "contactAddress": "45, Garki Road, Area 11, Abuja"
+    },
+    "34567890123": {
+      "name": "Oluwaseun Adebayo",
+      "email": "seun.adebayo@outlook.com",
+      "phoneNumber": "+2349056781234",
+      "contactAddress": "7, Ring Road, Ibadan, Oyo State"
+    }
+  },
+  "bvns": {
+    "22222222222": {
+      "name": "Chidi Nwachukwu",
+      "email": "chidi.nwachukwu@gmail.com",
+      "phoneNumber": "+2348031234567",
+      "contactAddress": "12, Adeola Odeku Street, Victoria Island, Lagos"
+    },
+    "33333333333": {
+      "name": "Amina Bello",
+      "email": "amina.bello@yahoo.com",
+      "phoneNumber": "+2348123456789",
+      "contactAddress": "45, Garki Road, Area 11, Abuja"
+    },
+    "44444444444": {
+      "name": "Oluwaseun Adebayo",
+      "email": "seun.adebayo@outlook.com",
+      "phoneNumber": "+2349056781234",
+      "contactAddress": "7, Ring Road, Ibadan, Oyo State"
+    }
+  }
+}
