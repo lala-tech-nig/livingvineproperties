@@ -19,6 +19,7 @@ const getNavigation = (role) => {
                 { name: 'User Management', href: '/crm/superadmin/users', icon: ShieldAlert },
                 { name: 'CRM Overview', href: '/crm/superadmin/crm', icon: Users },
                 { name: 'Payroll & HR', href: '/crm/superadmin/hr', icon: History },
+                { name: 'WhatsApp Hub', href: '/crm/superadmin/whatsapp', icon: MessageSquare },
             ];
         case 'ceo':
             return [
@@ -26,6 +27,7 @@ const getNavigation = (role) => {
                 { name: 'Team Management', href: '/crm/ceo/team', icon: ShieldAlert },
                 { name: 'Company CRM', href: '/crm/ceo/crm', icon: Users },
                 { name: 'Notifications', href: '/crm/ceo/notifications', icon: Bell },
+                { name: 'WhatsApp Hub', href: '/crm/superadmin/whatsapp', icon: MessageSquare },
             ];
         case 'sales':
             return [
@@ -33,12 +35,14 @@ const getNavigation = (role) => {
                 { name: 'Customers', href: '/crm/sales/customers', icon: Users },
                 { name: 'Leads', href: '/crm/sales/leads', icon: PlusCircle },
                 { name: 'Tasks', href: '/crm/sales/tasks', icon: History },
+                { name: 'WhatsApp Contacts', href: '/crm/whatsapp', icon: MessageSquare },
             ];
         case 'marketing':
             return [
                 { name: 'Marketing Dashboard', href: '/crm/marketing', icon: BarChart3 },
                 { name: 'Lead Gen', href: '/crm/marketing/leads', icon: PlusCircle },
                 { name: 'Surveys', href: '/crm/marketing/surveys', icon: MessageSquare },
+                { name: 'WhatsApp Contacts', href: '/crm/whatsapp', icon: MessageSquare },
             ];
         case 'hr':
             return [
@@ -46,9 +50,13 @@ const getNavigation = (role) => {
                 { name: 'Attendance', href: '/crm/hr/attendance', icon: History },
                 { name: 'Payroll', href: '/crm/hr/payroll', icon: Briefcase },
                 { name: 'Staff', href: '/crm/hr/staff', icon: Users },
+                { name: 'WhatsApp Contacts', href: '/crm/whatsapp', icon: MessageSquare },
             ];
         default:
-            return [{ name: 'Dashboard', href: '/crm', icon: BarChart3 }];
+            return [
+                { name: 'Dashboard', href: '/crm', icon: BarChart3 },
+                { name: 'WhatsApp Contacts', href: '/crm/whatsapp', icon: MessageSquare },
+            ];
     }
 };
 

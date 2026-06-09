@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
 import {
-    BarChart3, Users, Bell, LogOut, Globe, Briefcase
+    BarChart3, Users, Bell, LogOut, Globe, Briefcase, MessageSquare
 } from 'lucide-react';
 
 const MGT_NAV = [
@@ -15,6 +15,7 @@ const MGT_NAV = [
     { name: 'CRM', href: '/management/crm', icon: Users },
     { name: 'Notifications', href: '/management/notifications', icon: Bell },
     { name: 'Website Editor', href: '/management/website-content', icon: Globe },
+    { name: 'WhatsApp Manager', href: '/management/whatsapp', icon: MessageSquare },
 ];
 
 export default function ManagementLayout({ children }) {

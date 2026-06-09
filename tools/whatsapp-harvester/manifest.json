@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Living Vine WhatsApp Harvester",
+  "version": "1.0",
+  "description": "Export and upload contacts from WhatsApp Web groups to the company database.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/api/*",
+    "https://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
