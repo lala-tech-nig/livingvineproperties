@@ -33,7 +33,7 @@ const HeroCarousel = () => {
     const [current, setCurrent] = useState(0);
     const [amount, setAmount] = useState(1000000);
 
-    const ROI_PERCENTAGE = 0.26;
+    const ROI_PERCENTAGE = 0.24;
     const roi = amount * ROI_PERCENTAGE;
     const total = amount + roi;
 

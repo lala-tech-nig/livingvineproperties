@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 
 const ROICalculator = () => {
-    const [amount, setAmount] = useState(1000000); // 1 Million default
+    const [amount, setAmount] = useState(100000); // 100,000 default
     const ROI_PERCENTAGE = 0.24; // 24%
     const DURATION_YEARS = 1;
 

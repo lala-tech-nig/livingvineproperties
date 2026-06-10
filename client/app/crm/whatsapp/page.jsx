@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { motion } from 'framer-motion';
-import { MessageSquare, Calendar, Users, Download, Search, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, Calendar, Users, Download, Upload, Search, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, XCircle, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '@/lib/axios';
 
@@ -17,6 +17,11 @@ export default function StaffWhatsAppDashboard() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalContacts, setTotalContacts] = useState(0);
+
+    // CSV / XLSX upload state
+    const fileInputRef = useRef(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadResult, setUploadResult] = useState(null); // { insertedCount, skippedCount, totalParsed, message }
 
     useEffect(() => {
         fetchStats();
@@ -90,6 +95,39 @@ export default function StaffWhatsAppDashboard() {
         }
     };
 
+    const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Reset result
+        setUploadResult(null);
+        setUploading(true);
+        const toastId = toast.loading(`Uploading ${file.name}…`);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const { data } = await api.post('/whatsapp/contacts/upload-file', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            setUploadResult(data);
+            toast.success(data.message, { id: toastId });
+
+            // Refresh stats and contact list
+            fetchStats();
+            fetchContacts();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Upload failed', { id: toastId });
+        } finally {
+            setUploading(false);
+            // Reset input so the same file can be re-uploaded if needed
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     const statCards = [
         { name: 'Gathered Today', value: stats.today, icon: Calendar, color: 'from-[#de1f25]/20 to-red-500/10 border-red-500/30 text-red-400' },
         { name: 'This Week', value: stats.week, icon: Users, color: 'from-blue-600/20 to-blue-500/10 border-blue-500/30 text-blue-400' },
@@ -144,6 +182,66 @@ export default function StaffWhatsAppDashboard() {
                         </div>
                     </motion.div>
                 ))}
+            </div>
+
+            {/* ── CSV / XLSX Upload Card ── */}
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                            <FileSpreadsheet className="text-[#de1f25]" size={18} />
+                            Upload Contact File
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                            Upload a CSV or Excel file — the system will automatically extract all phone numbers,
+                            pick Display Name where available, filter out letters-only tokens, and skip any duplicates already in the database.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            id="staffFileUpload"
+                        />
+                        <label
+                            htmlFor="staffFileUpload"
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-all ${
+                                uploading
+                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                    : 'bg-[#de1f25] hover:bg-[#b81419] text-white shadow-md'
+                            }`}
+                        >
+                            <Upload size={16} />
+                            {uploading ? 'Processing…' : 'Choose File (.csv / .xlsx)'}
+                        </label>
+                    </div>
+                </div>
+
+                {/* Upload result banner */}
+                {uploadResult && (
+                    <div className={`flex flex-wrap gap-4 p-4 rounded-xl border text-sm ${
+                        uploadResult.insertedCount > 0
+                            ? 'bg-emerald-500/10 border-emerald-500/20'
+                            : 'bg-gray-800 border-gray-700'
+                    }`}>
+                        <div className="flex items-center gap-2">
+                            <CheckCircle size={16} className="text-emerald-400 shrink-0" />
+                            <span className="text-white font-bold">{uploadResult.insertedCount}</span>
+                            <span className="text-gray-400">new contacts saved</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <XCircle size={16} className="text-gray-500 shrink-0" />
+                            <span className="text-gray-400">{uploadResult.skippedCount} duplicates skipped</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <FileSpreadsheet size={16} className="text-blue-400 shrink-0" />
+                            <span className="text-gray-400">{uploadResult.totalParsed} numbers parsed from file</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Filter and Table Container */}

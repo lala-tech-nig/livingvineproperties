@@ -1,9 +1,29 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const User = require('../models/User');
 const WhatsAppContact = require('../models/WhatsAppContact');
 const { protect, authorize } = require('../middlewares/authMiddleware');
 const XLSX = require('xlsx');
+
+// Multer – store uploaded files in memory (no disk writes)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+    fileFilter: (req, file, cb) => {
+        const allowed = [
+            'text/csv',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/octet-stream'
+        ];
+        if (allowed.includes(file.mimetype) || file.originalname.match(/\.(csv|xlsx|xls)$/i)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only CSV and Excel files are accepted'));
+        }
+    }
+});
 
 // Helper to get date boundaries
 const getDateBoundaries = () => {
@@ -93,7 +113,120 @@ router.post('/contacts/bulk', protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/whatsapp/contacts/mine
+// @route   POST /api/whatsapp/contacts/upload-file
+// @desc    Upload a CSV or Excel file; extract phone numbers & display names, dedup against DB, save new
+// @access  Private (staff)
+router.post('/contacts/upload-file', protect, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded. Send a CSV or XLSX file in the "file" field.' });
+        }
+
+        // ── Parse the file buffer into a workbook ─────────────────────────────
+        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const allRows = [];
+
+        workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            // raw: true keeps numbers as numbers; defval: '' fills empty cells
+            const rows = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+            allRows.push(...rows);
+        });
+
+        if (allRows.length === 0) {
+            return res.status(400).json({ message: 'The uploaded file appears to be empty or unreadable.' });
+        }
+
+        // ── Detect "display name" column header ───────────────────────────────
+        // Looks for any key that includes 'name' or 'display' (case-insensitive)
+        const sampleKeys = Object.keys(allRows[0] || {});
+        const nameKey = sampleKeys.find(k =>
+            /display/i.test(k) || /^name$/i.test(k) || /display.?name/i.test(k)
+        ) || sampleKeys.find(k => /name/i.test(k)) || null;
+
+        // ── Extract contacts from rows ─────────────────────────────────────────
+        const extractedContacts = [];
+        const seenPhones = new Set();
+
+        allRows.forEach(row => {
+            // Get display name from the detected column (or empty string)
+            const displayName = nameKey ? String(row[nameKey] || '').trim() : '';
+
+            // Scan ALL cell values in this row for phone number tokens
+            Object.values(row).forEach(cellValue => {
+                const cellStr = String(cellValue || '');
+
+                // Split on common separators: comma, semicolon, pipe, newline, space
+                const tokens = cellStr.split(/[,;\|\n\r\s]+/);
+
+                tokens.forEach(token => {
+                    // Strip everything except digits and leading +
+                    const cleaned = token.replace(/[^\d+]/g, '');
+                    // Must be numeric only (no letters left), and at least 7 digits
+                    const digitsOnly = cleaned.replace(/\D/g, '');
+
+                    if (
+                        digitsOnly.length >= 7 &&   // long enough to be a phone
+                        digitsOnly.length <= 15 &&  // not too long
+                        !seenPhones.has(digitsOnly) &&
+                        /^\d+$/.test(digitsOnly)   // all digits after stripping +
+                    ) {
+                        seenPhones.add(digitsOnly);
+
+                        // Derive country code from leading digits
+                        let countryCode = '';
+                        if (cleaned.startsWith('+')) {
+                            const match = cleaned.match(/^\+(\d{1,3})/);
+                            if (match) countryCode = match[1];
+                        }
+
+                        extractedContacts.push({
+                            displayName: displayName || `+${digitsOnly}`,
+                            phoneNumber: digitsOnly,
+                            countryCode,
+                            groupName: req.body.groupName || 'CSV Upload',
+                            collectedBy: req.user.id
+                        });
+                    }
+                });
+            });
+        });
+
+        if (extractedContacts.length === 0) {
+            return res.status(200).json({
+                insertedCount: 0,
+                skippedCount: 0,
+                message: 'No valid phone numbers found in the uploaded file.'
+            });
+        }
+
+        // ── Dedup against database ────────────────────────────────────────────
+        const phoneNumbers = extractedContacts.map(c => c.phoneNumber);
+        const existingInDb = await WhatsAppContact.find({ phoneNumber: { $in: phoneNumbers } }).select('phoneNumber');
+        const existingSet = new Set(existingInDb.map(c => c.phoneNumber));
+
+        const toInsert = extractedContacts.filter(c => !existingSet.has(c.phoneNumber));
+        const skippedCount = extractedContacts.length - toInsert.length;
+
+        let insertedCount = 0;
+        if (toInsert.length > 0) {
+            const result = await WhatsAppContact.insertMany(toInsert);
+            insertedCount = result.length;
+        }
+
+        res.status(201).json({
+            insertedCount,
+            skippedCount,
+            totalParsed: extractedContacts.length,
+            message: `Parsed ${extractedContacts.length} numbers — saved ${insertedCount} new, skipped ${skippedCount} duplicates.`
+        });
+    } catch (error) {
+        console.error('[upload-file] Error:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 // @desc    Retrieve contacts collected by the logged in staff member
 // @access  Private (Staff specific)
 router.get('/contacts/mine', protect, async (req, res) => {

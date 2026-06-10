@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
     MessageSquare, Download, Search, RefreshCw, ChevronLeft, ChevronRight,
     UserPlus, ShieldAlert, Send, PlusCircle, CheckCircle, XCircle, BarChart2,
-    Calendar, Users, UsersRound, Settings
+    Calendar, Users, UsersRound, Settings, Upload, FileSpreadsheet
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '@/lib/axios';
@@ -41,6 +41,11 @@ export default function WhatsAppManagerDashboard() {
         role: 'sales'
     });
     const [creatingStaff, setCreatingStaff] = useState(false);
+
+    // CSV / XLSX upload state (manager)
+    const fileInputRef = useRef(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadResult, setUploadResult] = useState(null);
 
     useEffect(() => {
         loadDashboardData();
@@ -149,6 +154,31 @@ export default function WhatsAppManagerDashboard() {
         } catch (error) {
             console.error(error);
             toast.error('Failed to export data', { id: toastId });
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadResult(null);
+        setUploading(true);
+        const toastId = toast.loading(`Uploading ${file.name}…`);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const { data } = await api.post('/whatsapp/contacts/upload-file', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setUploadResult(data);
+            toast.success(data.message, { id: toastId });
+            // Refresh the contacts tab and performance
+            loadDashboardData();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Upload failed', { id: toastId });
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -328,6 +358,56 @@ export default function WhatsAppManagerDashboard() {
             {/* 2. CONTACTS DATABASE TAB */}
             {activeTab === 'contacts' && (
                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
+
+                    {/* ── Upload CSV / XLSX Panel ── */}
+                    <div className="bg-gray-950 border border-amber-500/20 rounded-xl p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-bold text-white flex items-center gap-2">
+                                    <FileSpreadsheet className="text-amber-500" size={16} />
+                                    Bulk Upload from CSV / Excel
+                                </p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    Upload any CSV or XLSX file — the system extracts every phone number, picks Display Name column automatically, filters out text-only cells, deduplicates against the full database, and saves only new numbers.
+                                </p>
+                            </div>
+                            <div className="shrink-0">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".csv,.xlsx,.xls"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    id="managerFileUpload"
+                                />
+                                <label
+                                    htmlFor="managerFileUpload"
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm cursor-pointer transition-all ${
+                                        uploading
+                                            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                            : 'bg-amber-600 hover:bg-amber-700 text-white shadow'
+                                    }`}
+                                >
+                                    <Upload size={15} />
+                                    {uploading ? 'Processing…' : 'Upload File'}
+                                </label>
+                            </div>
+                        </div>
+                        {uploadResult && (
+                            <div className="flex flex-wrap gap-4 mt-3 p-3 rounded-xl bg-gray-900 border border-gray-800 text-xs">
+                                <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                                    <CheckCircle size={13} /> {uploadResult.insertedCount} new saved
+                                </span>
+                                <span className="flex items-center gap-1.5 text-gray-500">
+                                    <XCircle size={13} /> {uploadResult.skippedCount} duplicates skipped
+                                </span>
+                                <span className="flex items-center gap-1.5 text-blue-400">
+                                    <FileSpreadsheet size={13} /> {uploadResult.totalParsed} numbers parsed
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex flex-wrap gap-2">
                             {/* Filter by Staff */}

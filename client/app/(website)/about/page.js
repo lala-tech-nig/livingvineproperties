@@ -122,8 +122,8 @@ export default function About() {
                 <div className="container mx-auto px-4">
                     <h3 className="text-2xl font-serif font-bold mb-10 opacity-80">Certified & Registered With</h3>
                     <div className="flex flex-wrap justify-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-                        <div className="text-2xl font-bold flex items-center gap-2"><Briefcase /> CAC RC: 1234567</div>
-                        <div className="text-2xl font-bold flex items-center gap-2"><Award /> REDAN</div>
+                        <div className="text-2xl font-bold flex items-center gap-2"><Briefcase /> CAC RC: 7739391</div>
+                        <div className="text-2xl font-bold flex items-center gap-2"><Award /> NRS</div>
                         <div className="text-2xl font-bold flex items-center gap-2"><CheckCircle /> EFCC SCUML</div>
                     </div>
                 </div>
