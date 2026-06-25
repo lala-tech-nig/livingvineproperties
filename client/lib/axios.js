@@ -15,4 +15,22 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Intercept responses to handle 401 Unauthorized
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                // Redirect to login page if currently on a management route
+                if (window.location.pathname.startsWith('/management') && window.location.pathname !== '/management/login') {
+                    window.location.href = '/management/login';
+                }
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;
