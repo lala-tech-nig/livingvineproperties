@@ -15,39 +15,14 @@ const iconMap = {
     Smartphone: Smartphone,
 };
 
-const STATIC_SERVICES = [
-    {
-        title: "Land Banking",
-        description: "Secure high-value land assets in rapidly developing areas for maximum capital appreciation.",
-        icon: "LandPlot",
-        href: "/investments#land-banking"
-    },
-    {
-        title: "Property Development",
-        description: "Partner with us in developing premium residential and commercial structures.",
-        icon: "Building2",
-        href: "/investments#development"
-    },
-    {
-        title: "Real Estate Advisory",
-        description: "Expert guidance for navigating the Nigerian real estate market with confidence.",
-        icon: "Briefcase",
-        href: "/investments#advisory"
-    },
-    {
-        title: "Digital Investment",
-        description: "Invest in fractional real estate ownership through our upcoming digital platform.",
-        icon: "Smartphone",
-        href: "/investments#digital"
-    }
-];
+const STATIC_SERVICES = [];
 
 const ServiceGrid = () => {
     const [services, setServices] = useState(STATIC_SERVICES);
     const [header, setHeader] = useState({
-        homeServicesBadge: "What We Offer",
-        homeServicesTitle: "Wealth Creation Strategies",
-        homeServicesDesc: "We've curated a suite of real estate solutions designed to help you secure, grow, and multiply your capital in the Nigerian market."
+        homeServicesBadge: "",
+        homeServicesTitle: "",
+        homeServicesDesc: ""
     });
 
     useEffect(() => {
@@ -67,9 +42,9 @@ const ServiceGrid = () => {
                 const { data } = await api.get('/website/settings');
                 if (data) {
                     setHeader({
-                        homeServicesBadge: data.homeServicesBadge || "What We Offer",
-                        homeServicesTitle: data.homeServicesTitle || "Wealth Creation Strategies",
-                        homeServicesDesc: data.homeServicesDesc || "We've curated a suite of real estate solutions designed to help you secure, grow, and multiply your capital in the Nigerian market."
+                        homeServicesBadge: data.homeServicesBadge || "",
+                        homeServicesTitle: data.homeServicesTitle || "",
+                        homeServicesDesc: data.homeServicesDesc || ""
                     });
                 }
             } catch (error) {
@@ -80,6 +55,8 @@ const ServiceGrid = () => {
         fetchServices();
         fetchSettings();
     }, []);
+
+    if (services.length === 0 && !header.homeServicesTitle) return null;
 
     return (
         <SectionWrapper className="bg-muted/30">

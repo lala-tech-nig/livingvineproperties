@@ -8,10 +8,10 @@ import api from "@/lib/axios";
 
 const CTA = () => {
     const [cta, setCta] = useState({
-        homeCTATitle: "Start Your Journey to Generational Wealth.",
-        homeCTADesc: "Join hundreds of smart investors securing their future with Living Vine Properties. Secure, transparent, and built on indigenous trust.",
-        homeCTABtnText: "Invest Now",
-        homeCTAAltBtnText: "Talk to an Advisor"
+        homeCTATitle: "",
+        homeCTADesc: "",
+        homeCTABtnText: "",
+        homeCTAAltBtnText: ""
     });
 
     useEffect(() => {
@@ -20,10 +20,10 @@ const CTA = () => {
                 const { data } = await api.get('/website/settings');
                 if (data) {
                     setCta({
-                        homeCTATitle: data.homeCTATitle || "Start Your Journey to Generational Wealth.",
-                        homeCTADesc: data.homeCTADesc || "Join hundreds of smart investors securing their future with Living Vine Properties. Secure, transparent, and built on indigenous trust.",
-                        homeCTABtnText: data.homeCTABtnText || "Invest Now",
-                        homeCTAAltBtnText: data.homeCTAAltBtnText || "Talk to an Advisor"
+                        homeCTATitle: data.homeCTATitle || "",
+                        homeCTADesc: data.homeCTADesc || "",
+                        homeCTABtnText: data.homeCTABtnText || "",
+                        homeCTAAltBtnText: data.homeCTAAltBtnText || ""
                     });
                 }
             } catch (e) {
@@ -33,8 +33,11 @@ const CTA = () => {
         fetchCTA();
     }, []);
 
+    if (!cta.homeCTATitle) return null;
+
     // Split title by newlines or handle line breaks
     const renderTitle = (titleText) => {
+        if (!titleText) return "";
         return titleText.split('\n').map((line, i, arr) => (
             <span key={i}>
                 {line}

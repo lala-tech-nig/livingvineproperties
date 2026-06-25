@@ -6,25 +6,9 @@ import api from "@/lib/axios";
 
 export default function PrivacyPolicy() {
     const [policy, setPolicy] = useState({
-        privacyPageTitle: "Privacy Policy",
-        privacyPageEffectiveDate: "February 15, 2026",
-        privacyPageContent: `### 1. Introduction
-Living Vine Properties ("we", "us", "our") respects your privacy and is committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.
-
-### 2. Information We Collect
-We may collect, use, store and transfer different kinds of personal data about you which we have grouped together follows:
-- **Identity Data:** includes first name, maiden name, last name, username or similar identifier.
-- **Contact Data:** includes billing address, delivery address, email address and telephone numbers.
-- **Technical Data:** includes internet protocol (IP) address, your login data, browser type and version, time zone setting and location.
-
-### 3. How We Use Your Data
-We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:
-- Where we need to perform the contract we are about to enter into or have entered into with you.
-- Where it is necessary for our legitimate interests (or those of a third party) and your interests and fundamental rights do not override those interests.
-- Where we need to comply with a legal or regulatory obligation.
-
-### 4. Data Security
-We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorized way, altered or disclosed. In addition, we limit access to your personal data to those employees, agents, contractors and other third parties who have a business need to know.`
+        privacyPageTitle: "",
+        privacyPageEffectiveDate: "",
+        privacyPageContent: ""
     });
     const [loading, setLoading] = useState(true);
 
@@ -34,8 +18,8 @@ We have put in place appropriate security measures to prevent your personal data
                 const { data } = await api.get('/website/settings');
                 if (data && data.privacyPageContent) {
                     setPolicy({
-                        privacyPageTitle: data.privacyPageTitle || "Privacy Policy",
-                        privacyPageEffectiveDate: data.privacyPageEffectiveDate || "February 15, 2026",
+                        privacyPageTitle: data.privacyPageTitle || "",
+                        privacyPageEffectiveDate: data.privacyPageEffectiveDate || "",
                         privacyPageContent: data.privacyPageContent
                     });
                 }

@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import api from "@/lib/axios";
 
-const STATIC_STATS = [
-    { label: "Land Units Sold", value: "2,500+" },
-    { label: "Happy Investors", value: "850+" },
-    { label: "Project Locations", value: "15+" },
-    { label: "Years Experience", value: "10+" },
-];
+const STATIC_STATS = [];
 
 const TrustStrip = () => {
     const [stats, setStats] = useState(STATIC_STATS);
@@ -27,6 +22,8 @@ const TrustStrip = () => {
         };
         fetchStats();
     }, []);
+
+    if (!stats || stats.length === 0) return null;
 
     return (
         <section className="bg-primary text-white py-12 border-t border-primary-foreground/10">

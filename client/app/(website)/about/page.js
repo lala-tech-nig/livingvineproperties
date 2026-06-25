@@ -15,29 +15,21 @@ const iconMap = {
 
 export default function About() {
     const [settings, setSettings] = useState({
-        aboutPageEstablishedText: "Established 2015",
-        aboutPageHeroTitle: "Building Legacies, \n One Acre at a Time.",
-        aboutPageHeroSubtitle: "We are Living Vine Properties. An indigenous real estate company committed to bridging the gap between ambition and ownership through transparency, integrity, and strategic innovation.",
-        aboutPageMissionTitle: "Our Mission",
-        aboutPageMissionDesc: "To empower individuals and organizations with secure, profitable real estate investment opportunities that create generational wealth, while contributing significantly to the infrastructural development of Nigeria.",
-        aboutPageVisionTitle: "Our Vision",
-        aboutPageVisionDesc: "To be the most trusted and preferred real estate partner in Africa, known for our unwavering commitment to client satisfaction, project excellence, and community growth.",
-        aboutPageCoreValuesTitle: "What Drives Us",
-        aboutPageCoreValuesSubtitle: "These core values guide every decision we make and every interaction we have.",
-        aboutPageCoreValues: [
-            { title: "Integrity", desc: "We are transparent in our dealings. No hidden fees, no ambiguity using verifiable documentation.", iconName: "CheckCircle" },
-            { title: "Excellence", desc: "We don't settle for average. Our projects are designed to meet global standards of quality and aesthetics.", iconName: "Award" },
-            { title: "Client First", desc: "Your financial goals are our priority. We tailor our solutions to meet your specific investment needs.", iconName: "Users" }
-        ],
-        aboutPageTeamTitle: "Meet The Minds",
-        aboutPageTeamSubtitle: "Leadership",
-        aboutPageTeam: [
-            { name: "Micheal Okonkwo", role: "MD / CEO", img: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2574&auto=format&fit=crop" },
-            { name: "Sarah Adebayo", role: "Head of Operations", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2576&auto=format&fit=crop" },
-            { name: "Barr. Tunde Cole", role: "Legal Secretary", img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=2574&auto=format&fit=crop" }
-        ],
-        aboutPageCertificationsTitle: "Certified & Registered With",
-        aboutPageCertifications: ["CAC RC: 7739391", "NRS", "EFCC SCUML"]
+        aboutPageEstablishedText: "",
+        aboutPageHeroTitle: "",
+        aboutPageHeroSubtitle: "",
+        aboutPageMissionTitle: "",
+        aboutPageMissionDesc: "",
+        aboutPageVisionTitle: "",
+        aboutPageVisionDesc: "",
+        aboutPageCoreValuesTitle: "",
+        aboutPageCoreValuesSubtitle: "",
+        aboutPageCoreValues: [],
+        aboutPageTeamTitle: "",
+        aboutPageTeamSubtitle: "",
+        aboutPageTeam: [],
+        aboutPageCertificationsTitle: "",
+        aboutPageCertifications: []
     });
 
     const [loading, setLoading] = useState(true);
@@ -48,35 +40,21 @@ export default function About() {
                 const { data } = await api.get('/website/settings');
                 if (data) {
                     setSettings({
-                        aboutPageEstablishedText: data.aboutPageEstablishedText || "Established 2015",
-                        aboutPageHeroTitle: data.aboutPageHeroTitle || "Building Legacies, \n One Acre at a Time.",
-                        aboutPageHeroSubtitle: data.aboutPageHeroSubtitle || "We are Living Vine Properties. An indigenous real estate company committed to bridging the gap between ambition and ownership through transparency, integrity, and strategic innovation.",
-                        aboutPageMissionTitle: data.aboutPageMissionTitle || "Our Mission",
-                        aboutPageMissionDesc: data.aboutPageMissionDesc || "To empower individuals and organizations with secure, profitable real estate investment opportunities that create generational wealth, while contributing significantly to the infrastructural development of Nigeria.",
-                        aboutPageVisionTitle: data.aboutPageVisionTitle || "Our Vision",
-                        aboutPageVisionDesc: data.aboutPageVisionDesc || "To be the most trusted and preferred real estate partner in Africa, known for our unwavering commitment to client satisfaction, project excellence, and community growth.",
-                        aboutPageCoreValuesTitle: data.aboutPageCoreValuesTitle || "What Drives Us",
-                        aboutPageCoreValuesSubtitle: data.aboutPageCoreValuesSubtitle || "These core values guide every decision we make and every interaction we have.",
-                        aboutPageCoreValues: data.aboutPageCoreValues && data.aboutPageCoreValues.length > 0
-                            ? data.aboutPageCoreValues
-                            : [
-                                { title: "Integrity", desc: "We are transparent in our dealings. No hidden fees, no ambiguity using verifiable documentation.", iconName: "CheckCircle" },
-                                { title: "Excellence", desc: "We don't settle for average. Our projects are designed to meet global standards of quality and aesthetics.", iconName: "Award" },
-                                { title: "Client First", desc: "Your financial goals are our priority. We tailor our solutions to meet your specific investment needs.", iconName: "Users" }
-                              ],
-                        aboutPageTeamTitle: data.aboutPageTeamTitle || "Meet The Minds",
-                        aboutPageTeamSubtitle: data.aboutPageTeamSubtitle || "Leadership",
-                        aboutPageTeam: data.aboutPageTeam && data.aboutPageTeam.length > 0
-                            ? data.aboutPageTeam
-                            : [
-                                { name: "Micheal Okonkwo", role: "MD / CEO", img: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2574&auto=format&fit=crop" },
-                                { name: "Sarah Adebayo", role: "Head of Operations", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2576&auto=format&fit=crop" },
-                                { name: "Barr. Tunde Cole", role: "Legal Secretary", img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=2574&auto=format&fit=crop" }
-                              ],
-                        aboutPageCertificationsTitle: data.aboutPageCertificationsTitle || "Certified & Registered With",
-                        aboutPageCertifications: data.aboutPageCertifications && data.aboutPageCertifications.length > 0
-                            ? data.aboutPageCertifications
-                            : ["CAC RC: 7739391", "NRS", "EFCC SCUML"]
+                        aboutPageEstablishedText: data.aboutPageEstablishedText || "",
+                        aboutPageHeroTitle: data.aboutPageHeroTitle || "",
+                        aboutPageHeroSubtitle: data.aboutPageHeroSubtitle || "",
+                        aboutPageMissionTitle: data.aboutPageMissionTitle || "",
+                        aboutPageMissionDesc: data.aboutPageMissionDesc || "",
+                        aboutPageVisionTitle: data.aboutPageVisionTitle || "",
+                        aboutPageVisionDesc: data.aboutPageVisionDesc || "",
+                        aboutPageCoreValuesTitle: data.aboutPageCoreValuesTitle || "",
+                        aboutPageCoreValuesSubtitle: data.aboutPageCoreValuesSubtitle || "",
+                        aboutPageCoreValues: data.aboutPageCoreValues || [],
+                        aboutPageTeamTitle: data.aboutPageTeamTitle || "",
+                        aboutPageTeamSubtitle: data.aboutPageTeamSubtitle || "",
+                        aboutPageTeam: data.aboutPageTeam || [],
+                        aboutPageCertificationsTitle: data.aboutPageCertificationsTitle || "",
+                        aboutPageCertifications: data.aboutPageCertifications || []
                     });
                 }
             } catch (e) {

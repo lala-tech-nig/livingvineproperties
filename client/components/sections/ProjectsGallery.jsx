@@ -7,32 +7,13 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import api from "@/lib/axios";
 
-const STATIC_PROJECTS = [
-    {
-        title: "The Ambiance",
-        location: "Lekki Phase 1",
-        status: "Selling Fast",
-        image: "https://images.unsplash.com/photo-1600596542815-e32870033baf?q=80&w=2674&auto=format&fit=crop",
-    },
-    {
-        title: "Greenfield Estate",
-        location: "Epe, Lagos",
-        status: "Sold Out",
-        image: "https://images.unsplash.com/photo-1448630360428-65456885c650?q=80&w=2667&auto=format&fit=crop",
-    },
-    {
-        title: "Empire Heights",
-        location: "Ikoyi",
-        status: "Launching Soon",
-        image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2670&auto=format&fit=crop",
-    },
-];
+const STATIC_PROJECTS = [];
 
 const ProjectsGallery = () => {
     const [projects, setProjects] = useState(STATIC_PROJECTS);
     const [header, setHeader] = useState({
-        homeProjectsBadge: "Portfolio",
-        homeProjectsTitle: "Featured Developments"
+        homeProjectsBadge: "",
+        homeProjectsTitle: ""
     });
 
     useEffect(() => {
@@ -52,8 +33,8 @@ const ProjectsGallery = () => {
                 const { data } = await api.get('/website/settings');
                 if (data) {
                     setHeader({
-                        homeProjectsBadge: data.homeProjectsBadge || "Portfolio",
-                        homeProjectsTitle: data.homeProjectsTitle || "Featured Developments"
+                        homeProjectsBadge: data.homeProjectsBadge || "",
+                        homeProjectsTitle: data.homeProjectsTitle || ""
                     });
                 }
             } catch (e) {
@@ -64,6 +45,8 @@ const ProjectsGallery = () => {
         fetchProjects();
         fetchSettings();
     }, []);
+
+    if (projects.length === 0 && !header.homeProjectsTitle) return null;
 
     return (
         <SectionWrapper className="bg-white">

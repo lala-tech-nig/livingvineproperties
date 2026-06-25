@@ -12,8 +12,8 @@ export default function Projects() {
     const [filter, setFilter] = useState("All");
     const [loading, setLoading] = useState(true);
     const [header, setHeader] = useState({
-        projectsPageHeroTitle: "Our Portfolio",
-        projectsPageHeroSubtitle: "Explore our track record of excellence. From sold-out estates to upcoming luxury developments."
+        projectsPageHeroTitle: "",
+        projectsPageHeroSubtitle: ""
     });
 
     useEffect(() => {
@@ -35,8 +35,8 @@ export default function Projects() {
                 const { data } = await api.get('/website/settings');
                 if (data) {
                     setHeader({
-                        projectsPageHeroTitle: data.projectsPageHeroTitle || "Our Portfolio",
-                        projectsPageHeroSubtitle: data.projectsPageHeroSubtitle || "Explore our track record of excellence. From sold-out estates to upcoming luxury developments."
+                        projectsPageHeroTitle: data.projectsPageHeroTitle || "",
+                        projectsPageHeroSubtitle: data.projectsPageHeroSubtitle || ""
                     });
                 }
             } catch (e) {

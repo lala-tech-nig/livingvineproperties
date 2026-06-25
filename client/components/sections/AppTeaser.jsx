@@ -68,14 +68,10 @@ const AppTeaser = () => {
     const pad = (n) => String(n).padStart(2, "0");
 
     const [teaser, setTeaser] = useState({
-        homeAppTeaserBadge: "Coming Soon",
-        homeAppTeaserTitle: "Invest on the Go. Anytime, Anywhere.",
-        homeAppTeaserDesc: "Track your portfolio, receive real-time project updates, and secure new land acquisitions directly from your smartphone. The future of indigenous real estate investment is in your pocket.",
-        homeAppTeaserFeatures: [
-            "Live portfolio tracking & ROI analytics",
-            "Push notifications on project milestones",
-            "One-tap investment top-up & withdrawal"
-        ]
+        homeAppTeaserBadge: "",
+        homeAppTeaserTitle: "",
+        homeAppTeaserDesc: "",
+        homeAppTeaserFeatures: []
     });
 
     useEffect(() => {
@@ -84,16 +80,10 @@ const AppTeaser = () => {
                 const { data } = await api.get('/website/settings');
                 if (data) {
                     setTeaser({
-                        homeAppTeaserBadge: data.homeAppTeaserBadge || "Coming Soon",
-                        homeAppTeaserTitle: data.homeAppTeaserTitle || "Invest on the Go. Anytime, Anywhere.",
-                        homeAppTeaserDesc: data.homeAppTeaserDesc || "Track your portfolio, receive real-time project updates, and secure new land acquisitions directly from your smartphone. The future of indigenous real estate investment is in your pocket.",
-                        homeAppTeaserFeatures: data.homeAppTeaserFeatures && data.homeAppTeaserFeatures.length > 0
-                            ? data.homeAppTeaserFeatures
-                            : [
-                                "Live portfolio tracking & ROI analytics",
-                                "Push notifications on project milestones",
-                                "One-tap investment top-up & withdrawal"
-                            ]
+                        homeAppTeaserBadge: data.homeAppTeaserBadge || "",
+                        homeAppTeaserTitle: data.homeAppTeaserTitle || "",
+                        homeAppTeaserDesc: data.homeAppTeaserDesc || "",
+                        homeAppTeaserFeatures: data.homeAppTeaserFeatures || []
                     });
                 }
             } catch (e) {
@@ -103,11 +93,9 @@ const AppTeaser = () => {
         fetchTeaser();
     }, []);
 
-    const properties = [
-        { name: "Premium Estate", location: "Lekki, Lagos", price: "₦18M – ₦45M", sqm: "500sqm", img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=80" },
-        { name: "Greenview Estate", location: "Ikeja GRA, Lagos", price: "₦10M – ₦28M", sqm: "300sqm", img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=200&q=80" },
-        { name: "Royal Court", location: "Ejie, Lagos", price: "₦6M – ₦15M", sqm: "500sqm", img: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=200&q=80" },
-    ];
+    const properties = [];
+
+    if (!teaser.homeAppTeaserTitle) return null;
 
     return (
         <section className="relative bg-white py-24 overflow-hidden border-t border-gray-100">

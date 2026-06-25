@@ -10,45 +10,27 @@ import api from "@/lib/axios";
 
 export default function Investments() {
     const [settings, setSettings] = useState({
-        investmentsPageHeroTitle: "Grow Your Wealth With \n Real Assets",
-        investmentsPageHeroSubtitle: "Discover our tailored investment packages designed for security, high returns, and long-term capital appreciation.",
-        investmentsPageHeroBtnText: "Schedule a Consultation",
-        investmentsPageLandBankingBadge: "Wealth Strategy",
-        investmentsPageLandBankingTitle: "Land Banking",
-        investmentsPageLandBankingDesc: "Land Banking is the practice of buying land in undeveloped or developing areas with the intention of holding it for high capital appreciation. It is one of the safest and most profitable real estate strategies.",
-        investmentsPageLandBankingBenefits: [
-            "Secure Title Documents (C of O, Gazette)",
-            "100% ROI within 12-24 months in prime locations",
-            "Zero maintenance costs while you hold"
-        ],
-        investmentsPageLandBankingImage: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2832&auto=format&fit=crop",
-        investmentsPageLandBankingBtnText: "View Available Lands",
-        investmentsPageDevBadge: "Construction",
-        investmentsPageDevTitle: "Property Development",
-        investmentsPageDevDesc: "We design and build premium residential and commercial structures tailored to modern living. From automated smart homes to eco-friendly office spaces, our developments define luxury.",
-        investmentsPageDevBenefits: [
-            "Smart Home Integration",
-            "Premium Finishing & Materials",
-            "Eco-Friendly Designs",
-            "Facility Management Services"
-        ],
-        investmentsPageDevImage: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2831&auto=format&fit=crop",
-        investmentsPageDevBtnText: "See Our Projects",
-        investmentsPageAppreciationTitle: "The Power of Appreciation",
-        investmentsPageAppreciationNote: "*Projections based on historical data of the Ibeju-Lekki corridor. Real estate values in this axis have consistently outperformed traditional savings.",
-        investmentsPageAppreciationYears: [
-            { year: "Year 1", growth: "Initial Investment", percentage: 30 },
-            { year: "Year 3", growth: "50% Growth", percentage: 60 },
-            { year: "Year 5+", growth: "150% ROI", percentage: 100 }
-        ],
-        investmentsPageProcessTitle: "Ready to Start?",
-        investmentsPageProcessBtnText: "Begin Process",
-        investmentsPageProcessSteps: [
-            { step: "01", title: "Free Consultation" },
-            { step: "02", title: "Site Inspection" },
-            { step: "03", title: "Payment & Documentation" },
-            { step: "04", title: "Asset Allocation" }
-        ]
+        investmentsPageHeroTitle: "",
+        investmentsPageHeroSubtitle: "",
+        investmentsPageHeroBtnText: "",
+        investmentsPageLandBankingBadge: "",
+        investmentsPageLandBankingTitle: "",
+        investmentsPageLandBankingDesc: "",
+        investmentsPageLandBankingBenefits: [],
+        investmentsPageLandBankingImage: "",
+        investmentsPageLandBankingBtnText: "",
+        investmentsPageDevBadge: "",
+        investmentsPageDevTitle: "",
+        investmentsPageDevDesc: "",
+        investmentsPageDevBenefits: [],
+        investmentsPageDevImage: "",
+        investmentsPageDevBtnText: "",
+        investmentsPageAppreciationTitle: "",
+        investmentsPageAppreciationNote: "",
+        investmentsPageAppreciationYears: [],
+        investmentsPageProcessTitle: "",
+        investmentsPageProcessBtnText: "",
+        investmentsPageProcessSteps: []
     });
 
     const [loading, setLoading] = useState(true);
@@ -59,53 +41,27 @@ export default function Investments() {
                 const { data } = await api.get('/website/settings');
                 if (data) {
                     setSettings({
-                        investmentsPageHeroTitle: data.investmentsPageHeroTitle || "Grow Your Wealth With \n Real Assets",
-                        investmentsPageHeroSubtitle: data.investmentsPageHeroSubtitle || "Discover our tailored investment packages designed for security, high returns, and long-term capital appreciation.",
-                        investmentsPageHeroBtnText: data.investmentsPageHeroBtnText || "Schedule a Consultation",
-                        investmentsPageLandBankingBadge: data.investmentsPageLandBankingBadge || "Wealth Strategy",
-                        investmentsPageLandBankingTitle: data.investmentsPageLandBankingTitle || "Land Banking",
-                        investmentsPageLandBankingDesc: data.investmentsPageLandBankingDesc || "Land Banking is the practice of buying land in undeveloped or developing areas with the intention of holding it for high capital appreciation. It is one of the safest and most profitable real estate strategies.",
-                        investmentsPageLandBankingBenefits: data.investmentsPageLandBankingBenefits && data.investmentsPageLandBankingBenefits.length > 0
-                            ? data.investmentsPageLandBankingBenefits
-                            : [
-                                "Secure Title Documents (C of O, Gazette)",
-                                "100% ROI within 12-24 months in prime locations",
-                                "Zero maintenance costs while you hold"
-                              ],
-                        investmentsPageLandBankingImage: data.investmentsPageLandBankingImage || "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2832&auto=format&fit=crop",
-                        investmentsPageLandBankingBtnText: data.investmentsPageLandBankingBtnText || "View Available Lands",
-                        investmentsPageDevBadge: data.investmentsPageDevBadge || "Construction",
-                        investmentsPageDevTitle: data.investmentsPageDevTitle || "Property Development",
-                        investmentsPageDevDesc: data.investmentsPageDevDesc || "We design and build premium residential and commercial structures tailored to modern living. From automated smart homes to eco-friendly office spaces, our developments define luxury.",
-                        investmentsPageDevBenefits: data.investmentsPageDevBenefits && data.investmentsPageDevBenefits.length > 0
-                            ? data.investmentsPageDevBenefits
-                            : [
-                                "Smart Home Integration",
-                                "Premium Finishing & Materials",
-                                "Eco-Friendly Designs",
-                                "Facility Management Services"
-                              ],
-                        investmentsPageDevImage: data.investmentsPageDevImage || "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2831&auto=format&fit=crop",
-                        investmentsPageDevBtnText: data.investmentsPageDevBtnText || "See Our Projects",
-                        investmentsPageAppreciationTitle: data.investmentsPageAppreciationTitle || "The Power of Appreciation",
-                        investmentsPageAppreciationNote: data.investmentsPageAppreciationNote || "*Projections based on historical data of the Ibeju-Lekki corridor. Real estate values in this axis have consistently outperformed traditional savings.",
-                        investmentsPageAppreciationYears: data.investmentsPageAppreciationYears && data.investmentsPageAppreciationYears.length > 0
-                            ? data.investmentsPageAppreciationYears
-                            : [
-                                { year: "Year 1", growth: "Initial Investment", percentage: 30 },
-                                { year: "Year 3", growth: "50% Growth", percentage: 60 },
-                                { year: "Year 5+", growth: "150% ROI", percentage: 100 }
-                              ],
-                        investmentsPageProcessTitle: data.investmentsPageProcessTitle || "Ready to Start?",
-                        investmentsPageProcessBtnText: data.investmentsPageProcessBtnText || "Begin Process",
-                        investmentsPageProcessSteps: data.investmentsPageProcessSteps && data.investmentsPageProcessSteps.length > 0
-                            ? data.investmentsPageProcessSteps
-                            : [
-                                { step: "01", title: "Free Consultation" },
-                                { step: "02", title: "Site Inspection" },
-                                { step: "03", title: "Payment & Documentation" },
-                                { step: "04", title: "Asset Allocation" }
-                              ]
+                        investmentsPageHeroTitle: data.investmentsPageHeroTitle || "",
+                        investmentsPageHeroSubtitle: data.investmentsPageHeroSubtitle || "",
+                        investmentsPageHeroBtnText: data.investmentsPageHeroBtnText || "",
+                        investmentsPageLandBankingBadge: data.investmentsPageLandBankingBadge || "",
+                        investmentsPageLandBankingTitle: data.investmentsPageLandBankingTitle || "",
+                        investmentsPageLandBankingDesc: data.investmentsPageLandBankingDesc || "",
+                        investmentsPageLandBankingBenefits: data.investmentsPageLandBankingBenefits || [],
+                        investmentsPageLandBankingImage: data.investmentsPageLandBankingImage || "",
+                        investmentsPageLandBankingBtnText: data.investmentsPageLandBankingBtnText || "",
+                        investmentsPageDevBadge: data.investmentsPageDevBadge || "",
+                        investmentsPageDevTitle: data.investmentsPageDevTitle || "",
+                        investmentsPageDevDesc: data.investmentsPageDevDesc || "",
+                        investmentsPageDevBenefits: data.investmentsPageDevBenefits || [],
+                        investmentsPageDevImage: data.investmentsPageDevImage || "",
+                        investmentsPageDevBtnText: data.investmentsPageDevBtnText || "",
+                        investmentsPageAppreciationTitle: data.investmentsPageAppreciationTitle || "",
+                        investmentsPageAppreciationNote: data.investmentsPageAppreciationNote || "",
+                        investmentsPageAppreciationYears: data.investmentsPageAppreciationYears || [],
+                        investmentsPageProcessTitle: data.investmentsPageProcessTitle || "",
+                        investmentsPageProcessBtnText: data.investmentsPageProcessBtnText || "",
+                        investmentsPageProcessSteps: data.investmentsPageProcessSteps || []
                     });
                 }
             } catch (e) {

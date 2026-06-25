@@ -8,9 +8,9 @@ import api from "@/lib/axios";
 import { toast } from "react-hot-toast";
 
 const STATIC_CONTACT_INFO = {
-    address: "15, Admiralty Way, Lekki Phase 1, Lagos, Nigeria",
-    phone: "+234 800 123 4567\n+234 812 345 6789",
-    email: "info@livingvineproperties.com\nsales@livingvineproperties.com",
+    address: "",
+    phone: "",
+    email: "",
 };
 
 export default function Contact() {
@@ -72,10 +72,10 @@ export default function Contact() {
             <section className="bg-primary text-white py-20 text-center">
                 <div className="container mx-auto px-4">
                     <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-                        {settings?.contactPageHeroTitle || "Get In Touch"}
+                        {settings?.contactPageHeroTitle || ""}
                     </h1>
                     <p className="text-xl text-white/90 max-w-2xl mx-auto font-light">
-                        {settings?.contactPageHeroSubtitle || "Have a question about an investment? Want to schedule a site inspection? Our team is ready to assist you."}
+                        {settings?.contactPageHeroSubtitle || ""}
                     </p>
                 </div>
             </section>
@@ -130,7 +130,7 @@ export default function Contact() {
                                 <div>
                                     <h4 className="font-bold text-lg text-foreground">Office Hours</h4>
                                     <p className="text-muted-foreground whitespace-pre-line">
-                                        {settings?.contactPageOfficeHours || "Mon - Fri: 8:00 AM - 5:00 PM\nSat: 10:00 AM - 2:00 PM (Inspections Only)"}
+                                        {settings?.contactPageOfficeHours || ""}
                                     </p>
                                 </div>
                             </div>
@@ -140,11 +140,11 @@ export default function Contact() {
                         <div className="w-full h-80 bg-gray-200 rounded-2xl overflow-hidden relative shadow-lg border border-gray-300">
                             <div
                                 className="absolute inset-0 bg-cover bg-center grayscale hover:grayscale-0 transition-all duration-500"
-                                style={{ backgroundImage: `url('${settings?.contactPageMapImage || "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2674&auto=format&fit=crop"}')` }}
+                                style={{ backgroundImage: `url('${settings?.contactPageMapImage || ""}')` }}
                             />
                             <div className="absolute inset-0 flex items-center justify-center bg-black/10">
                                 <a 
-                                    href={settings?.contactPageMapLink || "https://maps.google.com"} 
+                                    href={settings?.contactPageMapLink || "#"} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     className="bg-white px-4 py-2 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors"
