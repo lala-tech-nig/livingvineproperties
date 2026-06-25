@@ -1,18 +1,58 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import api from '@/lib/axios';
 import { motion } from 'framer-motion';
-import { Users, Target, Calendar, Clock } from 'lucide-react';
+import { Users, Target, Calendar, Clock, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default function SalesDashboard() {
     const { user } = useAuthStore();
+    const [customers, setCustomers] = useState([]);
+    const [leads, setLeads] = useState([]);
+    const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAll = async () => {
+            try {
+                const [custRes, leadsRes, tasksRes] = await Promise.all([
+                    api.get('/crm/customers').catch(() => ({ data: [] })),
+                    api.get('/crm/leads').catch(() => ({ data: [] })),
+                    api.get('/tasks').catch(() => ({ data: [] })),
+                ]);
+                setCustomers(custRes.data);
+                setLeads(leadsRes.data);
+                setTasks(tasksRes.data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAll();
+    }, []);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTasks = tasks.filter(t => {
+        if (!t.dueDate) return false;
+        const d = new Date(t.dueDate);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime();
+    });
+    const newLeads = leads.filter(l => l.status === 'new');
 
     const stats = [
-        { name: 'Active Customers', value: '0', icon: Users, color: 'bg-blue-500' },
-        { name: 'New Leads', value: '0', icon: Target, color: 'bg-green-500' },
-        { name: 'Tasks for Today', value: '0', icon: Calendar, color: 'bg-orange-500' },
-        { name: 'Avg. Response Time', value: '2h', icon: Clock, color: 'bg-purple-500' },
+        { name: 'Active Customers', value: loading ? '...' : customers.length.toString(), icon: Users, color: 'bg-blue-500', href: '/crm/sales/customers' },
+        { name: 'New Leads', value: loading ? '...' : newLeads.length.toString(), icon: Target, color: 'bg-orange-500', href: '/crm/sales/leads' },
+        { name: 'Due Today', value: loading ? '...' : todayTasks.length.toString(), icon: Calendar, color: 'bg-[#de1f25]', href: '/crm/sales/tasks' },
+        { name: 'Open Tasks', value: loading ? '...' : tasks.filter(t => t.status !== 'done').length.toString(), icon: Clock, color: 'bg-purple-500', href: '/crm/sales/tasks' },
     ];
+
+    const recentCustomers = customers.slice(0, 5);
+    const urgentTasks = tasks.filter(t => t.priority === 'high' || t.priority === 'urgent').slice(0, 5);
 
     return (
         <div className="space-y-8">
@@ -21,6 +61,7 @@ export default function SalesDashboard() {
                 <p className="text-gray-400">Here's what's happening with your sales pipeline today.</p>
             </header>
 
+            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat, index) => (
                     <motion.div
@@ -30,7 +71,7 @@ export default function SalesDashboard() {
                         transition={{ delay: index * 0.1 }}
                         className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
                     >
-                        <div className="flex items-center gap-4">
+                        <Link href={stat.href} className="flex items-center gap-4 group">
                             <div className={`${stat.color} p-3 rounded-xl text-white`}>
                                 <stat.icon size={24} />
                             </div>
@@ -38,28 +79,94 @@ export default function SalesDashboard() {
                                 <p className="text-sm text-gray-500">{stat.name}</p>
                                 <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                             </div>
-                        </div>
+                        </Link>
                     </motion.div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-gray-900">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Recent Customers */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="text-lg font-semibold mb-4 text-gray-900">Recent Customers</h3>
-                    <div className="text-center py-12 text-gray-400">
-                        <Users size={48} className="mx-auto mb-4 opacity-20" />
-                        <p>No customers assigned yet.</p>
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-base font-bold text-gray-900">Recent Customers</h3>
+                        <Link href="/crm/sales/customers" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                            View all <ArrowRight size={12} />
+                        </Link>
                     </div>
+                    {loading ? (
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="animate-pulse flex gap-3 items-center">
+                                    <div className="w-9 h-9 rounded-full bg-gray-200" />
+                                    <div className="flex-1 space-y-1.5">
+                                        <div className="h-3 bg-gray-200 rounded w-1/3" />
+                                        <div className="h-2.5 bg-gray-200 rounded w-1/2" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : recentCustomers.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400">
+                            <Users size={36} className="mx-auto mb-3 opacity-20" />
+                            <p className="text-sm">No customers yet</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-50">
+                            {recentCustomers.map(c => (
+                                <div key={c._id} className="py-3 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
+                                            {c.firstName?.charAt(0)}{c.lastName?.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">{c.firstName} {c.lastName}</p>
+                                            <p className="text-xs text-gray-500">{c.email}</p>
+                                        </div>
+                                    </div>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                        {c.status}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                {/* Today's Tasks */}
+                {/* High Priority Tasks */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="text-lg font-semibold mb-4 text-gray-900">Today's Tasks</h3>
-                    <div className="text-center py-12 text-gray-400">
-                        <Calendar size={48} className="mx-auto mb-4 opacity-20" />
-                        <p>You're all caught up for today!</p>
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-base font-bold text-gray-900">High Priority Tasks</h3>
+                        <Link href="/crm/sales/tasks" className="text-xs text-[#de1f25] hover:underline flex items-center gap-1">
+                            All tasks <ArrowRight size={12} />
+                        </Link>
                     </div>
+                    {loading ? (
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="animate-pulse h-14 bg-gray-100 rounded-xl" />
+                            ))}
+                        </div>
+                    ) : urgentTasks.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400">
+                            <Calendar size={36} className="mx-auto mb-3 opacity-20" />
+                            <p className="text-sm">No high-priority tasks</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {urgentTasks.map(t => (
+                                <div key={t._id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <span className={`w-2 h-2 rounded-full shrink-0 ${t.priority === 'urgent' ? 'bg-purple-500' : 'bg-red-500'}`} />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">{t.title}</p>
+                                        {t.dueDate && <p className="text-xs text-gray-500">Due: {new Date(t.dueDate).toLocaleDateString()}</p>}
+                                    </div>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${t.status === 'done' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                        {t.status}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

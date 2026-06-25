@@ -77,4 +77,46 @@ router.put('/:id/suspend', protect, async (req, res) => {
     }
 });
 
+// @route   PUT /api/users/:id/role
+// @desc    Update user role (Tiered access)
+// @access  Private
+router.put('/:id/role', protect, async (req, res) => {
+    try {
+        const { role } = req.body;
+        const targetUser = await User.findById(req.params.id);
+        if (!targetUser) return res.status(404).json({ message: 'User not found' });
+
+        const tiers = { 'superadmin': 100, 'ceo': 80, 'management': 60, 'hr': 40, 'sales': 20, 'marketing': 20, 'investor': 0 };
+        const currentTier = tiers[req.user.role] || 0;
+        const targetTier = tiers[targetUser.role] || 0;
+        const newTier = tiers[role] || 0;
+
+        if (currentTier <= targetTier || currentTier <= newTier) {
+            return res.status(401).json({ message: 'Insufficient permissions to modify this role' });
+        }
+
+        targetUser.role = role;
+        await targetUser.save();
+        res.json({ message: 'Role updated successfully', user: targetUser });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   DELETE /api/users/:id
+// @desc    Delete user
+// @access  Private (Admin only)
+router.delete('/:id', protect, async (req, res) => {
+    try {
+        if (!['superadmin'].includes(req.user.role)) {
+            return res.status(401).json({ message: 'Only superadmin can delete users' });
+        }
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
 module.exports = router;

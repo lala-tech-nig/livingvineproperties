@@ -30,6 +30,7 @@ const websiteRoutes = require('./routes/website');
 const investmentProductRoutes = require('./routes/investmentProducts');
 const surveyRoutes = require('./routes/surveys');
 const whatsappRoutes = require('./routes/whatsapp');
+const notificationRoutes = require('./routes/notifications');
 
 // Initialize Cron Jobs
 require('./services/cronJobs');
@@ -45,6 +46,7 @@ app.use('/api/website', websiteRoutes);
 app.use('/api/investment-products', investmentProductRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error Handler Middleware
 const errorHandler = require('./middlewares/errorMiddleware');
