@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Bell, Home, LayoutGrid, History, Building2, HeadphonesIcon, ArrowRight, MonitorSmartphone } from "lucide-react";
+import api from "@/lib/axios";
 
 /* ── Circular progress ring ─────────────────────────────── */
 function ProgressRing({ pct = 72, r = 26, stroke = 4, trackColor = "#e5e7eb", fillColor = "#16a34a" }) {
@@ -66,6 +67,42 @@ const AppTeaser = () => {
     const countdown = useCountdown();
     const pad = (n) => String(n).padStart(2, "0");
 
+    const [teaser, setTeaser] = useState({
+        homeAppTeaserBadge: "Coming Soon",
+        homeAppTeaserTitle: "Invest on the Go. Anytime, Anywhere.",
+        homeAppTeaserDesc: "Track your portfolio, receive real-time project updates, and secure new land acquisitions directly from your smartphone. The future of indigenous real estate investment is in your pocket.",
+        homeAppTeaserFeatures: [
+            "Live portfolio tracking & ROI analytics",
+            "Push notifications on project milestones",
+            "One-tap investment top-up & withdrawal"
+        ]
+    });
+
+    useEffect(() => {
+        const fetchTeaser = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data) {
+                    setTeaser({
+                        homeAppTeaserBadge: data.homeAppTeaserBadge || "Coming Soon",
+                        homeAppTeaserTitle: data.homeAppTeaserTitle || "Invest on the Go. Anytime, Anywhere.",
+                        homeAppTeaserDesc: data.homeAppTeaserDesc || "Track your portfolio, receive real-time project updates, and secure new land acquisitions directly from your smartphone. The future of indigenous real estate investment is in your pocket.",
+                        homeAppTeaserFeatures: data.homeAppTeaserFeatures && data.homeAppTeaserFeatures.length > 0
+                            ? data.homeAppTeaserFeatures
+                            : [
+                                "Live portfolio tracking & ROI analytics",
+                                "Push notifications on project milestones",
+                                "One-tap investment top-up & withdrawal"
+                            ]
+                    });
+                }
+            } catch (e) {
+                // Fail silently
+            }
+        };
+        fetchTeaser();
+    }, []);
+
     const properties = [
         { name: "Premium Estate", location: "Lekki, Lagos", price: "₦18M – ₦45M", sqm: "500sqm", img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=80" },
         { name: "Greenview Estate", location: "Ikeja GRA, Lagos", price: "₦10M – ₦28M", sqm: "300sqm", img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=200&q=80" },
@@ -86,19 +123,18 @@ const AppTeaser = () => {
                 <div className="order-2 lg:order-1 text-left">
                     <span className="inline-flex items-center gap-2 bg-primary/10 text-primary font-bold uppercase tracking-widest text-xs px-4 py-2 rounded-full mb-6">
                         <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        Coming Soon
+                        {teaser.homeAppTeaserBadge}
                     </span>
                     <h2 className="text-4xl md:text-5xl xl:text-6xl font-serif font-bold text-foreground mb-6 leading-tight">
-                        Invest on the Go.{" "}
-                        <span className="text-primary block">Anytime, Anywhere.</span>
+                        {teaser.homeAppTeaserTitle}
                     </h2>
                     <p className="text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
-                        Track your portfolio, receive real-time project updates, and secure new land acquisitions directly from your smartphone. The future of indigenous real estate investment is in your pocket.
+                        {teaser.homeAppTeaserDesc}
                     </p>
 
                     {/* Feature bullets */}
                     <ul className="space-y-3 mb-10 text-sm text-gray-600">
-                        {["Live portfolio tracking & ROI analytics", "Push notifications on project milestones", "One-tap investment top-up & withdrawal"].map((f) => (
+                        {teaser.homeAppTeaserFeatures.map((f) => (
                             <li key={f} className="flex items-center gap-3">
                                 <span className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
                                     <svg className="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>

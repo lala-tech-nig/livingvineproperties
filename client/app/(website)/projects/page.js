@@ -11,6 +11,10 @@ export default function Projects() {
     const [projects, setProjects] = useState([]);
     const [filter, setFilter] = useState("All");
     const [loading, setLoading] = useState(true);
+    const [header, setHeader] = useState({
+        projectsPageHeroTitle: "Our Portfolio",
+        projectsPageHeroSubtitle: "Explore our track record of excellence. From sold-out estates to upcoming luxury developments."
+    });
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -25,7 +29,23 @@ export default function Projects() {
                 setLoading(false);
             }
         };
+
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data) {
+                    setHeader({
+                        projectsPageHeroTitle: data.projectsPageHeroTitle || "Our Portfolio",
+                        projectsPageHeroSubtitle: data.projectsPageHeroSubtitle || "Explore our track record of excellence. From sold-out estates to upcoming luxury developments."
+                    });
+                }
+            } catch (e) {
+                // Fail silently
+            }
+        };
+
         fetchProjects();
+        fetchSettings();
     }, []);
 
     const filteredProjects = filter === "All"
@@ -37,9 +57,9 @@ export default function Projects() {
             {/* Simple Header */}
             <div className="bg-gray-50 py-16 text-center border-b border-gray-200">
                 <div className="container mx-auto px-4">
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">Our Portfolio</h1>
+                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">{header.projectsPageHeroTitle}</h1>
                     <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-                        Explore our track record of excellence. From sold-out estates to upcoming luxury developments.
+                        {header.projectsPageHeroSubtitle}
                     </p>
                 </div>
             </div>

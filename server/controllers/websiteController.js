@@ -200,29 +200,16 @@ exports.deleteProject = async (req, res, next) => {
 // Update website settings
 exports.updateSettings = async (req, res, next) => {
     try {
-        const { 
-            address, phone, email, whatsapp, facebook, twitter, instagram, linkedin, 
-            marqueeTitle, marqueeTagline, marqueeEmail, marqueePhone,
-            aboutTitle, aboutSubtitle, aboutDescription1, aboutDescription2, aboutImage,
-            aboutFeature1, aboutFeature2, aboutFeature3
-        } = req.body;
         let setting = await WebsiteSetting.findOne();
-        
-        const updateData = { 
-            address, phone, email, whatsapp, facebook, twitter, instagram, linkedin, 
-            marqueeTitle, marqueeTagline, marqueeEmail, marqueePhone,
-            aboutTitle, aboutSubtitle, aboutDescription1, aboutDescription2, aboutImage,
-            aboutFeature1, aboutFeature2, aboutFeature3
-        };
         
         if (setting) {
             setting = await WebsiteSetting.findByIdAndUpdate(
                 setting._id,
-                updateData,
+                req.body,
                 { new: true, runValidators: true }
             );
         } else {
-            setting = await WebsiteSetting.create(updateData);
+            setting = await WebsiteSetting.create(req.body);
         }
         res.json(setting);
     } catch (error) {

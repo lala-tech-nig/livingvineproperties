@@ -44,6 +44,11 @@ const STATIC_SERVICES = [
 
 const ServiceGrid = () => {
     const [services, setServices] = useState(STATIC_SERVICES);
+    const [header, setHeader] = useState({
+        homeServicesBadge: "What We Offer",
+        homeServicesTitle: "Wealth Creation Strategies",
+        homeServicesDesc: "We've curated a suite of real estate solutions designed to help you secure, grow, and multiply your capital in the Nigerian market."
+    });
 
     useEffect(() => {
         const fetchServices = async () => {
@@ -56,20 +61,37 @@ const ServiceGrid = () => {
                 console.error("Failed to fetch website services:", error);
             }
         };
+
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data) {
+                    setHeader({
+                        homeServicesBadge: data.homeServicesBadge || "What We Offer",
+                        homeServicesTitle: data.homeServicesTitle || "Wealth Creation Strategies",
+                        homeServicesDesc: data.homeServicesDesc || "We've curated a suite of real estate solutions designed to help you secure, grow, and multiply your capital in the Nigerian market."
+                    });
+                }
+            } catch (error) {
+                // Fail silently
+            }
+        };
+
         fetchServices();
+        fetchSettings();
     }, []);
 
     return (
         <SectionWrapper className="bg-muted/30">
             <div className="text-center max-w-2xl mx-auto mb-16">
                 <span className="text-primary font-bold uppercase tracking-widest text-sm bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
-                    What We Offer
+                    {header.homeServicesBadge}
                 </span>
                 <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mt-4 mb-6">
-                    Wealth Creation Strategies
+                    {header.homeServicesTitle}
                 </h2>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                    We've curated a suite of real estate solutions designed to help you secure, grow, and multiply your capital in the Nigerian market.
+                    {header.homeServicesDesc}
                 </p>
             </div>
 

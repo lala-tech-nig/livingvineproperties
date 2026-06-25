@@ -30,6 +30,10 @@ const STATIC_PROJECTS = [
 
 const ProjectsGallery = () => {
     const [projects, setProjects] = useState(STATIC_PROJECTS);
+    const [header, setHeader] = useState({
+        homeProjectsBadge: "Portfolio",
+        homeProjectsTitle: "Featured Developments"
+    });
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -42,16 +46,32 @@ const ProjectsGallery = () => {
                 console.error("Failed to fetch website projects:", error);
             }
         };
+
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data) {
+                    setHeader({
+                        homeProjectsBadge: data.homeProjectsBadge || "Portfolio",
+                        homeProjectsTitle: data.homeProjectsTitle || "Featured Developments"
+                    });
+                }
+            } catch (e) {
+                // Fail silently
+            }
+        };
+
         fetchProjects();
+        fetchSettings();
     }, []);
 
     return (
         <SectionWrapper className="bg-white">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12">
                 <div>
-                    <span className="text-primary font-bold uppercase tracking-widest text-sm">Portfolio</span>
+                    <span className="text-primary font-bold uppercase tracking-widest text-sm">{header.homeProjectsBadge}</span>
                     <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mt-2">
-                        Featured Developments
+                        {header.homeProjectsTitle}
                     </h2>
                 </div>
                 <Button variant="outline" className="hidden md:flex" asChild>
