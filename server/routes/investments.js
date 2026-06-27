@@ -74,11 +74,20 @@ router.post('/', protect, async (req, res) => {
             status: 'reviewing'
         });
 
+        // Persist NIN to user profile for future investment auto-fill (first time only)
+        const User = require('../models/User');
+        const userDoc = await User.findById(req.user._id);
+        if (userDoc && nin && !userDoc.nin) {
+            userDoc.nin = nin;
+            await userDoc.save();
+        }
+
         res.status(201).json(investment);
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
 });
+
 
 // @route   GET /api/investments/my
 // @desc    Get logged in user investments
@@ -122,24 +131,84 @@ router.get('/:id', protect, async (req, res) => {
 
 // @route   PUT /api/investments/:id/status
 // @desc    Update investment status
-// @access  Private (Management/CEO depending on status)
-router.put('/:id/status', protect, authorize('management', 'ceo'), async (req, res) => {
+// @access  CEO/Superadmin for approvals; Management for review-level updates only
+router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
     try {
-        const { status, ceoPaymentAccount } = req.body;
-        const investment = await Investment.findById(req.params.id);
+        const { status, companyAccountId } = req.body;
+        const isCEO = ['ceo', 'superadmin'].includes(req.user.role);
 
-        if (investment) {
-            investment.status = status || investment.status;
-
-            if (ceoPaymentAccount && req.user.role === 'ceo') {
-                investment.ceoPaymentAccount = ceoPaymentAccount;
-            }
-
-            const updatedInvestment = await investment.save();
-            res.json(updatedInvestment);
-        } else {
-            res.status(404).json({ message: 'Investment not found' });
+        // Management cannot approve or decline — CEO only
+        const ceoOnlyStatuses = ['approved', 'declined', 'active', 'liquidated'];
+        if (!isCEO && ceoOnlyStatuses.includes(status)) {
+            return res.status(403).json({
+                message: 'Only the CEO can approve, decline, activate or liquidate investments.'
+            });
         }
+
+        const investment = await Investment.findById(req.params.id);
+        if (!investment) return res.status(404).json({ message: 'Investment not found' });
+        const wasActive = investment.status === 'active';
+        investment.status = status || investment.status;
+
+        // Save selected company bank account (the account investor should pay into)
+        let selectedAccountId = companyAccountId || (investment.ceoPaymentAccount && investment.ceoPaymentAccount.accountId);
+        if (isCEO && companyAccountId) {
+            const BankAccount = require('../models/BankAccount');
+            const account = await BankAccount.findById(companyAccountId);
+            if (account) {
+                investment.ceoPaymentAccount = {
+                    bankName:      account.bankName,
+                    accountNumber: account.accountNumber,
+                    accountName:   account.accountName,
+                    accountId:     account._id,
+                };
+                selectedAccountId = account._id;
+            }
+        }
+
+        // Auto-credit company bank account if transitioning to active
+        if (status === 'active' && !wasActive && selectedAccountId) {
+            try {
+                const BankAccount = require('../models/BankAccount');
+                const account = await BankAccount.findById(selectedAccountId);
+                if (account) {
+                    account.balance += parseFloat(investment.amountToInvest || 0);
+                    account.transactions.push({
+                        type: 'credit',
+                        amount: parseFloat(investment.amountToInvest || 0),
+                        description: `Investment payment received from ${investment.name}`,
+                        reference: investment._id.toString(),
+                        performedBy: req.user._id
+                    });
+                    await account.save();
+                }
+            } catch (err) {
+                console.error('Error auto-crediting bank account:', err);
+            }
+        }
+
+        const updatedInvestment = await investment.save();
+
+        // Create notification for the investor
+        try {
+            const Notification = require('../models/Notification');
+            const statusMessages = {
+                approved:   'Your investment has been approved! Please proceed with payment to the provided account.',
+                declined:   'Your investment application has been declined. Contact your account officer for details.',
+                active:     'Your investment is now active and generating returns.',
+                liquidated: 'Your investment has been liquidated. Returns have been processed.',
+                retreated:  'Your investment has been marked as retreated.',
+            };
+            if (statusMessages[status]) {
+                await Notification.create({
+                    userId:  investment.user,
+                    title:   `Investment ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+                    message: statusMessages[status],
+                });
+            }
+        } catch (_) { /* non-blocking */ }
+
+        res.json(updatedInvestment);
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }

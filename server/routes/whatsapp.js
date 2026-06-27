@@ -338,7 +338,7 @@ router.get('/contacts/staff-performance', protect, authorize('management', 'ceo'
 
         // Find all staff users (non-investors)
         const staffMembers = await User.find({ role: { $in: ['sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin'] } })
-            .select('firstName surname email role isActive');
+            .select('firstName surname email role isActive basicSalary age idNumber bonuses joiningDate');
 
         // Run groupings
         const totalCounts = await WhatsAppContact.aggregate([
@@ -382,6 +382,11 @@ router.get('/contacts/staff-performance', protect, authorize('management', 'ceo'
                 email: staff.email,
                 role: staff.role,
                 isActive: staff.isActive,
+                basicSalary: staff.basicSalary,
+                age: staff.age,
+                idNumber: staff.idNumber,
+                bonuses: staff.bonuses,
+                joiningDate: staff.joiningDate,
                 today: todayMap[idStr] || 0,
                 week: weekMap[idStr] || 0,
                 month: monthMap[idStr] || 0,
@@ -440,7 +445,7 @@ router.get('/contacts/export', protect, async (req, res) => {
 // @access  Private (Managers only)
 router.post('/create-staff', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
     try {
-        const { email, firstName, surname, phoneNumber, password, role } = req.body;
+        const { email, firstName, surname, phoneNumber, password, role, basicSalary, age, idNumber, bonuses, joiningDate } = req.body;
         if (!email || !firstName || !surname || !phoneNumber || !password || !role) {
             return res.status(400).json({ message: 'Please provide all fields' });
         }
@@ -470,7 +475,12 @@ router.post('/create-staff', protect, authorize('management', 'ceo', 'superadmin
             phoneNumber,
             password: hashedPassword,
             role,
-            isActive: true
+            isActive: true,
+            basicSalary: basicSalary ? Number(basicSalary) : 0,
+            age: age ? Number(age) : undefined,
+            idNumber: idNumber || '',
+            bonuses: bonuses ? Number(bonuses) : 0,
+            joiningDate: joiningDate ? new Date(joiningDate) : new Date()
         });
 
         res.status(201).json({
@@ -480,6 +490,11 @@ router.post('/create-staff', protect, authorize('management', 'ceo', 'superadmin
             surname: user.surname,
             role: user.role,
             isActive: user.isActive,
+            basicSalary: user.basicSalary,
+            age: user.age,
+            idNumber: user.idNumber,
+            bonuses: user.bonuses,
+            joiningDate: user.joiningDate,
             message: 'Staff account created successfully.'
         });
     } catch (error) {

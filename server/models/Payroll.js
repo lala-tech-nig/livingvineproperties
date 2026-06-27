@@ -38,6 +38,18 @@ const payrollSchema = new mongoose.Schema({
     paymentDate: {
         type: Date,
     },
+    loanDeduction: {
+        type: Number,
+        default: 0,
+    },
+    loanRemainingBalance: {
+        type: Number,
+        default: 0,
+    },
+    loanId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Loan',
+    },
     notes: String
 }, { timestamps: true });
 

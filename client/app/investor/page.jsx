@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/axios';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { PlusCircle, TrendingUp, Calendar, Wallet, ArrowRight, Eye, RefreshCw, Star, Info } from 'lucide-react';
+import { PlusCircle, TrendingUp, Calendar, Wallet, ArrowRight, Eye, RefreshCw, Star, Info, UserCheck, Phone, Mail, Settings, CheckCircle2, ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 /* ── Circular progress ring component ─────────────────── */
@@ -33,6 +33,7 @@ export default function InvestorDashboard() {
     const [investments, setInvestments] = useState([]);
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [profileCompletion, setProfileCompletion] = useState(null);
     
     // Countdown state for nearest active investment
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -45,17 +46,18 @@ export default function InvestorDashboard() {
 
     const fetchData = async () => {
         try {
-            const [invRes, projRes] = await Promise.all([
+            const [invRes, projRes, completionRes] = await Promise.all([
                 api.get('/investments/my'),
-                api.get('/website/projects')
+                api.get('/website/projects'),
+                api.get('/users/profile/completion').catch(() => ({ data: null })),
             ]);
             setInvestments(invRes.data);
             setProjects(projRes.data || []);
+            if (completionRes.data) setProfileCompletion(completionRes.data);
             
             // Find active/approved investment with nearest maturity date
             const activeInvs = invRes.data.filter(i => i.status === 'approved' || i.status === 'active' || i.status === 'reviewing');
             if (activeInvs.length > 0) {
-                // Find nearest approved/active
                 const approvedInvs = activeInvs.filter(i => i.status === 'approved' || i.status === 'active');
                 const selectedInv = approvedInvs.length > 0 ? approvedInvs[0] : activeInvs[0];
                 setNearestInv(selectedInv);
@@ -115,7 +117,59 @@ export default function InvestorDashboard() {
 
     return (
         <div className="space-y-6">
-            {/* ───────────────────────────────────────────────────────────── */}
+
+            {/* ── Profile Completion Banner ─────────────────────────────── */}
+            {profileCompletion && profileCompletion.percent < 100 && (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 overflow-hidden relative">
+                    {/* Gradient accent */}
+                    <div className="absolute inset-y-0 left-0 w-1 rounded-l-2xl"
+                        style={{ background: profileCompletion.percent >= 80 ? '#22c55e' : profileCompletion.percent >= 50 ? '#f59e0b' : '#de1f25' }} />
+                    <div className="pl-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <Settings size={15} className="text-gray-400" />
+                                <p className="text-sm font-bold text-gray-900">
+                                    Profile <span style={{ color: profileCompletion.percent >= 80 ? '#22c55e' : profileCompletion.percent >= 50 ? '#f59e0b' : '#de1f25' }}>{profileCompletion.percent}%</span> complete
+                                </p>
+                            </div>
+                            <Link href="/investor/account-settings"
+                                className="flex items-center gap-1 text-xs font-bold text-[#de1f25] hover:underline">
+                                Complete <ChevronRight size={12} />
+                            </Link>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2.5">
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${profileCompletion.percent}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
+                                className="h-full rounded-full"
+                                style={{ background: profileCompletion.percent >= 80 ? '#22c55e' : profileCompletion.percent >= 50 ? '#f59e0b' : '#de1f25' }} />
+                        </div>
+                        {/* Missing item chips */}
+                        <div className="flex flex-wrap gap-1.5">
+                            {profileCompletion.checks.filter(c => !c.done).slice(0, 5).map(c => (
+                                <Link key={c.key} href="/investor/account-settings"
+                                    className="text-[10px] font-semibold px-2 py-0.5 bg-gray-100 hover:bg-[#de1f25]/10 hover:text-[#de1f25] text-gray-500 rounded-full transition-colors flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 rounded-full border border-gray-400" />
+                                    {c.label}
+                                </Link>
+                            ))}
+                            {profileCompletion.checks.filter(c => !c.done).length > 5 && (
+                                <span className="text-[10px] text-gray-400 font-medium self-center">+{profileCompletion.checks.filter(c => !c.done).length - 5} more</span>
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* ── Completed profile celebration chip ── */}
+            {profileCompletion && profileCompletion.percent === 100 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
+                    <CheckCircle2 size={16} className="text-green-500" />
+                    <p className="text-sm font-semibold text-green-800">Your profile is 100% complete — thank you! 🎉</p>
+                </motion.div>
+            )}
+
             {/* MOBILE VIEW (Renders on < lg screens)                        */}
             {/* ───────────────────────────────────────────────────────────── */}
             <div className="lg:hidden space-y-5 pb-20">
@@ -208,6 +262,45 @@ export default function InvestorDashboard() {
                             ₦{nearestInv ? nearestInv.expectedROI?.toLocaleString() : totalExpectedROI.toLocaleString()}.00
                         </div>
                     </div>
+                </div>
+
+                {/* Account Officer Card — Mobile */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                            <UserCheck className="text-orange-800" size={14} />
+                        </div>
+                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Your Account Officer</span>
+                    </div>
+                    {user?.accountOfficer ? (
+                        <div className="space-y-1.5">
+                            <p className="font-bold text-gray-900 text-sm leading-tight">
+                                {user.accountOfficer.firstName} {user.accountOfficer.surname}
+                            </p>
+                            <p className="text-[10px] text-orange-700 font-semibold capitalize bg-orange-50 rounded-full px-2 py-0.5 inline-block">
+                                {user.accountOfficer.role}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                                <Mail size={11} className="text-gray-400" />
+                                <a href={`mailto:${user.accountOfficer.email}`} className="text-[10px] text-gray-500 hover:text-[#de1f25] transition-colors truncate">
+                                    {user.accountOfficer.email}
+                                </a>
+                            </div>
+                            {user.accountOfficer.phoneNumber && (
+                                <div className="flex items-center gap-1.5">
+                                    <Phone size={11} className="text-gray-400" />
+                                    <a href={`tel:${user.accountOfficer.phoneNumber}`} className="text-[10px] text-gray-500 hover:text-[#de1f25] transition-colors">
+                                        {user.accountOfficer.phoneNumber}
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-center py-2">
+                            <p className="text-xs text-gray-400">No account officer assigned yet.</p>
+                            <p className="text-[10px] text-gray-300 mt-0.5">Contact us to get support.</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Start New Investment CTA */}
@@ -313,10 +406,13 @@ export default function InvestorDashboard() {
                     </motion.div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden text-gray-900">
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="text-lg font-bold text-gray-900">Your Investments</h3>
-                    </div>
+                {/* Two-column layout: investments table + account officer */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Investments Table (2/3 width) */}
+                    <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden text-gray-900">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-gray-900">Your Investments</h3>
+                        </div>
 
                     {investments.length === 0 ? (
                         <div className="p-12 text-center text-gray-500 flex flex-col items-center">
@@ -374,6 +470,69 @@ export default function InvestorDashboard() {
                             </table>
                         </div>
                     )}
+                    </div>
+
+                    {/* Right column: Account Officer + quick stats */}
+                    <div className="space-y-4">
+                        {/* Account Officer Card */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                                    <UserCheck size={20} className="text-orange-800" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Account Officer</p>
+                                    <p className="text-[10px] text-gray-300">Your dedicated representative</p>
+                                </div>
+                            </div>
+                            {user?.accountOfficer ? (
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-800 to-orange-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                            {user.accountOfficer.firstName?.charAt(0)}{user.accountOfficer.surname?.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900">{user.accountOfficer.firstName} {user.accountOfficer.surname}</p>
+                                            <span className="text-[10px] font-semibold text-orange-700 capitalize bg-orange-50 px-2 py-0.5 rounded-full">
+                                                {user.accountOfficer.role}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="border-t border-gray-50 pt-3 space-y-2">
+                                        <a
+                                            href={`mailto:${user.accountOfficer.email}`}
+                                            className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#de1f25] transition-colors group"
+                                        >
+                                            <Mail size={14} className="text-gray-400 group-hover:text-[#de1f25]" />
+                                            <span className="truncate">{user.accountOfficer.email}</span>
+                                        </a>
+                                        {user.accountOfficer.phoneNumber && (
+                                            <a
+                                                href={`tel:${user.accountOfficer.phoneNumber}`}
+                                                className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#de1f25] transition-colors group"
+                                            >
+                                                <Phone size={14} className="text-gray-400 group-hover:text-[#de1f25]" />
+                                                <span>{user.accountOfficer.phoneNumber}</span>
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                                        <UserCheck size={24} className="text-gray-300" />
+                                    </div>
+                                    <p className="text-sm text-gray-400 font-medium">No Account Officer Assigned</p>
+                                    <p className="text-xs text-gray-300 mt-1">Contact our office to get a dedicated representative.</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
                 </div>
             </div>
         </div>

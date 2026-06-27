@@ -4,22 +4,24 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
-import { Home, PlusCircle, History, MessageSquare, LogOut, Bell, Building2, Headphones } from 'lucide-react';
+import { Home, PlusCircle, History, MessageSquare, LogOut, Bell, Building2, Headphones, Settings } from 'lucide-react';
 import api from '@/lib/axios';
 import SurveyModal from '@/components/ui/SurveyModal';
 
 const INVESTOR_NAV = [
-    { name: 'Overview', href: '/investor', icon: Home },
-    { name: 'New Investment', href: '/investor/new-investment', icon: PlusCircle },
-    { name: 'History', href: '/investor/history', icon: History },
-    { name: 'Messages', href: '/investor/messages', icon: MessageSquare },
+    { name: 'Overview',         href: '/investor',                  icon: Home },
+    { name: 'New Investment',   href: '/investor/new-investment',   icon: PlusCircle },
+    { name: 'History',          href: '/investor/history',          icon: History },
+    { name: 'Messages',         href: '/investor/messages',         icon: MessageSquare },
+    { name: 'Account Settings', href: '/investor/account-settings', icon: Settings },
 ];
 
 export default function InvestorLayout({ children }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, isAuthenticated, initializeAuth, logout } = useAuthStore();
+    const { user, isAuthenticated, initializeAuth, logout, setUser } = useAuthStore();
     const [mounted, setMounted] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     
     // Survey state
     const [activeSurvey, setActiveSurvey] = useState(null);
@@ -74,6 +76,49 @@ export default function InvestorLayout({ children }) {
         }
     }, [isAuthenticated, mounted, pathname, isPublicPage]);
 
+    // Poll unread investor notifications every 60s
+    useEffect(() => {
+        if (!isAuthenticated || !mounted || isPublicPage || user?.role !== 'investor') return;
+        const fetchUnread = async () => {
+            try {
+                const { data } = await api.get('/notifications');
+                setUnreadCount(Array.isArray(data) ? data.filter(n => !n.isRead).length : 0);
+            } catch { /* silent */ }
+        };
+        fetchUnread();
+        const id = setInterval(fetchUnread, 60000);
+        return () => clearInterval(id);
+    }, [isAuthenticated, mounted, isPublicPage, user?.role]);
+
+    // Sync latest profile (including accountOfficer) from server on mount
+    useEffect(() => {
+        const syncProfile = async () => {
+            try {
+                const { data } = await api.get('/users/profile');
+                // Merge the fresh server data into the auth store (and localStorage)
+                const merged = {
+                    id: data._id,
+                    email: data.email,
+                    role: data.role,
+                    firstName: data.firstName,
+                    surname: data.surname,
+                    accountOfficer: data.accountOfficer || null,
+                };
+                const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+                if (storedToken) {
+                    localStorage.setItem('user', JSON.stringify(merged));
+                    setUser(merged, storedToken);
+                }
+            } catch (err) {
+                // Silently fail — user will still see their cached data
+            }
+        };
+
+        if (isAuthenticated && mounted && !isPublicPage && user?.role === 'investor') {
+            syncProfile();
+        }
+    }, [isAuthenticated, mounted, isPublicPage, user?.role, setUser]);
+
     if (isPublicPage) {
         return <>{children}</>;
     }
@@ -104,11 +149,11 @@ export default function InvestorLayout({ children }) {
 
     // Mobile Navigation items styled matching mockup
     const MOBILE_NAV_ITEMS = [
-        { name: 'Home', href: '/investor', icon: Home },
-        { name: 'Invest', href: '/investor/new-investment', icon: PlusCircle },
-        { name: 'History', href: '/investor/history', icon: History },
-        { name: 'Properties', href: '/projects', icon: Building2, isExternal: true },
-        { name: 'Support', href: '/investor/messages', icon: Headphones }
+        { name: 'Home',    href: '/investor',                  icon: Home },
+        { name: 'Invest',  href: '/investor/new-investment',   icon: PlusCircle },
+        { name: 'History', href: '/investor/history',          icon: History },
+        { name: 'Account', href: '/investor/account-settings', icon: Settings },
+        { name: 'Support', href: '/investor/messages',         icon: Headphones },
     ];
 
     return (
@@ -141,8 +186,10 @@ export default function InvestorLayout({ children }) {
 
                     <div className="p-4 border-t border-gray-100 flex-shrink-0">
                         <div className="flex items-center gap-3 mb-4 px-2">
-                            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#b0181d] font-bold shrink-0">
-                                {user?.firstName?.charAt(0)}{user?.surname?.charAt(0)}
+                            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#b0181d] font-bold shrink-0 overflow-hidden border border-orange-200">
+                                {user?.profileImage
+                                    ? <img src={user.profileImage} alt="avatar" className="w-full h-full object-cover" />
+                                    : <>{user?.firstName?.charAt(0)}{user?.surname?.charAt(0)}</>}
                             </div>
                             <div className="truncate">
                                 <p className="text-sm font-medium text-gray-900">{user?.firstName} {user?.surname}</p>
@@ -169,10 +216,14 @@ export default function InvestorLayout({ children }) {
                             </h1>
                         </div>
                         <div className="flex items-center gap-4">
-                            <button className="relative p-2 text-gray-400 hover:text-[#de1f25] transition-colors">
+                            <Link href="/investor/notifications" className="relative p-2 text-gray-400 hover:text-[#de1f25] transition-colors">
                                 <Bell size={20} />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                            </button>
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-[#de1f25] rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
+                            </Link>
                         </div>
                     </header>
 
@@ -190,10 +241,14 @@ export default function InvestorLayout({ children }) {
                                         <div className="text-[11px] font-bold text-gray-800 leading-tight">Welcome back to<br/><span className="text-primary font-serif">Living Vine Properties</span></div>
                                     </div>
                                 </div>
-                                <div className="relative p-1">
+                                <Link href="/investor/notifications" className="relative p-1">
                                     <Bell size={18} className="text-gray-650" />
-                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
-                                </div>
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-0 right-0 min-w-[14px] h-3.5 bg-red-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center px-0.5">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
+                                    )}
+                                </Link>
                             </div>
                             {children}
                         </div>

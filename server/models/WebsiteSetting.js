@@ -369,6 +369,10 @@ const websiteSettingSchema = new mongoose.Schema({
     termsPageContent: {
         type: String,
         default: ''
+    },
+    loginBackground: {
+        type: String,
+        default: ''
     }
 }, { timestamps: true });
 

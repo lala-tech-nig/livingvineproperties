@@ -24,6 +24,7 @@ export default function WebsiteContentEditor() {
         address: '', phone: '', email: '', whatsapp: '',
         facebook: '', twitter: '', instagram: '', linkedin: '',
         marqueeTitle: '', marqueeTagline: '', marqueeEmail: '', marqueePhone: '',
+        loginBackground: '',
         
         // Homepage snippet
         aboutTitle: '', aboutSubtitle: '', aboutDescription1: '', aboutDescription2: '',
@@ -119,6 +120,7 @@ export default function WebsiteContentEditor() {
                     marqueeTagline: settingsRes.marqueeTagline || '',
                     marqueeEmail: settingsRes.marqueeEmail || '',
                     marqueePhone: settingsRes.marqueePhone || '',
+                    loginBackground: settingsRes.loginBackground || '',
                     aboutTitle: settingsRes.aboutTitle || '',
                     aboutSubtitle: settingsRes.aboutSubtitle || '',
                     aboutDescription1: settingsRes.aboutDescription1 || '',
@@ -516,6 +518,41 @@ export default function WebsiteContentEditor() {
                                         <label className="block text-xs font-bold text-gray-400 mb-2">Facebook Link</label>
                                         <input type="text" value={settings.facebook} onChange={e => setSettings({...settings, facebook: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none text-sm" />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Login Screens Left Banner Image */}
+                            <div className="bg-gray-950 p-6 rounded-xl border border-gray-800 space-y-4">
+                                <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest">Login Screens Left Banner Image</h4>
+                                <p className="text-xs text-gray-400">
+                                    Set the image that appears on the left panel of all Login screens (Investor, Manager, and Staff). 
+                                    A vertical ratio of <strong className="text-amber-500">1000px × 1500px</strong> or <strong className="text-amber-500">1200px × 1600px</strong> is recommended to fill the screen perfectly without stretching or pixelation.
+                                </p>
+                                <div className="space-y-3">
+                                    <label className="block text-xs font-bold text-gray-400">Background Image URL</label>
+                                    <div className="flex gap-4">
+                                        <input 
+                                            type="text" 
+                                            value={settings.loginBackground} 
+                                            onChange={e => setSettings({...settings, loginBackground: e.target.value})} 
+                                            placeholder="https://images.unsplash.com/..."
+                                            className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none text-sm" 
+                                        />
+                                        <label className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 transition-colors shrink-0">
+                                            <UploadCloud size={16} /> Upload Image
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="hidden" 
+                                                onChange={e => handleImageUpload(e, 'loginBackground')} 
+                                            />
+                                        </label>
+                                    </div>
+                                    {settings.loginBackground && (
+                                        <div className="relative w-32 h-48 border border-gray-800 rounded-xl overflow-hidden mt-3">
+                                            <img src={settings.loginBackground} alt="Login Background Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

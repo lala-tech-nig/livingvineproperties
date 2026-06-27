@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,21 @@ export default function InvestorLoginPage() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const setUser = useAuthStore((state) => state.setUser);
+    const [bgImage, setBgImage] = useState('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2670&auto=format&fit=crop');
+
+    useEffect(() => {
+        const fetchBg = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data?.loginBackground) {
+                    setBgImage(data.loginBackground);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchBg();
+    }, []);
 
     const [formData, setFormData] = useState({
         email: '',
@@ -40,10 +55,11 @@ export default function InvestorLoginPage() {
                 email: data.email,
                 role: data.role,
                 firstName: data.firstName,
-                surname: data.surname
+                surname: data.surname,
+                accountOfficer: data.accountOfficer || null,
             }));
             setUser(
-                { id: data._id, email: data.email, role: data.role, firstName: data.firstName, surname: data.surname },
+                { id: data._id, email: data.email, role: data.role, firstName: data.firstName, surname: data.surname, accountOfficer: data.accountOfficer || null },
                 data.token
             );
 
@@ -59,25 +75,11 @@ export default function InvestorLoginPage() {
 
     return (
         <div className="flex min-h-screen bg-gray-50 flex-col md:flex-row">
-            <div className="hidden md:flex w-1/2 bg-orange-950 relative overflow-hidden items-center justify-center">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-30"></div>
-                <div className="relative z-10 p-12 text-white max-w-lg">
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl font-bold mb-6 font-serif"
-                    >
-                        Investor Portal
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-lg text-orange-200/80 leading-relaxed font-light"
-                    >
-                        Securely manage your capital allocations, track property portfolios, and observe high-yield asset appreciations.
-                    </motion.p>
-                </div>
+            <div className="hidden md:flex w-1/2 bg-gray-900 relative overflow-hidden items-center justify-center">
+                <div 
+                    className="absolute inset-0 bg-cover bg-center transition-all duration-500" 
+                    style={{ backgroundImage: `url('${bgImage}')` }}
+                />
             </div>
 
             <div className="w-full md:w-1/2 flex items-center justify-center p-6 sm:p-12 md:p-24 bg-white relative">
@@ -142,11 +144,11 @@ export default function InvestorLoginPage() {
                                 Register now
                             </Link>
                         </p>
-                        <div className="border-t border-gray-100 pt-4 flex justify-around text-xs">
+                        {/* <div className="border-t border-gray-100 pt-4 flex justify-around text-xs">
                             <Link href="/crm/login" className="text-gray-400 hover:text-primary font-medium">CRM Staff Access</Link>
                             <span className="text-gray-300">|</span>
                             <Link href="/management/login" className="text-gray-400 hover:text-primary font-medium">Manager Access</Link>
-                        </div>
+                        </div> */}
                     </div>
                 </motion.div>
             </div>

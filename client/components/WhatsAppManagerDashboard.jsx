@@ -38,7 +38,12 @@ export default function WhatsAppManagerDashboard() {
         email: '',
         phoneNumber: '',
         password: '',
-        role: 'sales'
+        role: 'sales',
+        basicSalary: '',
+        age: '',
+        idNumber: '',
+        bonuses: '',
+        joiningDate: ''
     });
     const [creatingStaff, setCreatingStaff] = useState(false);
 
@@ -107,7 +112,12 @@ export default function WhatsAppManagerDashboard() {
                 email: '',
                 phoneNumber: '',
                 password: '',
-                role: 'sales'
+                role: 'sales',
+                basicSalary: '',
+                age: '',
+                idNumber: '',
+                bonuses: '',
+                joiningDate: ''
             });
             // Reload list
             const { data } = await api.get('/whatsapp/contacts/staff-performance');
@@ -697,6 +707,60 @@ export default function WhatsAppManagerDashboard() {
                                     <option value="management">Operations Manager</option>
                                 </select>
                             </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-400 mb-1">Base Salary (₦)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={newStaff.basicSalary}
+                                        onChange={(e) => setNewStaff({...newStaff, basicSalary: e.target.value})}
+                                        className="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-650 outline-none focus:border-amber-500"
+                                        placeholder="e.g. 150000"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-400 mb-1">Regular Bonus (₦)</label>
+                                    <input
+                                        type="number"
+                                        value={newStaff.bonuses}
+                                        onChange={(e) => setNewStaff({...newStaff, bonuses: e.target.value})}
+                                        className="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-650 outline-none focus:border-amber-500"
+                                        placeholder="e.g. 10000"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-400 mb-1">Age</label>
+                                    <input
+                                        type="number"
+                                        value={newStaff.age}
+                                        onChange={(e) => setNewStaff({...newStaff, age: e.target.value})}
+                                        className="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-650 outline-none focus:border-amber-500"
+                                        placeholder="e.g. 28"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-400 mb-1">ID Number</label>
+                                    <input
+                                        type="text"
+                                        value={newStaff.idNumber}
+                                        onChange={(e) => setNewStaff({...newStaff, idNumber: e.target.value})}
+                                        className="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-650 outline-none focus:border-amber-500"
+                                        placeholder="e.g. LVP-054"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-1">Date Joined</label>
+                                <input
+                                    type="date"
+                                    value={newStaff.joiningDate}
+                                    onChange={(e) => setNewStaff({...newStaff, joiningDate: e.target.value})}
+                                    className="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500 cursor-pointer"
+                                />
+                            </div>
                             <button
                                 type="submit"
                                 disabled={creatingStaff}
@@ -728,8 +792,18 @@ export default function WhatsAppManagerDashboard() {
                                 <tbody className="divide-y divide-gray-800 text-sm">
                                     {staffList.map((staff) => (
                                         <tr key={staff._id} className="hover:bg-gray-850/30 transition-colors">
-                                            <td className="py-3.5 font-semibold text-white">{staff.firstName} {staff.surname}</td>
-                                            <td className="py-3.5 text-gray-400">{staff.email}</td>
+                                            <td className="py-3.5 font-semibold text-white">
+                                                <div>{staff.firstName} {staff.surname}</div>
+                                                <div className="text-[10px] font-normal text-gray-500 mt-0.5">
+                                                    ID: {staff.idNumber || 'N/A'} • Age: {staff.age || 'N/A'} • Joined: {staff.joiningDate ? new Date(staff.joiningDate).toLocaleDateString() : 'N/A'}
+                                                </div>
+                                            </td>
+                                            <td className="py-3.5 text-gray-400">
+                                                <div>{staff.email}</div>
+                                                <div className="text-[10px] font-normal text-gray-550 mt-0.5">
+                                                    Salary: ₦{staff.basicSalary?.toLocaleString() || '0'} • Regular Bonus: ₦{staff.bonuses?.toLocaleString() || '0'}
+                                                </div>
+                                            </td>
                                             <td className="py-3.5 capitalize text-xs">
                                                 <span className="bg-gray-950 px-2.5 py-1 rounded border border-gray-850 text-gray-300">
                                                     {staff.role}

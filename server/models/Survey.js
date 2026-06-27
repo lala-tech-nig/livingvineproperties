@@ -37,4 +37,17 @@ const surveySchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
+// Targeting criteria — empty = show to all investors
+const targetingSchema = {
+    religions: [{ type: String }],   // e.g. ['muslim','christian']
+    genders: [{ type: String }],     // e.g. ['male']
+    states: [{ type: String }],      // e.g. ['Lagos','Abuja']
+    ageMin: { type: Number, default: null },
+    ageMax: { type: Number, default: null },
+};
+
+surveySchema.add({
+    targeting: { type: Object, default: {} },
+});
+
 module.exports = mongoose.model('Survey', surveySchema);

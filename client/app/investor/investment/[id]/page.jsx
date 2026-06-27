@@ -82,27 +82,37 @@ export default function InvestmentReviewPage() {
     const [sending, setSending]   = useState(false);
 
     // CEO decision state
-    const [newStatus, setNewStatus]   = useState('');
-    const [payAccount, setPayAccount] = useState({ bankName: '', accountNumber: '', accountName: '' });
-    const [deciding, setDeciding]     = useState(false);
+    const [newStatus, setNewStatus]       = useState('');
+    const [companyAccountId, setCompanyAccountId] = useState('');
+    const [companyAccounts, setCompanyAccounts]   = useState([]);
+    const [deciding, setDeciding]         = useState(false);
 
     const commentBottom = useRef(null);
 
     const isCEO        = user?.role === 'ceo' || user?.role === 'superadmin';
     const isManagement = user?.role === 'management' || isCEO;
 
-    /* fetch investment */
+    /* fetch investment + company accounts */
     useEffect(() => {
         const load = async () => {
             try {
-                const [{ data: invData }, { data: cmtData }] = await Promise.all([
+                const requests = [
                     api.get(`/investments/${id}`),
                     api.get(`/comments/${id}`),
-                ]);
+                ];
+                if (user?.role === 'ceo' || user?.role === 'superadmin') {
+                    requests.push(api.get('/finance/accounts').catch(() => ({ data: [] })));
+                }
+                const results = await Promise.all(requests);
+                const invData = results[0].data;
+                const cmtData = results[1].data;
                 setInv(invData);
                 setNewStatus(invData.status);
-                if (invData.ceoPaymentAccount?.bankName) setPayAccount(invData.ceoPaymentAccount);
+                if (invData.ceoPaymentAccount?.accountId) {
+                    setCompanyAccountId(invData.ceoPaymentAccount.accountId);
+                }
                 setComments(cmtData);
+                if (results[2]) setCompanyAccounts(results[2].data || []);
             } catch (e) {
                 toast.error('Failed to load investment details');
             } finally {
@@ -110,7 +120,7 @@ export default function InvestmentReviewPage() {
             }
         };
         if (id) load();
-    }, [id]);
+    }, [id, user?.role]);
 
     useEffect(() => {
         commentBottom.current?.scrollIntoView({ behavior: 'smooth' });
@@ -132,15 +142,22 @@ export default function InvestmentReviewPage() {
     /* CEO: update status */
     const handleDecision = async () => {
         if (!newStatus) return;
+        if (isCEO && ['approved'].includes(newStatus) && !companyAccountId) {
+            toast.error('Please select a company bank account for the investor to pay into.');
+            return;
+        }
         setDeciding(true);
         try {
             const payload = { status: newStatus };
-            if (isCEO && payAccount.bankName) payload.ceoPaymentAccount = payAccount;
+            if (isCEO && companyAccountId) payload.companyAccountId = companyAccountId;
             const { data } = await api.put(`/investments/${id}/status`, payload);
             setInv(data);
             toast.success(`Investment status updated to "${newStatus}"`);
-        } catch { toast.error('Failed to update status'); }
-        finally { setDeciding(false); }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update status');
+        } finally {
+            setDeciding(false);
+        }
     };
 
     /* ── loading ───────────────────────────────────────────── */
@@ -265,67 +282,96 @@ export default function InvestmentReviewPage() {
                         </h3>
                     </div>
 
-                    <div className="p-6 space-y-6">
-                        {/* Status selector */}
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-3">Update Investment Status</label>
-                            <div className="flex flex-wrap gap-2">
-                                {['reviewing', 'approved', 'active', 'declined', 'retreated', 'liquidated'].map(s => (
-                                    <button
-                                        key={s}
-                                        onClick={() => setNewStatus(s)}
-                                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-                                            newStatus === s
-                                                ? 'bg-gray-900 text-white border-gray-900 shadow-md'
-                                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400'
-                                        }`}
-                                    >
-                                        {s}
-                                    </button>
-                                ))}
+                    {/* Management read-only notice */}
+                    {!isCEO && (
+                        <div className="p-6 space-y-4">
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                                <AlertTriangle size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-bold text-amber-900 text-sm">View Only — CEO Action Required</p>
+                                    <p className="text-amber-700 text-xs mt-1">Only the CEO can approve, decline, activate or liquidate investments. You may add internal notes below.</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="bg-gray-50 rounded-xl p-4">
+                                    <p className="text-xs text-gray-400 mb-1">Current Status</p>
+                                    <p className="font-bold capitalize text-gray-900">{inv.status}</p>
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-4">
+                                    <p className="text-xs text-gray-400 mb-1">Capital</p>
+                                    <p className="font-bold text-gray-900">{fmt(inv.amountToInvest)}</p>
+                                </div>
                             </div>
                         </div>
+                    )}
 
-                        {/* CEO payment account */}
-                        {isCEO && (
+                    {/* CEO full panel */}
+                    {isCEO && (
+                        <div className="p-6 space-y-6">
+                            {/* Status selector */}
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-3">
-                                    Company Payment Account <span className="text-gray-400 font-normal">(account we'll pay the investor from)</span>
-                                </label>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    {[
-                                        { key: 'bankName', label: 'Bank Name', placeholder: 'GTBank' },
-                                        { key: 'accountNumber', label: 'Account Number', placeholder: '0123456789', mono: true },
-                                        { key: 'accountName', label: 'Account Name', placeholder: 'Living Vine Properties' },
-                                    ].map(f => (
-                                        <div key={f.key}>
-                                            <label className="block text-xs text-gray-500 mb-1">{f.label}</label>
-                                            <input
-                                                type="text"
-                                                value={payAccount[f.key]}
-                                                onChange={e => setPayAccount(p => ({ ...p, [f.key]: e.target.value }))}
-                                                placeholder={f.placeholder}
-                                                className={`w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 text-sm outline-none bg-gray-50 ${f.mono ? 'font-mono tracking-widest' : ''}`}
-                                            />
-                                        </div>
+                                <label className="block text-sm font-bold text-gray-700 mb-3">Update Investment Status</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {['reviewing', 'approved', 'active', 'declined', 'retreated', 'liquidated'].map(s => (
+                                        <button
+                                            key={s}
+                                            onClick={() => setNewStatus(s)}
+                                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                                                newStatus === s
+                                                    ? 'bg-gray-900 text-white border-gray-900 shadow-md'
+                                                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400'
+                                            }`}
+                                        >
+                                            {s}
+                                        </button>
                                     ))}
                                 </div>
                             </div>
-                        )}
 
-                        <button
-                            onClick={handleDecision}
-                            disabled={deciding || newStatus === inv.status}
-                            className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#de1f25]/20"
-                        >
-                            {deciding ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                            {deciding ? 'Saving Decision...' : 'Save Decision'}
-                        </button>
+                            {/* Company account selector */}
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Company Account for Investor to Pay Into
+                                    <span className="text-gray-400 font-normal ml-2">(investor will see this on approval)</span>
+                                </label>
+                                {companyAccounts.length === 0 ? (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+                                        No company accounts registered yet. <a href="/crm/ceo/finance" className="font-bold underline">Add one in Finance →</a>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {companyAccounts.map(acc => (
+                                            <button key={acc._id} type="button"
+                                                onClick={() => setCompanyAccountId(acc._id)}
+                                                className={`text-left p-4 rounded-xl border transition-all ${
+                                                    companyAccountId === acc._id
+                                                        ? 'bg-indigo-50 border-indigo-400 ring-2 ring-indigo-200'
+                                                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                                                }`}>
+                                                <p className="font-bold text-sm text-gray-900">{acc.bankName}</p>
+                                                <p className="font-mono text-xs text-gray-500 tracking-widest mt-0.5">{acc.accountNumber}</p>
+                                                <p className="text-xs text-gray-600 mt-0.5">{acc.accountName}</p>
+                                                <p className="text-xs font-bold text-green-700 mt-1">Bal: ₦{acc.balance?.toLocaleString()}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
-                        {newStatus === inv.status && (
-                            <p className="text-xs text-gray-400">Select a different status above to enable saving.</p>
-                        )}
-                    </div>
+                            <button
+                                onClick={handleDecision}
+                                disabled={deciding || newStatus === inv.status}
+                                className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#de1f25]/20"
+                            >
+                                {deciding ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                                {deciding ? 'Saving Decision...' : 'Save Decision'}
+                            </button>
+
+                            {newStatus === inv.status && (
+                                <p className="text-xs text-gray-400">Select a different status above to enable saving.</p>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 

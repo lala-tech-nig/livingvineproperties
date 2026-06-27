@@ -17,7 +17,11 @@ export default function RegisterPage() {
         email: '',
         phoneNumber: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        referredByEmail: '',
+        gender: '',
+        religion: '',
+        state: '',
     });
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,7 +41,11 @@ export default function RegisterPage() {
                 email: formData.email,
                 phoneNumber: formData.phoneNumber,
                 password: formData.password,
-                role: 'investor' // explicitly force investor role
+                role: 'investor', // explicitly force investor role
+                referredByEmail: formData.referredByEmail || undefined,
+                gender: formData.gender || undefined,
+                religion: formData.religion || undefined,
+                state: formData.state || undefined,
             });
             toast.success('Registration successful! Please login.');
             router.push('/investor/login');
@@ -141,6 +149,59 @@ export default function RegisterPage() {
                                 />
                             </div>
                         </div>
+
+                        {/* Demographics (optional) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Gender <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                                </label>
+                                <select name="gender" value={formData.gender} onChange={handleChange}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 bg-gray-50 focus:bg-white text-gray-900 transition-colors"
+                                >
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Religion <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                                </label>
+                                <select name="religion" value={formData.religion} onChange={handleChange}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 bg-gray-50 focus:bg-white text-gray-900 transition-colors"
+                                >
+                                    <option value="">Select</option>
+                                    <option value="muslim">Muslim</option>
+                                    <option value="christian">Christian</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    State <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                                </label>
+                                <input type="text" name="state" value={formData.state} onChange={handleChange}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 bg-gray-50 focus:bg-white text-gray-900 transition-colors"
+                                    placeholder="e.g. Lagos"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Referral Email
+                                <span className="ml-1.5 text-xs font-normal text-gray-400">(Optional)</span>
+                            </label>
+                            <input
+                                type="email" name="referredByEmail" value={formData.referredByEmail} onChange={handleChange}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-600 focus:border-[#de1f25] bg-gray-50 focus:bg-white text-gray-900 transition-colors"
+                                placeholder="Email of the person who referred you"
+                            />
+                            <p className="mt-1.5 text-xs text-gray-400">If a staff member referred you, enter their work email address. They will be automatically assigned as your Account Officer.</p>
+                        </div>
+
 
                         <button
                             type="submit"

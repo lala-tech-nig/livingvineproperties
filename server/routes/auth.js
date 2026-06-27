@@ -15,7 +15,7 @@ const generateToken = (id) => {
 // @desc    Register a new user
 router.post('/register', async (req, res) => {
     try {
-        const { email, firstName, surname, phoneNumber, password, role } = req.body;
+        const { email, firstName, surname, phoneNumber, password, role, referredByEmail, gender, religion, state } = req.body;
 
         if (!email || !firstName || !surname || !phoneNumber || !password) {
             return res.status(400).json({ message: 'Please add all fields' });
@@ -25,6 +25,28 @@ router.post('/register', async (req, res) => {
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
+        }
+
+        // Resolve account officer from referral email (must be active staff, not an investor)
+        let accountOfficerId = null;
+        let resolvedReferredEmail = null;
+        if (referredByEmail && referredByEmail.trim() !== '') {
+            const cleanEmail = referredByEmail.trim().toLowerCase();
+            if (cleanEmail !== email.trim().toLowerCase()) {
+                const referringStaff = await User.findOne({
+                    email: { $regex: new RegExp(`^${cleanEmail}$`, 'i') },
+                    role: { $ne: 'investor' },
+                    isActive: true,
+                });
+                if (referringStaff) {
+                    accountOfficerId = referringStaff._id;
+                    resolvedReferredEmail = cleanEmail;
+                }
+                // If no matching staff found, we still save the email they entered but don't assign an officer
+                if (!referringStaff) {
+                    resolvedReferredEmail = cleanEmail;
+                }
+            }
         }
 
         // Hash password
@@ -38,16 +60,27 @@ router.post('/register', async (req, res) => {
             surname,
             phoneNumber,
             password: hashedPassword,
-            role: role || 'investor' // Default to investor, can be overridden if testing/admin creation
+            role: role || 'investor',
+            referredByEmail: resolvedReferredEmail,
+            accountOfficer: accountOfficerId,
+            gender: gender || undefined,
+            religion: religion || undefined,
+            state: state || undefined,
         });
 
         if (user) {
+            // Populate accountOfficer for the response
+            const populatedUser = await User.findById(user._id)
+                .select('-password')
+                .populate('accountOfficer', 'firstName surname email phoneNumber role');
+
             res.status(201).json({
-                _id: user.id,
-                email: user.email,
-                firstName: user.firstName,
-                surname: user.surname,
-                role: user.role,
+                _id: populatedUser.id,
+                email: populatedUser.email,
+                firstName: populatedUser.firstName,
+                surname: populatedUser.surname,
+                role: populatedUser.role,
+                accountOfficer: populatedUser.accountOfficer,
                 token: generateToken(user._id),
             });
         } else {
@@ -64,7 +97,7 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).populate('accountOfficer', 'firstName surname email phoneNumber role');
 
         if (user && (await bcrypt.compare(password, user.password))) {
             if (!user.isActive) {
@@ -77,6 +110,7 @@ router.post('/login', async (req, res) => {
                 firstName: user.firstName,
                 surname: user.surname,
                 role: user.role,
+                accountOfficer: user.accountOfficer,
                 token: generateToken(user._id),
             });
         } else {
@@ -88,3 +122,4 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+

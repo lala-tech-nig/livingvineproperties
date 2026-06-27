@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
+import api from '@/lib/axios';
 import {
     BarChart3, Users, ShieldAlert, History, Bell, LogOut,
-    PlusCircle, MessageSquare, Briefcase
+    PlusCircle, MessageSquare, Briefcase, Landmark
 } from 'lucide-react';
 
 const CRM_ROLES = ['sales', 'marketing', 'hr', 'ceo', 'superadmin'];
@@ -23,26 +24,29 @@ const getNavigation = (role) => {
             ];
         case 'ceo':
             return [
-                { name: 'Dashboard', href: '/crm/ceo', icon: BarChart3 },
-                { name: 'Team Management', href: '/crm/ceo/team', icon: ShieldAlert },
-                { name: 'Company CRM', href: '/crm/ceo/crm', icon: Users },
-                { name: 'Notifications', href: '/crm/ceo/notifications', icon: Bell },
-                { name: 'WhatsApp Hub', href: '/crm/superadmin/whatsapp', icon: MessageSquare },
+                { name: 'Dashboard',      href: '/crm/ceo',             icon: BarChart3 },
+                { name: 'Team Management',href: '/crm/ceo/team',        icon: ShieldAlert },
+                { name: 'Company CRM',    href: '/crm/ceo/crm',         icon: Users },
+                { name: 'Finance',        href: '/crm/ceo/finance',     icon: Landmark },
+                { name: 'Notifications',  href: '/crm/ceo/notifications',icon: Bell },
+                { name: 'WhatsApp Hub',   href: '/crm/ceo/whatsapp',    icon: MessageSquare },
             ];
         case 'sales':
             return [
-                { name: 'Sales Dashboard', href: '/crm/sales', icon: BarChart3 },
-                { name: 'Customers', href: '/crm/sales/customers', icon: Users },
-                { name: 'Leads', href: '/crm/sales/leads', icon: PlusCircle },
-                { name: 'Tasks', href: '/crm/sales/tasks', icon: History },
-                { name: 'WhatsApp Contacts', href: '/crm/whatsapp', icon: MessageSquare },
+                { name: 'Sales Dashboard', href: '/crm/sales',           icon: BarChart3 },
+                { name: 'Customers',       href: '/crm/sales/customers', icon: Users },
+                { name: 'Leads',           href: '/crm/sales/leads',     icon: PlusCircle },
+                { name: 'Tasks',           href: '/crm/sales/tasks',     icon: History },
+                { name: 'Notifications',   href: '/crm/sales/notifications', icon: Bell },
+                { name: 'WhatsApp Contacts', href: '/crm/whatsapp',      icon: MessageSquare },
             ];
         case 'marketing':
             return [
-                { name: 'Marketing Dashboard', href: '/crm/marketing', icon: BarChart3 },
-                { name: 'Lead Gen', href: '/crm/marketing/leads', icon: PlusCircle },
-                { name: 'Surveys', href: '/crm/marketing/surveys', icon: MessageSquare },
-                { name: 'WhatsApp Contacts', href: '/crm/whatsapp', icon: MessageSquare },
+                { name: 'Marketing Dashboard', href: '/crm/marketing',          icon: BarChart3 },
+                { name: 'Lead Gen',            href: '/crm/marketing/leads',    icon: PlusCircle },
+                { name: 'Surveys',             href: '/crm/marketing/surveys',  icon: MessageSquare },
+                { name: 'Notifications',        href: '/crm/marketing/notifications', icon: Bell },
+                { name: 'WhatsApp Contacts',   href: '/crm/whatsapp',           icon: MessageSquare },
             ];
         case 'hr':
             return [
@@ -70,6 +74,7 @@ export default function CRMLayout({ children }) {
     const pathname = usePathname();
     const { user, isAuthenticated, initializeAuth, logout } = useAuthStore();
     const [mounted, setMounted] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const isLoginPage = pathname === '/crm/login';
 
@@ -84,6 +89,22 @@ export default function CRMLayout({ children }) {
         if (!isAuthenticated) { router.push('/crm/login'); return; }
         if (user && !CRM_ROLES.includes(user.role)) { router.push('/crm/login'); }
     }, [mounted, isAuthenticated, user, router, pathname, isLoginPage]);
+
+    // Poll unread notifications every 60s
+    useEffect(() => {
+        if (!isAuthenticated || !mounted || isLoginPage) return;
+        const fetchUnread = async () => {
+            try {
+                const endpoint = ['ceo','superadmin','management'].includes(user?.role)
+                    ? '/notifications/all' : '/notifications';
+                const { data } = await api.get(endpoint);
+                setUnreadCount(Array.isArray(data) ? data.filter(n => !n.isRead).length : 0);
+            } catch { /* silent */ }
+        };
+        fetchUnread();
+        const id = setInterval(fetchUnread, 60000);
+        return () => clearInterval(id);
+    }, [isAuthenticated, mounted, isLoginPage, user?.role]);
 
     if (isLoginPage) {
         return <>{children}</>;
@@ -163,10 +184,15 @@ export default function CRMLayout({ children }) {
                             {ROLE_LABEL[user?.role]} / {pathname.split('/')[3] || 'Dashboard'}
                         </h1>
                         <div className="flex items-center gap-4">
-                            <button className="relative p-2 text-gray-500 hover:text-[#de1f25] transition-colors">
+                            <Link href={navigation.find(n => n.name === 'Notifications')?.href || '#'}
+                                className="relative p-2 text-gray-500 hover:text-[#de1f25] transition-colors">
                                 <Bell size={20} />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                            </button>
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-[#de1f25] rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
+                            </Link>
                         </div>
                     </header>
 
@@ -176,10 +202,15 @@ export default function CRMLayout({ children }) {
                             <div className="lg:hidden flex items-center justify-between mb-6">
                                 <Link href="/" className="text-xl font-bold text-white font-serif">Living Vine <span className="text-[#de1f25] text-sm">CRM</span></Link>
                                 <div className="flex items-center gap-3">
-                                    <button className="relative p-2 text-gray-500 hover:text-[#de1f25] transition-colors">
+                                    <Link href={navigation.find(n => n.name === 'Notifications')?.href || '#'}
+                                        className="relative p-2 text-gray-500 hover:text-[#de1f25] transition-colors">
                                         <Bell size={20} />
-                                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                    </button>
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-[#de1f25] rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
                                     <button
                                         onClick={handleLogout}
                                         className="w-8 h-8 rounded-full bg-[#de1f25]/20 flex items-center justify-center text-[#de1f25] font-bold"

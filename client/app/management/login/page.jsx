@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,21 @@ export default function ManagerLoginPage() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const setUser = useAuthStore((state) => state.setUser);
+    const [bgImage, setBgImage] = useState('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2670&auto=format&fit=crop');
+
+    useEffect(() => {
+        const fetchBg = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data?.loginBackground) {
+                    setBgImage(data.loginBackground);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchBg();
+    }, []);
 
     const [formData, setFormData] = useState({ email: '', password: '' });
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -61,30 +76,10 @@ export default function ManagerLoginPage() {
         <div className="flex min-h-screen bg-gray-950 flex-col md:flex-row">
             {/* Left Panel */}
             <div className="hidden md:flex w-1/2 bg-gray-900 relative overflow-hidden items-center justify-center border-r border-gray-800">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center opacity-10"></div>
-                <div className="relative z-10 p-12 text-white max-w-lg">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="w-12 h-12 bg-amber-600 rounded-xl flex items-center justify-center">
-                            <Briefcase size={24} />
-                        </div>
-                        <span className="text-sm font-bold uppercase tracking-widest text-gray-400">Management Portal</span>
-                    </div>
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl font-bold mb-6 font-serif leading-tight text-white"
-                    >
-                        Operations & Content Control
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-gray-400 leading-relaxed"
-                    >
-                        Access the Living Vine administration panel. Manage dynamic website contents, audit customer portfolios, and review new investments.
-                    </motion.p>
-                </div>
+                <div 
+                    className="absolute inset-0 bg-cover bg-center transition-all duration-500" 
+                    style={{ backgroundImage: `url('${bgImage}')` }}
+                />
             </div>
 
             {/* Right Panel */}

@@ -40,7 +40,61 @@ const userSchema = new mongoose.Schema({
     joiningDate: {
         type: Date,
         default: Date.now,
-    }
+    },
+    basicSalary: {
+        type: Number,
+        default: 0,
+    },
+    age: {
+        type: Number,
+    },
+    idNumber: {
+        type: String,
+    },
+    bonuses: {
+        type: Number,
+        default: 0,
+    },
+    referredByEmail: {
+        type: String,
+        default: null,
+    },
+    accountOfficer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null,
+    },
+    gender: {
+        type: String,
+        enum: ['male', 'female', 'other'],
+        default: null,
+    },
+    religion: {
+        type: String,
+        enum: ['muslim', 'christian', 'other'],
+        default: null,
+    },
+    state: {
+        type: String,
+        default: null,
+    },
+    nin: {
+        type: String,
+        default: null,
+    },
+    // Named celebration dates the company uses for anniversary reminders
+    celebrationDates: [{
+        label: { type: String, required: true },   // e.g. 'Birthday', 'Wedding Anniversary'
+        date:  { type: Date,   required: true },
+    }],
+    address: {
+        type: String,
+        default: null,
+    },
+    occupation: {
+        type: String,
+        default: null,
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

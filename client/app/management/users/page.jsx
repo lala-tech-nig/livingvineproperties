@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Search, Shield, ShieldOff, ChevronDown, RefreshCw,
-    Mail, Phone, UserCog, CheckCircle, XCircle, Clock, Filter
+    Mail, Phone, UserCog, CheckCircle, XCircle, Clock, Filter, UserCheck, ArrowRightLeft, X
 } from 'lucide-react';
 
 const ROLES_ASSIGNABLE = ['management', 'hr', 'sales', 'marketing'];
@@ -43,6 +43,9 @@ export default function ManagementUsers() {
     const [roleFilter, setRoleFilter] = useState('all');
     const [actionLoading, setActionLoading] = useState(null);
     const [openRoleMenu, setOpenRoleMenu] = useState(null);
+    const [transferSource, setTransferSource] = useState(null); // staff whose accounts we'll transfer
+    const [transferTargetId, setTransferTargetId] = useState('');
+    const [transferLoading, setTransferLoading] = useState(false);
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
@@ -101,6 +104,25 @@ export default function ManagementUsers() {
             toast.error(err.response?.data?.message || 'Role update failed');
         } finally {
             setActionLoading(null);
+        }
+    };
+
+    const handleTransferAccounts = async () => {
+        if (!transferSource || !transferTargetId) return;
+        setTransferLoading(true);
+        try {
+            const { data } = await api.post(`/users/${transferSource._id}/transfer-accounts`, { targetStaffId: transferTargetId });
+            const { transferred } = data;
+            toast.success(
+                `✅ Transferred ${transferred.investors} investor(s), ${transferred.customers} customer(s), ${transferred.leads} lead(s)`,
+                { duration: 5000 }
+            );
+            setTransferSource(null);
+            setTransferTargetId('');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Transfer failed');
+        } finally {
+            setTransferLoading(false);
         }
     };
 
@@ -319,24 +341,35 @@ export default function ManagementUsers() {
 
                                     {/* Actions */}
                                     <td className="px-6 py-4 text-right">
-                                        {canModify(u) ? (
-                                            <button
-                                                onClick={() => handleToggleSuspend(u._id)}
-                                                disabled={actionLoading === u._id + '-suspend'}
-                                                title={u.isActive ? 'Suspend Account' : 'Activate Account'}
-                                                className={`p-2 rounded-lg transition-colors ${u.isActive ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-600 hover:bg-emerald-50'} disabled:opacity-50`}
-                                            >
-                                                {actionLoading === u._id + '-suspend' ? (
-                                                    <RefreshCw size={18} className="animate-spin" />
-                                                ) : u.isActive ? (
-                                                    <ShieldOff size={18} />
-                                                ) : (
-                                                    <Shield size={18} />
-                                                )}
-                                            </button>
-                                        ) : (
-                                            <span className="text-xs text-gray-300 italic">No access</span>
-                                        )}
+                                        <div className="flex items-center justify-end gap-2">
+                                            {canModify(u) && (
+                                                <button
+                                                    onClick={() => { setTransferSource(u); setTransferTargetId(''); }}
+                                                    title="Transfer assigned accounts to another staff"
+                                                    className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
+                                                >
+                                                    <ArrowRightLeft size={18} />
+                                                </button>
+                                            )}
+                                            {canModify(u) ? (
+                                                <button
+                                                    onClick={() => handleToggleSuspend(u._id)}
+                                                    disabled={actionLoading === u._id + '-suspend'}
+                                                    title={u.isActive ? 'Suspend Account' : 'Activate Account'}
+                                                    className={`p-2 rounded-lg transition-colors ${u.isActive ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-600 hover:bg-emerald-50'} disabled:opacity-50`}
+                                                >
+                                                    {actionLoading === u._id + '-suspend' ? (
+                                                        <RefreshCw size={18} className="animate-spin" />
+                                                    ) : u.isActive ? (
+                                                        <ShieldOff size={18} />
+                                                    ) : (
+                                                        <Shield size={18} />
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-gray-300 italic">No access</span>
+                                            )}
+                                        </div>
                                     </td>
                                 </motion.tr>
                             ))}
@@ -345,10 +378,101 @@ export default function ManagementUsers() {
                 </div>
             </div>
 
-            {/* Close dropdown on outside click */}
+            {/* Close role dropdown on outside click */}
             {openRoleMenu && (
                 <div className="fixed inset-0 z-40" onClick={() => setOpenRoleMenu(null)} />
             )}
+
+            {/* Transfer Accounts Modal */}
+            <AnimatePresence>
+                {transferSource && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+                            className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
+                        >
+                            {/* Modal header */}
+                            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <ArrowRightLeft size={18} className="text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-900">Transfer Accounts</h3>
+                                        <p className="text-xs text-gray-400">Reassign all accounts from this staff member</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => { setTransferSource(null); setTransferTargetId(''); }} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-5">
+                                {/* From */}
+                                <div className="bg-gray-50 rounded-2xl p-4">
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Transferring FROM</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-sm">
+                                            {transferSource.firstName?.charAt(0)}{transferSource.surname?.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900">{transferSource.firstName} {transferSource.surname}</p>
+                                            <p className="text-xs text-gray-500">{transferSource.email}</p>
+                                        </div>
+                                        <span className={`ml-auto text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${ROLE_COLORS[transferSource.role] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>{ROLE_LABELS[transferSource.role] || transferSource.role}</span>
+                                    </div>
+                                </div>
+
+                                {/* To */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Transfer TO</label>
+                                    <select
+                                        value={transferTargetId}
+                                        onChange={e => setTransferTargetId(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-colors"
+                                    >
+                                        <option value="">— Select a staff member —</option>
+                                        {users
+                                            .filter(u => u._id !== transferSource._id && u.isActive && u.role !== 'investor')
+                                            .map(u => (
+                                                <option key={u._id} value={u._id}>
+                                                    {u.firstName} {u.surname} ({ROLE_LABELS[u.role] || u.role})
+                                                </option>
+                                            ))
+                                        }
+                                    </select>
+                                </div>
+
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                                    <strong>What will be transferred:</strong> All investor accounts, CRM customers, and leads currently assigned to <strong>{transferSource.firstName}</strong> will be reassigned to the selected staff member.
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => { setTransferSource(null); setTransferTargetId(''); }}
+                                        className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleTransferAccounts}
+                                        disabled={!transferTargetId || transferLoading}
+                                        className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {transferLoading ? (
+                                            <><RefreshCw size={16} className="animate-spin" /> Transferring...</>
+                                        ) : (
+                                            <><ArrowRightLeft size={16} /> Confirm Transfer</>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

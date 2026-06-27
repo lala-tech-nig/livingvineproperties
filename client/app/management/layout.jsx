@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
+import api from '@/lib/axios';
 import {
     BarChart3, Users, Bell, LogOut, Globe, Briefcase, MessageSquare
 } from 'lucide-react';
@@ -23,6 +24,7 @@ export default function ManagementLayout({ children }) {
     const pathname = usePathname();
     const { user, isAuthenticated, initializeAuth, logout } = useAuthStore();
     const [mounted, setMounted] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const isLoginPage = pathname === '/management/login';
 
@@ -42,6 +44,20 @@ export default function ManagementLayout({ children }) {
             router.push('/management/login');
         }
     }, [mounted, isAuthenticated, user, router, pathname, isLoginPage]);
+
+    // Poll unread notifications every 60s
+    useEffect(() => {
+        if (!isAuthenticated || !mounted || isLoginPage) return;
+        const fetchUnread = async () => {
+            try {
+                const { data } = await api.get('/notifications/all');
+                setUnreadCount(Array.isArray(data) ? data.filter(n => !n.isRead).length : 0);
+            } catch { /* silent */ }
+        };
+        fetchUnread();
+        const id = setInterval(fetchUnread, 60000);
+        return () => clearInterval(id);
+    }, [isAuthenticated, mounted, isLoginPage]);
 
     if (isLoginPage) {
         return <>{children}</>;
@@ -123,10 +139,15 @@ export default function ManagementLayout({ children }) {
                             Management Portal / {pathname.split('/')[2] ? pathname.split('/')[2].replace('-', ' ') : 'Dashboard'}
                         </h1>
                         <div className="flex items-center gap-4">
-                            <button className="relative p-2 text-gray-500 hover:text-amber-500 transition-colors">
+                            <Link href="/management/notifications"
+                                className="relative p-2 text-gray-500 hover:text-amber-500 transition-colors">
                                 <Bell size={20} />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                            </button>
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-[#de1f25] rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
+                            </Link>
                         </div>
                     </header>
 
@@ -136,10 +157,15 @@ export default function ManagementLayout({ children }) {
                             <div className="lg:hidden flex items-center justify-between mb-6">
                                 <Link href="/" className="text-xl font-bold text-white font-serif">Living Vine <span className="text-amber-500 text-sm">Mgt</span></Link>
                                 <div className="flex items-center gap-3">
-                                    <button className="relative p-2 text-gray-500 hover:text-amber-500 transition-colors">
+                                    <Link href="/management/notifications"
+                                        className="relative p-2 text-gray-500 hover:text-amber-500 transition-colors">
                                         <Bell size={20} />
-                                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                    </button>
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-[#de1f25] rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
                                     <button
                                         onClick={handleLogout}
                                         className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold"
