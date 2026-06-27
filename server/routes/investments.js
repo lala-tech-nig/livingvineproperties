@@ -6,6 +6,31 @@ const Investment = require('../models/Investment');
 const InvestmentProduct = require('../models/InvestmentProduct');
 const { protect, authorize } = require('../middlewares/authMiddleware');
 
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
+const { Readable } = require('stream');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+const uploadBufferToCloudinary = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            { folder: 'livingvine', allowed_formats: ['jpg', 'png', 'jpeg', 'pdf'] },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+        Readable.from(buffer).pipe(stream);
+    });
+};
+
 // @route   GET /api/investments/verify-identity
 // @desc    Verify NIN or BVN using local db.json records
 // @access  Private
@@ -136,13 +161,24 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
     try {
         const { status, companyAccountId } = req.body;
         const isCEO = ['ceo', 'superadmin'].includes(req.user.role);
+        const isManager = req.user.role === 'management';
 
-        // Management cannot approve or decline — CEO only
-        const ceoOnlyStatuses = ['approved', 'declined', 'active', 'liquidated'];
+        // Management cannot approve, decline or liquidate — CEO only
+        // Managers CAN activate (start) an investment IF receipt is attached
+        const ceoOnlyStatuses = ['approved', 'declined', 'liquidated'];
         if (!isCEO && ceoOnlyStatuses.includes(status)) {
             return res.status(403).json({
-                message: 'Only the CEO can approve, decline, activate or liquidate investments.'
+                message: 'Only the CEO can approve, decline, or liquidate investments.'
             });
+        }
+
+        // Managers activating — must have a payment receipt
+        if (isManager && status === 'active') {
+            const inv = await Investment.findById(req.params.id);
+            if (!inv) return res.status(404).json({ message: 'Investment not found' });
+            if (!inv.paymentReceipt) {
+                return res.status(400).json({ message: 'Cannot start investment: investor has not uploaded a payment receipt yet.' });
+            }
         }
 
         const investment = await Investment.findById(req.params.id);
@@ -187,6 +223,11 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
             }
         }
 
+        // Set startDate to now when investment becomes active
+        if (status === 'active' && !wasActive) {
+            investment.startDate = new Date();
+        }
+
         const updatedInvestment = await investment.save();
 
         // Create notification for the investor
@@ -209,6 +250,55 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
         } catch (_) { /* non-blocking */ }
 
         res.json(updatedInvestment);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   PUT /api/investments/:id/receipt
+// @desc    Investor uploads payment receipt for their investment
+// @access  Private (investor only — must own the investment)
+router.put('/:id/receipt', protect, upload.single('receipt'), async (req, res) => {
+    try {
+        const investment = await Investment.findById(req.params.id);
+        if (!investment) return res.status(404).json({ message: 'Investment not found' });
+
+        // Only the investor who owns this investment can attach a receipt
+        if (investment.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Access denied.' });
+        }
+
+        // Investment must be approved before receipt can be uploaded
+        if (investment.status !== 'approved') {
+            return res.status(400).json({ message: 'Receipt can only be uploaded for approved investments.' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+
+        // Upload to Cloudinary
+        const result = await uploadBufferToCloudinary(req.file.buffer);
+        investment.paymentReceipt = result.secure_url;
+        investment.receiptUploadedAt = new Date();
+
+        await investment.save();
+
+        // Notify management/CEO about the receipt
+        try {
+            const Notification = require('../models/Notification');
+            const User = require('../models/User');
+            const admins = await User.find({ role: { $in: ['management', 'ceo', 'superadmin'] } }).select('_id');
+            await Promise.all(admins.map(admin =>
+                Notification.create({
+                    userId: admin._id,
+                    title: 'Payment Receipt Uploaded',
+                    message: `${investment.name} has uploaded a payment receipt for their investment of ₦${investment.amountToInvest?.toLocaleString()}. Please review and start the investment.`,
+                })
+            ));
+        } catch (_) { /* non-blocking */ }
+
+        res.json({ message: 'Receipt uploaded successfully.', paymentReceipt: result.secure_url });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }

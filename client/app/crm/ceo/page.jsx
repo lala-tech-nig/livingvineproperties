@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import {
     TrendingUp, Users, CheckCircle, Clock, XCircle, Landmark,
     MessageSquare, Bell, ArrowRight, BarChart3, DollarSign,
-    RefreshCw, UserCheck, ShieldAlert
+    RefreshCw, UserCheck, ShieldAlert, Receipt
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -142,7 +142,14 @@ export default function CEODashboard() {
                                                 <p className="font-bold">{inv.name}</p>
                                                 <p className="text-xs text-gray-400">{inv.email}</p>
                                             </td>
-                                            <td className="px-5 py-3 font-bold text-gray-900">₦{inv.amountToInvest?.toLocaleString()}</td>
+                                            <td className="px-5 py-3">
+                                                <p className="font-bold text-gray-900">₦{inv.amountToInvest?.toLocaleString()}</p>
+                                                {inv.paymentReceipt && (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-1">
+                                                        <Receipt size={10} /> Receipt attached
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-5 py-3 text-gray-500">{inv.durationInMonths}m</td>
                                             <td className="px-5 py-3 text-right">
                                                 <Link href={`/investor/investment/${inv._id}`}
@@ -207,9 +214,16 @@ export default function CEODashboard() {
                                     <td className="px-5 py-3 font-bold">₦{inv.amountToInvest?.toLocaleString()}</td>
                                     <td className="px-5 py-3 text-gray-500">{inv.durationInMonths} months</td>
                                     <td className="px-5 py-3">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_COLOR[inv.status] || 'bg-gray-100 text-gray-600'}`}>
-                                            {inv.status}
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_COLOR[inv.status] || 'bg-gray-100 text-gray-600'}`}>
+                                                {inv.status}
+                                            </span>
+                                            {inv.status === 'approved' && inv.paymentReceipt && (
+                                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
+                                                    <Receipt size={10} /> Receipt attached
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-5 py-3 text-right">
                                         <Link href={`/investor/investment/${inv._id}`}

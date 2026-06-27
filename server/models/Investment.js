@@ -35,7 +35,10 @@ const investmentSchema = new mongoose.Schema({
         bankName: String,
         accountNumber: String,
         accountName: String,
+        accountId: mongoose.Schema.Types.ObjectId,
     },
+    paymentReceipt: String,
+    receiptUploadedAt: Date,
     startDate: Date,
     expectedROI: Number,
 }, { timestamps: true });

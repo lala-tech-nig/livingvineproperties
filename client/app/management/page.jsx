@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Briefcase, AlertCircle, Eye, Users, UserCheck, Search, Filter,
-    Phone, Mail, X, Gift, MapPin, RefreshCw, TrendingUp, Calendar, ChevronDown
+    Phone, Mail, X, Gift, MapPin, RefreshCw, TrendingUp, Calendar, ChevronDown, Receipt
 } from 'lucide-react';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -260,14 +260,21 @@ export default function ManagementDashboard() {
                                         </td>
                                         <td className="px-6 py-4 font-medium text-gray-900">₦{inv.amountToInvest?.toLocaleString()}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border
-                                                ${inv.status === 'reviewing' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                                                inv.status === 'approved' ? 'bg-green-100 text-green-800 border-green-200' :
-                                                inv.status === 'active' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                                                inv.status === 'declined' ? 'bg-red-100 text-red-800 border-red-200' :
-                                                'bg-gray-100 text-gray-800 border-gray-200'}`}>
-                                                {inv.status.toUpperCase()}
-                                            </span>
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border
+                                                    ${inv.status === 'reviewing' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                                    inv.status === 'approved' ? 'bg-green-100 text-green-800 border-green-200' :
+                                                    inv.status === 'active' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                                    inv.status === 'declined' ? 'bg-red-100 text-red-800 border-red-200' :
+                                                    'bg-gray-100 text-gray-800 border-gray-200'}`}>
+                                                    {inv.status.toUpperCase()}
+                                                </span>
+                                                {inv.status === 'approved' && inv.paymentReceipt && (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
+                                                        <Receipt size={10} /> Receipt attached
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <Link href={`/investor/investment/${inv._id}`}
