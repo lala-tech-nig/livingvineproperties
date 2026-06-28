@@ -269,7 +269,7 @@ function PaymentBanner({ inv, onReceiptUploaded }) {
 /*  MAIN INVESTOR DASHBOARD                                   */
 /* ══════════════════════════════════════════════════════════ */
 export default function InvestorDashboard() {
-    const { user }  = useAuthStore();
+    const { user, setUser }  = useAuthStore();
     const [investments, setInvestments] = useState([]);
     const [projects, setProjects]       = useState([]);
     const [loading, setLoading]         = useState(true);
@@ -288,14 +288,25 @@ export default function InvestorDashboard() {
 
     const fetchData = async () => {
         try {
-            const [invRes, projRes, completionRes] = await Promise.all([
+            const [invRes, projRes, completionRes, profileRes] = await Promise.all([
                 api.get('/investments/my'),
                 api.get('/website/projects'),
                 api.get('/users/profile/completion').catch(() => ({ data: null })),
+                api.get('/users/profile').catch(() => ({ data: null })),
             ]);
             setInvestments(invRes.data);
             setProjects(projRes.data || []);
             if (completionRes.data) setProfileCompletion(completionRes.data);
+
+            // Sync latest profileImage to authStore so the avatar is always current
+            if (profileRes.data?.profileImage) {
+                const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+                if (storedToken) {
+                    const updated = { ...user, profileImage: profileRes.data.profileImage };
+                    localStorage.setItem('user', JSON.stringify(updated));
+                    setUser(updated, storedToken);
+                }
+            }
         } catch {
             toast.error('Failed to load investments');
         } finally {

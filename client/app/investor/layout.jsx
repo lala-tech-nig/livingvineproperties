@@ -102,6 +102,8 @@ export default function InvestorLayout({ children }) {
                     role: data.role,
                     firstName: data.firstName,
                     surname: data.surname,
+                    phoneNumber: data.phoneNumber || null,
+                    profileImage: data.profileImage || null,
                     accountOfficer: data.accountOfficer || null,
                 };
                 const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -152,7 +154,7 @@ export default function InvestorLayout({ children }) {
         { name: 'Home',       href: '/investor',                  icon: Home         },
         { name: 'Invest',     href: '/investor/new-investment',   icon: PlusCircle   },
         { name: 'History',    href: '/investor/history',          icon: History      },
-        { name: 'Properties', href: '/projects',                  icon: Building2    },
+        { name: 'Properties', href: '/investor/properties',          icon: Building2    },
         { name: 'Support',    href: '/investor/messages',         icon: Headphones   },
     ];
 
@@ -228,24 +230,30 @@ export default function InvestorLayout({ children }) {
                     </header>
 
                     {/* Page Content */}
-                    <div className={`flex-1 overflow-auto lg:p-8 ${pathname === '/investor' ? 'p-0 sm:p-0' : 'p-4 sm:p-6'}`}>
+                    <div className={`flex-1 overflow-auto lg:p-8 ${(pathname === '/investor' || pathname.startsWith('/investor/properties/')) ? 'p-0 sm:p-0' : 'p-4 sm:p-6'}`}>
                         <div className="max-w-7xl mx-auto">
-                            {/* Mobile Header — hide on the dashboard home (it has its own header) */}
-                            {pathname !== '/investor' && (
-                            <div className="lg:hidden bg-white -mx-4 -mt-4 px-4 py-3.5 flex items-center justify-between border-b border-gray-100 mb-6 shadow-sm">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                                        {user?.firstName?.charAt(0)}
-                                    </div>
+                            {/* Mobile Header — same style as the dashboard home header */}
+                            {pathname !== '/investor' && !pathname.startsWith('/investor/properties/') && (
+                            <div className="lg:hidden bg-white -mx-4 -mt-4 px-5 pt-5 pb-4 flex items-center justify-between mb-5 border-b border-gray-100 shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <Link href="/investor/account-settings"
+                                        className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-[#de1f25] to-orange-500 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-white shrink-0 active:scale-95 transition-transform">
+                                        {user?.profileImage
+                                            ? <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                            : <span className="text-sm">{user?.firstName?.charAt(0)}{user?.surname?.charAt(0)}</span>
+                                        }
+                                    </Link>
                                     <div>
-                                        <div className="text-[9px] text-gray-400 leading-none">Hello, {user?.firstName} 👋</div>
-                                        <div className="text-[11px] font-bold text-gray-800 leading-tight">Welcome back to<br/><span className="text-primary font-serif">Living Vine Properties</span></div>
+                                        <p className="text-base font-black text-gray-900 leading-tight">
+                                            Hello, {user?.firstName} 👋
+                                        </p>
+                                        <p className="text-[11px] text-gray-400">Welcome back to Living Vine Properties</p>
                                     </div>
                                 </div>
-                                <Link href="/investor/notifications" className="relative p-1">
-                                    <Bell size={18} className="text-gray-650" />
+                                <Link href="/investor/notifications" className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                                    <Bell size={18} />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-0 right-0 min-w-[14px] h-3.5 bg-red-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center px-0.5">
+                                        <span className="absolute top-0.5 right-0.5 min-w-[14px] h-3.5 bg-red-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center px-0.5">
                                             {unreadCount > 9 ? '9+' : unreadCount}
                                         </span>
                                     )}
