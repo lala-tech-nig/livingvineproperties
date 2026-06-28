@@ -337,9 +337,13 @@ export default function InvestorDashboard() {
                 {/* Header */}
                 <div className="bg-white px-5 pt-6 pb-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#de1f25] to-orange-500 flex items-center justify-center text-white font-bold text-base shadow-md">
-                            {user?.firstName?.[0]}{user?.surname?.[0]}
-                        </div>
+                        <Link href="/investor/account-settings"
+                            className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-[#de1f25] to-orange-500 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-white active:scale-95 transition-transform shrink-0">
+                            {user?.profileImage
+                                ? <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                : <span>{user?.firstName?.[0]}{user?.surname?.[0]}</span>
+                            }
+                        </Link>
                         <div>
                             <p className="text-base font-black text-gray-900 leading-tight">
                                 Hello, {user?.firstName} 👋
