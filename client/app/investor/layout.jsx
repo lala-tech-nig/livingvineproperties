@@ -147,13 +147,13 @@ export default function InvestorLayout({ children }) {
         router.push('/investor/login');
     };
 
-    // Mobile Navigation items styled matching mockup
+    // Mobile bottom nav — matches the mockup: Home · Invest · History · Properties · Support
     const MOBILE_NAV_ITEMS = [
-        { name: 'Home',    href: '/investor',                  icon: Home },
-        { name: 'Invest',  href: '/investor/new-investment',   icon: PlusCircle },
-        { name: 'History', href: '/investor/history',          icon: History },
-        { name: 'Account', href: '/investor/account-settings', icon: Settings },
-        { name: 'Support', href: '/investor/messages',         icon: Headphones },
+        { name: 'Home',       href: '/investor',                  icon: Home         },
+        { name: 'Invest',     href: '/investor/new-investment',   icon: PlusCircle   },
+        { name: 'History',    href: '/investor/history',          icon: History      },
+        { name: 'Properties', href: '/projects',                  icon: Building2    },
+        { name: 'Support',    href: '/investor/messages',         icon: Headphones   },
     ];
 
     return (
@@ -228,9 +228,10 @@ export default function InvestorLayout({ children }) {
                     </header>
 
                     {/* Page Content */}
-                    <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+                    <div className={`flex-1 overflow-auto lg:p-8 ${pathname === '/investor' ? 'p-0 sm:p-0' : 'p-4 sm:p-6'}`}>
                         <div className="max-w-7xl mx-auto">
-                            {/* Mobile Header (re-styled to match mockup header, hidden on desktop) */}
+                            {/* Mobile Header — hide on the dashboard home (it has its own header) */}
+                            {pathname !== '/investor' && (
                             <div className="lg:hidden bg-white -mx-4 -mt-4 px-4 py-3.5 flex items-center justify-between border-b border-gray-100 mb-6 shadow-sm">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
@@ -250,34 +251,39 @@ export default function InvestorLayout({ children }) {
                                     )}
                                 </Link>
                             </div>
+                            )}
                             {children}
                         </div>
                     </div>
                 </main>
             </div>
 
-            {/* Mobile Bottom Navigation Bar (styled to match mockup footer) */}
-            <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 z-50 flex flex-col shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-                <nav className="flex justify-around items-center py-2.5 px-2">
+            {/* Mobile Bottom Navigation Bar */}
+            <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 z-50 shadow-[0_-4px_24px_rgba(0,0,0,0.07)]">
+                <nav className="flex justify-around items-center pt-2 pb-1 px-1">
                     {MOBILE_NAV_ITEMS.map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname === item.href || (item.href !== '/investor' && pathname.startsWith(item.href));
                         return (
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`flex flex-col items-center gap-0.5 transition-all w-16 ${
-                                    isActive ? 'text-primary font-bold' : 'text-gray-400 hover:text-gray-700'
+                                className={`flex flex-col items-center gap-0.5 transition-all py-1 px-3 rounded-xl ${
+                                    isActive ? 'text-[#de1f25]' : 'text-gray-400 hover:text-gray-700'
                                 }`}
                             >
-                                <item.icon size={16} className={isActive ? 'text-primary scale-110' : 'text-gray-450'} />
-                                <span className="text-[8px] font-semibold tracking-wide">{item.name}</span>
+                                {/* Red dot indicator above active icon */}
+                                <div className={`w-1 h-1 rounded-full mb-0.5 transition-all ${isActive ? 'bg-[#de1f25]' : 'bg-transparent'}`} />
+                                <item.icon size={isActive ? 22 : 20} strokeWidth={isActive ? 2.5 : 1.8} className="transition-all" />
+                                <span className={`text-[9px] font-bold tracking-wide transition-all ${isActive ? 'text-[#de1f25]' : 'text-gray-400'}`}>
+                                    {item.name}
+                                </span>
                             </Link>
                         );
                     })}
                 </nav>
-                {/* Home indicator bar (iPhone style) */}
-                <div className="flex justify-center pb-1.5 bg-white shrink-0">
-                    <div className="w-20 h-[3px] bg-gray-300 rounded-full" />
+                {/* iPhone-style home indicator */}
+                <div className="flex justify-center pb-1.5">
+                    <div className="w-24 h-[3px] bg-gray-200 rounded-full" />
                 </div>
             </div>
 
