@@ -15,8 +15,8 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -32,6 +32,7 @@ const surveyRoutes = require('./routes/surveys');
 const whatsappRoutes = require('./routes/whatsapp');
 const notificationRoutes = require('./routes/notifications');
 const financeRoutes = require('./routes/finance');
+const supportRoutes = require('./routes/support');
 
 // Initialize Cron Jobs
 require('./services/cronJobs');
@@ -49,6 +50,7 @@ app.use('/api/surveys', surveyRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/finance', financeRoutes);
+app.use('/api/support', supportRoutes);
 
 // Error Handler Middleware
 const errorHandler = require('./middlewares/errorMiddleware');

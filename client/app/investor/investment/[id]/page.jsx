@@ -93,7 +93,7 @@ export default function InvestmentReviewPage() {
     const commentBottom = useRef(null);
     const fileRef       = useRef(null);
 
-    const isCEO        = user?.role === 'ceo' || user?.role === 'superadmin';
+    const isCEO        = user?.role === 'ceo' || user?.role === 'superadmin' || user?.role === 'management';
     const isManagement = user?.role === 'management' || isCEO;
     const isInvestor   = !isManagement;
 
@@ -137,7 +137,7 @@ export default function InvestmentReviewPage() {
         if (!msg.trim()) return;
         setSending(true);
         try {
-            const { data } = await api.post(`/comments/${id}`, { text: msg });
+            const { data } = await api.post(`/comments/${id}`, { message: msg });
             setComments(prev => [...prev, data]);
             setMsg('');
         } catch { toast.error('Failed to send message'); }
@@ -469,7 +469,7 @@ export default function InvestmentReviewPage() {
                     <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50">
                         <Shield size={16} className="text-[#de1f25]" />
                         <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider">
-                            {isCEO ? 'CEO Decision Panel' : 'Management Review'}
+                            Decision Panel (CEO / Manager)
                         </h3>
                     </div>
 
@@ -571,18 +571,21 @@ export default function InvestmentReviewPage() {
                     {comments.length === 0 ? (
                         <p className="text-sm text-gray-400 text-center py-6">No messages yet. Start the conversation.</p>
                     ) : comments.map((c, i) => {
-                        const isMe = c.author?._id === user?._id || c.authorName === `${user?.firstName} ${user?.surname}`;
+                        const sender = c.userId || c.author;
+                        const isMe = sender?._id === user?._id || c.authorName === `${user?.firstName} ${user?.surname}`;
+                        const displayName = sender ? `${sender.firstName} ${sender.surname}` : (c.authorName || 'Unknown');
+                        const displayMessage = c.message || c.text;
                         return (
                             <div key={c._id || i} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isMe ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'}`}>
-                                    {(c.authorName || 'U')[0].toUpperCase()}
+                                    {(displayName || 'U')[0].toUpperCase()}
                                 </div>
                                 <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                                     <p className={`text-xs text-gray-400 ${isMe ? 'text-right' : ''}`}>
-                                        {c.authorName || 'Unknown'} · {fmtDate(c.createdAt)}
+                                        {displayName} · {fmtDate(c.createdAt)}
                                     </p>
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-primary text-white rounded-tr-sm' : 'bg-gray-100 text-gray-800 rounded-tl-sm'}`}>
-                                        {c.text}
+                                        {displayMessage}
                                     </div>
                                 </div>
                             </div>

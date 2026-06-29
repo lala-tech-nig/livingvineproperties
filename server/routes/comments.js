@@ -8,16 +8,17 @@ const { protect } = require('../middlewares/authMiddleware');
 // @access  Private
 router.post('/:investmentId', protect, async (req, res) => {
     try {
-        const { message, isPrivate } = req.body;
+        const { message, text, isPrivate } = req.body;
+        const commentText = message || text;
 
-        if (!message) {
+        if (!commentText) {
             return res.status(400).json({ message: 'Comment missing' });
         }
 
         const comment = await Comment.create({
             investmentId: req.params.investmentId,
             userId: req.user._id,
-            message,
+            message: commentText,
             role: req.user.role,
             isPrivate: isPrivate || false
         });

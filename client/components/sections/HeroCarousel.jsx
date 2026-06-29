@@ -103,7 +103,7 @@ const HeroCarousel = () => {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                             <Button size="lg" className="h-14 px-8 text-base" asChild>
-                                <Link href="/investments">
+                                <Link href="/investor/register">
                                     Start Investing <ArrowRight className="ml-2 w-5 h-5" />
                                 </Link>
                             </Button>

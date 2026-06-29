@@ -160,11 +160,10 @@ router.get('/:id', protect, async (req, res) => {
 router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
     try {
         const { status, companyAccountId } = req.body;
-        const isCEO = ['ceo', 'superadmin'].includes(req.user.role);
+        const isCEO = ['ceo', 'superadmin', 'management'].includes(req.user.role);
         const isManager = req.user.role === 'management';
 
-        // Management cannot approve, decline or liquidate — CEO only
-        // Managers CAN activate (start) an investment IF receipt is attached
+        // Management can now approve, decline or liquidate — same as CEO
         const ceoOnlyStatuses = ['approved', 'declined', 'liquidated'];
         if (!isCEO && ceoOnlyStatuses.includes(status)) {
             return res.status(403).json({
