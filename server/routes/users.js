@@ -268,17 +268,39 @@ router.post('/:id/transfer-accounts', protect, async (req, res) => {
     }
 });
 
-// @route   DELETE /api/users/:id
-// @desc    Delete user
-// @access  Private (Superadmin only)
-router.delete('/:id', protect, async (req, res) => {
+// @route   PUT /api/users/:id/assign-officer
+// @desc    Assign an account officer to an investor (Management/CEO/Superadmin only)
+// @access  Private
+router.put('/:id/assign-officer', protect, async (req, res) => {
     try {
-        if (req.user.role !== 'superadmin') {
-            return res.status(401).json({ message: 'Only superadmin can delete users' });
+        if (!['management', 'ceo', 'superadmin'].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Only management and above can assign account officers' });
         }
-        const user = await User.findByIdAndDelete(req.params.id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        res.json({ message: 'User deleted successfully' });
+
+        const { officerId } = req.body;
+        const investor = await User.findById(req.params.id);
+        if (!investor) return res.status(404).json({ message: 'Investor not found' });
+        if (investor.role !== 'investor') {
+            return res.status(400).json({ message: 'Can only assign account officers to investor accounts' });
+        }
+
+        if (officerId) {
+            const officer = await User.findById(officerId);
+            if (!officer) return res.status(404).json({ message: 'Account officer not found' });
+            if (officer.role === 'investor') {
+                return res.status(400).json({ message: 'Cannot assign an investor as an account officer' });
+            }
+            investor.accountOfficer = officerId;
+        } else {
+            investor.accountOfficer = null;
+        }
+
+        await investor.save();
+        const updatedInvestor = await User.findById(investor._id)
+            .select('-password')
+            .populate('accountOfficer', 'firstName surname email phoneNumber role');
+
+        res.json({ message: 'Account officer assigned successfully', user: updatedInvestor });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }

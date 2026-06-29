@@ -7,8 +7,10 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Briefcase, AlertCircle, Eye, Users, UserCheck, Search, Filter,
-    Phone, Mail, X, Gift, MapPin, RefreshCw, TrendingUp, Calendar, ChevronDown, Receipt
+    Phone, Mail, X, Gift, MapPin, RefreshCw, TrendingUp, Calendar, ChevronDown, Receipt,
+    MessageSquare, Send, Loader2
 } from 'lucide-react';
+import { useRef } from 'react';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function getAnniversaryInfo(dateStr) {
@@ -130,10 +132,10 @@ function InvestorModal({ investor, onClose }) {
 
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 export default function ManagementDashboard() {
-    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState('investments');
     const [investments, setInvestments] = useState([]);
     const [investors, setInvestors] = useState([]);
+    const [staff, setStaff] = useState([]);
     const [loading, setLoading] = useState(true);
     const [investorsLoading, setInvestorsLoading] = useState(false);
 
@@ -143,6 +145,16 @@ export default function ManagementDashboard() {
     const [filterGender, setFilterGender] = useState('');
     const [filterState, setFilterState] = useState('');
     const [selectedInvestor, setSelectedInvestor] = useState(null);
+
+    // Support Chat State
+    const [threads, setThreads] = useState([]);
+    const [selectedThread, setSelectedThread] = useState(null);
+    const [chatMessages, setChatMessages] = useState([]);
+    const [replyText, setReplyText] = useState('');
+    const [sendingReply, setSendingReply] = useState(false);
+    const [loadingThreads, setLoadingThreads] = useState(false);
+    const [loadingChat, setLoadingChat] = useState(false);
+    const chatBottomRef = useRef(null);
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -165,14 +177,91 @@ export default function ManagementDashboard() {
             if (filterReligion) params.set('religion', filterReligion);
             if (filterGender) params.set('gender', filterGender);
             if (filterState) params.set('state', filterState);
-            const { data } = await api.get(`/users/investors?${params}`);
-            setInvestors(data);
+            
+            const [invRes, staffRes] = await Promise.all([
+                api.get(`/users/investors?${params}`),
+                api.get('/users/all').catch(() => ({ data: [] }))
+            ]);
+            
+            setInvestors(invRes.data);
+            setStaff(staffRes.data.filter(u => u.role !== 'investor' && u.isActive));
         } catch (e) {
             console.error(e);
         } finally {
             setInvestorsLoading(false);
         }
     }, [filterReligion, filterGender, filterState]);
+
+    const handleAssignOfficer = async (investorId, officerId) => {
+        try {
+            const { data } = await api.put(`/users/${investorId}/assign-officer`, { officerId });
+            setInvestors(prev => prev.map(inv => inv._id === investorId ? { ...inv, accountOfficer: data.user.accountOfficer } : inv));
+            toast.success('Account officer assigned successfully!');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to assign officer');
+        }
+    };
+
+    const fetchThreads = useCallback(async () => {
+        setLoadingThreads(true);
+        try {
+            const { data } = await api.get('/support/threads');
+            setThreads(data);
+        } catch (e) {
+            console.error('Failed to fetch threads', e);
+        } finally {
+            setLoadingThreads(false);
+        }
+    }, []);
+
+    const fetchChatMessages = useCallback(async (investorId) => {
+        setLoadingChat(true);
+        try {
+            const { data } = await api.get(`/support/messages?investorId=${investorId}`);
+            setChatMessages(data);
+        } catch (e) {
+            console.error('Failed to fetch messages', e);
+        } finally {
+            setLoadingChat(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === 'support') {
+            fetchThreads();
+        }
+    }, [activeTab, fetchThreads]);
+
+    useEffect(() => {
+        if (selectedThread) {
+            fetchChatMessages(selectedThread.investor._id);
+            const interval = setInterval(() => {
+                api.get(`/support/messages?investorId=${selectedThread.investor._id}`)
+                    .then(({ data }) => setChatMessages(data))
+                    .catch(console.error);
+            }, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [selectedThread, fetchChatMessages]);
+
+    const handleSendReply = async (e) => {
+        e.preventDefault();
+        if (!replyText.trim() || !selectedThread) return;
+        setSendingReply(true);
+        try {
+            const { data } = await api.post('/support/messages', {
+                message: replyText,
+                investorId: selectedThread.investor._id
+            });
+            setChatMessages(prev => [...prev, data]);
+            setReplyText('');
+            fetchThreads();
+        } catch (err) {
+            toast.error('Failed to send reply');
+        } finally {
+            setSendingReply(false);
+        }
+    };
 
     useEffect(() => {
         if (activeTab === 'investors') fetchInvestors();
@@ -227,6 +316,7 @@ export default function ManagementDashboard() {
                 {[
                     { key: 'investments', label: 'Investment Portfolios', icon: TrendingUp },
                     { key: 'investors', label: 'Investor Registry', icon: Users },
+                    { key: 'support', label: 'Support Messages', icon: MessageSquare },
                 ].map(tab => (
                     <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-300 hover:text-white'}`}>
@@ -396,16 +486,18 @@ export default function ManagementDashboard() {
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-3.5">
-                                                        {inv.accountOfficer ? (
-                                                            <div className="flex items-center gap-1.5">
-                                                                <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-[9px] font-bold">
-                                                                    {inv.accountOfficer.firstName?.[0]}{inv.accountOfficer.surname?.[0]}
-                                                                </div>
-                                                                <span className="text-xs text-gray-600">{inv.accountOfficer.firstName} {inv.accountOfficer.surname}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-xs text-gray-300 italic">Unassigned</span>
-                                                        )}
+                                                        <select
+                                                            value={inv.accountOfficer?._id || ''}
+                                                            onChange={(e) => handleAssignOfficer(inv._id, e.target.value)}
+                                                            className="text-xs bg-gray-50 border border-gray-200 rounded-lg p-1.5 outline-none text-gray-800 font-medium focus:ring-1 focus:ring-[#de1f25]/30 max-w-[160px]"
+                                                        >
+                                                            <option value="">— Unassigned —</option>
+                                                            {staff.map(s => (
+                                                                <option key={s._id} value={s._id}>
+                                                                    {s.firstName} {s.surname} ({s.role})
+                                                                </option>
+                                                            ))}
+                                                        </select>
                                                     </td>
                                                     <td className="px-5 py-3.5 text-xs text-gray-500 whitespace-nowrap">
                                                         <div>
@@ -443,6 +535,120 @@ export default function ManagementDashboard() {
                                         })}
                                     </tbody>
                                 </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Tab: Support Messages ── */}
+            {activeTab === 'support' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[550px] text-gray-900 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                    
+                    {/* Threads List (Left Column) */}
+                    <div className="md:col-span-1 border-r border-gray-100 flex flex-col h-full bg-gray-50/30">
+                        <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                            <h3 className="font-bold text-gray-900 text-xs uppercase tracking-wider">Conversations</h3>
+                        </div>
+                        <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+                            {loadingThreads ? (
+                                <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-gray-300" /></div>
+                            ) : threads.length === 0 ? (
+                                <div className="p-8 text-center text-gray-400 text-sm">No active support chats found.</div>
+                            ) : (
+                                threads.map(t => {
+                                    const isSelected = selectedThread?.investor._id === t.investor._id;
+                                    return (
+                                        <button
+                                            key={t.investor._id}
+                                            onClick={() => setSelectedThread(t)}
+                                            className={`w-full text-left p-4 transition-all flex items-start gap-3 hover:bg-gray-50 ${isSelected ? 'bg-amber-50/60 border-l-4 border-[#de1f25]' : ''}`}
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#de1f25] to-orange-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                                {t.investor.firstName?.[0]}{t.investor.surname?.[0]}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-baseline mb-0.5">
+                                                    <h4 className="font-bold text-sm text-gray-900 truncate">{t.investor.firstName} {t.investor.surname}</h4>
+                                                    <span className="text-[9px] text-gray-400 shrink-0">{new Date(t.lastActive).toLocaleDateString()}</span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 truncate">{t.latestMessage}</p>
+                                            </div>
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Active Chat Thread (Right 2 Columns) */}
+                    <div className="md:col-span-2 flex flex-col h-full">
+                        {selectedThread ? (
+                            <>
+                                {/* Chat Header */}
+                                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 text-sm">{selectedThread.investor.firstName} {selectedThread.investor.surname}</h3>
+                                        <p className="text-xs text-gray-400">{selectedThread.investor.email} · {selectedThread.investor.phoneNumber}</p>
+                                    </div>
+                                </div>
+
+                                {/* Messages */}
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/10">
+                                    {loadingChat ? (
+                                        <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-[#de1f25]" /></div>
+                                    ) : (
+                                        chatMessages.map((c, i) => {
+                                            const isMe = c.sender?._id === user?.id || c.sender === user?.id;
+                                            const senderName = c.sender ? `${c.sender.firstName} ${c.sender.surname}` : 'User';
+                                            return (
+                                                <div key={c._id || i} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isMe ? 'bg-[#de1f25]/10 text-[#de1f25]' : 'bg-gray-100 text-gray-600'}`}>
+                                                        {(senderName || 'U')[0].toUpperCase()}
+                                                    </div>
+                                                    <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
+                                                        <span className="text-[9px] text-gray-400">
+                                                            {senderName} · {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                                                            isMe 
+                                                                ? 'bg-[#de1f25] text-white rounded-tr-sm' 
+                                                                : 'bg-white border border-gray-150 text-gray-800 rounded-tl-sm shadow-sm'
+                                                        }`}>
+                                                            {c.message}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                    <div ref={chatBottomRef} />
+                                </div>
+
+                                {/* Input Form */}
+                                <form onSubmit={handleSendReply} className="p-4 border-t border-gray-100 bg-white flex gap-3">
+                                    <input
+                                        type="text"
+                                        value={replyText}
+                                        onChange={e => setReplyText(e.target.value)}
+                                        placeholder="Type your reply..."
+                                        className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#de1f25]/20 focus:border-[#de1f25] text-sm outline-none bg-gray-50/50"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={sendingReply || !replyText.trim()}
+                                        className="bg-[#de1f25] hover:bg-[#b0181d] disabled:opacity-40 text-white px-5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-sm font-semibold shadow-md shadow-[#de1f25]/10"
+                                    >
+                                        {sendingReply ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                                        Reply
+                                    </button>
+                                </form>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-gray-400">
+                                <MessageSquare size={48} className="mb-3 opacity-20" />
+                                <p className="font-semibold">No conversation selected</p>
+                                <p className="text-xs mt-1">Select a thread from the left panel to view and reply.</p>
                             </div>
                         )}
                     </div>

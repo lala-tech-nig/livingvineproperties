@@ -135,6 +135,7 @@ export default function SuperadminCRM() {
     const [investors, setInvestors] = useState([]);
     const [customers, setCustomers] = useState([]);
     const [leads, setLeads] = useState([]);
+    const [staff, setStaff] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedItem, setSelectedItem] = useState(null);
@@ -144,8 +145,12 @@ export default function SuperadminCRM() {
         setLoading(true);
         try {
             if (activeTab === 'investors') {
-                const res = await api.get('/users/investors');
-                setInvestors(res.data);
+                const [invRes, staffRes] = await Promise.all([
+                    api.get('/users/investors'),
+                    api.get('/users/all').catch(() => ({ data: [] }))
+                ]);
+                setInvestors(invRes.data);
+                setStaff(staffRes.data.filter(u => u.role !== 'investor' && u.isActive));
             } else if (activeTab === 'customers') {
                 const res = await api.get('/crm/customers');
                 setCustomers(res.data);
@@ -160,6 +165,16 @@ export default function SuperadminCRM() {
             setLoading(false);
         }
     }, [activeTab]);
+
+    const handleAssignOfficer = async (investorId, officerId) => {
+        try {
+            const { data } = await api.put(`/users/${investorId}/assign-officer`, { officerId });
+            setInvestors(prev => prev.map(inv => inv._id === investorId ? { ...inv, accountOfficer: data.user.accountOfficer } : inv));
+            toast.success('Account officer assigned successfully!');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to assign officer');
+        }
+    };
 
     useEffect(() => {
         if (token) fetchCRMData();
@@ -264,13 +279,18 @@ export default function SuperadminCRM() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    {inv.accountOfficer ? (
-                                                        <div className="text-sm text-gray-900 font-medium">
-                                                            {inv.accountOfficer.firstName} {inv.accountOfficer.surname}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-xs text-gray-400 italic">Unassigned</span>
-                                                    )}
+                                                    <select
+                                                        value={inv.accountOfficer?._id || ''}
+                                                        onChange={(e) => handleAssignOfficer(inv._id, e.target.value)}
+                                                        className="text-xs bg-gray-50 border border-gray-200 rounded-lg p-1.5 outline-none text-gray-800 font-medium focus:ring-1 focus:ring-indigo-500/30 max-w-[160px]"
+                                                    >
+                                                        <option value="">— Unassigned —</option>
+                                                        {staff.map(s => (
+                                                            <option key={s._id} value={s._id}>
+                                                                {s.firstName} {s.surname} ({s.role})
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {ann && (

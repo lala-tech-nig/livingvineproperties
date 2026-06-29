@@ -39,6 +39,41 @@ router.post('/messages', protect, async (req, res) => {
         const populated = await SupportMessage.findById(newMessage._id)
             .populate('sender', 'firstName surname profileImage role');
 
+        // Send Notification
+        try {
+            const Notification = require('../models/Notification');
+            if (isAdminReply) {
+                // Notify the investor
+                await Notification.create({
+                    userId: targetInvestorId,
+                    title: 'New Support Message',
+                    message: 'You have received a reply from the support team. Check the Support tab.',
+                });
+            } else {
+                // Investor sent a message. Find their account officer (if any)
+                const investorUser = await User.findById(req.user._id).populate('accountOfficer');
+                if (investorUser && investorUser.accountOfficer) {
+                    await Notification.create({
+                        userId: investorUser.accountOfficer._id,
+                        title: 'New Support Message',
+                        message: `${investorUser.firstName} ${investorUser.surname} has sent a support message.`,
+                    });
+                } else {
+                    // Notify all management/admins
+                    const admins = await User.find({ role: { $in: ['management', 'ceo', 'superadmin'] } }).select('_id');
+                    await Promise.all(admins.map(admin =>
+                        Notification.create({
+                            userId: admin._id,
+                            title: 'New General Support Message',
+                            message: `${investorUser.firstName} ${investorUser.surname} has sent a support message.`,
+                        })
+                    ));
+                }
+            }
+        } catch (err) {
+            console.error('Error sending support message notification:', err);
+        }
+
         res.status(201).json(populated);
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });

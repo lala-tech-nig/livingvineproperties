@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
@@ -8,6 +8,16 @@ import api from '@/lib/axios';
 import {
     BarChart3, Users, Bell, LogOut, Globe, Briefcase, MessageSquare
 } from 'lucide-react';
+
+const speakText = (text) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        window.speechSynthesis.speak(utterance);
+    }
+};
 
 const MGT_NAV = [
     { name: 'Dashboard', href: '/management', icon: BarChart3 },
@@ -25,6 +35,9 @@ export default function ManagementLayout({ children }) {
     const { user, isAuthenticated, initializeAuth, logout } = useAuthStore();
     const [mounted, setMounted] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    const hasWelcomedRef = useRef(false);
+    const prevNotificationsRef = useRef([]);
 
     const isLoginPage = pathname === '/management/login';
 
@@ -51,13 +64,26 @@ export default function ManagementLayout({ children }) {
         const fetchUnread = async () => {
             try {
                 const { data } = await api.get('/notifications/all');
-                setUnreadCount(Array.isArray(data) ? data.filter(n => !n.isRead).length : 0);
+                const unread = Array.isArray(data) ? data.filter(n => !n.isRead) : [];
+                setUnreadCount(unread.length);
+
+                if (hasWelcomedRef.current) {
+                    // Speak any new notifications
+                    const newUnread = unread.filter(n => !prevNotificationsRef.current.some(p => p._id === n._id));
+                    newUnread.forEach(n => {
+                        speakText(`New notification: ${n.title}. ${n.message}`);
+                    });
+                } else if (user) {
+                    speakText(`Welcome back, ${user.firstName}! You have ${unread.length} unread notifications.`);
+                    hasWelcomedRef.current = true;
+                }
+                prevNotificationsRef.current = unread;
             } catch { /* silent */ }
         };
         fetchUnread();
         const id = setInterval(fetchUnread, 60000);
         return () => clearInterval(id);
-    }, [isAuthenticated, mounted, isLoginPage]);
+    }, [isAuthenticated, mounted, isLoginPage, user]);
 
     if (isLoginPage) {
         return <>{children}</>;
