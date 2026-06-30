@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import {
     User, Calendar, Gift, Plus, Trash2, Save, CheckCircle2,
     ChevronLeft, Loader2, Heart, Cake, Star, Sparkles,
-    MapPin, Briefcase, Shield, Camera
+    MapPin, Briefcase, Shield, Camera, Phone, Mail, UserCheck, TrendingUp
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -62,17 +62,21 @@ export default function AccountSettingsPage() {
 
     // Celebration dates
     const [celebrationDates, setCelebrationDates] = useState([]);
+    const [investments, setInvestments] = useState([]);
     const [newDate, setNewDate] = useState({ label: 'Birthday', customLabel: '', date: '' });
     const [showCustomLabel, setShowCustomLabel] = useState(false);
+
+    const runningInvestments = investments.filter(inv => ['active', 'approved'].includes(inv.status));
 
     useEffect(() => { fetchData(); }, []);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [profileRes, completionRes] = await Promise.all([
+            const [profileRes, completionRes, investmentsRes] = await Promise.all([
                 api.get('/users/profile'),
                 api.get('/users/profile/completion'),
+                api.get('/investments/my').catch(() => ({ data: [] }))
             ]);
             const p = profileRes.data;
             setProfile({
@@ -86,6 +90,7 @@ export default function AccountSettingsPage() {
             setCelebrationDates(p.celebrationDates || []);
             setPhotoUrl(p.profileImage || '');
             setCompletion(completionRes.data);
+            setInvestments(investmentsRes.data || []);
         } catch {
             toast.error('Failed to load profile');
         } finally {
@@ -459,6 +464,89 @@ export default function AccountSettingsPage() {
                     )}
                 </motion.div>
             )}
+
+            {/* Mobile-only portfolio & account officer details */}
+            <div className="lg:hidden mt-8 space-y-6 text-gray-900">
+                {/* Running Portfolios Card */}
+                <div className="bg-[#de1f25] p-6 rounded-3xl text-white shadow-lg relative overflow-hidden">
+                    <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-red-200 mb-2">Running Portfolios</p>
+                    <p className="text-4xl font-black">{runningInvestments.length}</p>
+                </div>
+
+                {/* Account Officer Card */}
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-4">
+                    <div className="flex items-center gap-3 mb-1">
+                        <div className="w-8 h-8 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
+                            <UserCheck size={16} className="text-orange-850" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Account Officer</p>
+                            <p className="text-[10px] text-gray-300">Your dedicated representative</p>
+                        </div>
+                    </div>
+                    {user?.accountOfficer ? (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-800 to-orange-600 flex items-center justify-center text-white font-bold text-base shrink-0 shadow-inner">
+                                    {user.accountOfficer.firstName?.[0]}{user.accountOfficer.surname?.[0]}
+                                </div>
+                                <div>
+                                    <p className="font-extrabold text-gray-900 text-sm leading-none">{user.accountOfficer.firstName} {user.accountOfficer.surname}</p>
+                                    <span className="text-[9px] font-bold text-orange-700 capitalize bg-orange-50 px-2 py-0.5 rounded-full mt-1.5 inline-block">
+                                        {user.accountOfficer.role}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="space-y-2.5 pt-3 border-t border-gray-50 text-xs">
+                                <a href={`mailto:${user.accountOfficer.email}`} className="flex items-center gap-2 text-gray-500 hover:text-[#de1f25] transition-colors">
+                                    <Mail size={14} className="text-gray-300" />
+                                    <span className="truncate">{user.accountOfficer.email}</span>
+                                </a>
+                                {user.accountOfficer.phoneNumber && (
+                                    <a href={`tel:${user.accountOfficer.phoneNumber}`} className="flex items-center gap-2 text-gray-500 hover:text-[#de1f25] transition-colors">
+                                        <Phone size={14} className="text-gray-300" />
+                                        <span>{user.accountOfficer.phoneNumber}</span>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-4 text-gray-400">
+                            <UserCheck size={24} className="mx-auto mb-2 opacity-30" />
+                            <p className="text-xs font-semibold">No assigned Account Officer</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* All Investments List */}
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-4">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">All Investments</p>
+                    <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto pr-1">
+                        {investments.map(inv => (
+                            <Link key={inv._id} href={`/investor/investment/${inv._id}`}
+                                className="flex items-center justify-between py-3.5 hover:bg-gray-50/50 transition-colors group">
+                                <div className="min-w-0">
+                                    <p className="text-sm font-extrabold text-gray-900">₦{inv.amountToInvest?.toLocaleString()}</p>
+                                    <p className="text-[10px] text-gray-400 font-mono mt-0.5 uppercase tracking-wider">{inv._id.slice(-6).toUpperCase()}</p>
+                                </div>
+                                <span className={`shrink-0 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider border ${
+                                    inv.status === 'active' ? 'bg-green-50 border-green-200 text-green-700' :
+                                    inv.status === 'approved' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                    inv.status === 'reviewing' ? 'bg-yellow-50 border-yellow-200 text-amber-700' :
+                                    'bg-gray-50 border-gray-200 text-gray-500'}`}>
+                                    {inv.status}
+                                </span>
+                            </Link>
+                        ))}
+                        {investments.length === 0 && (
+                            <div className="text-center py-6 text-gray-400">
+                                <p className="text-xs font-semibold">No portfolios created yet</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

@@ -95,6 +95,22 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
+    bankName: {
+        type: String,
+        default: null,
+    },
+    bankCode: {
+        type: String,
+        default: null,
+    },
+    accountNumber: {
+        type: String,
+        default: null,
+    },
+    debitAccountNo: {
+        type: String,
+        default: '2045896422',
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

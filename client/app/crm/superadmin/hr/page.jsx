@@ -380,8 +380,41 @@ export default function SuperadminHR() {
     };
 
     const totalPending = payrolls.filter(p => p.status === 'pending').length;
-    const totalNetPay = payrolls.reduce((acc, p) => acc + (p.netPay || 0), 0);
+    const totalPaidAmount = payrolls.filter(p => p.status === 'paid').reduce((acc, p) => acc + (p.netPay || 0), 0);
+    const totalPendingAmount = payrolls.filter(p => p.status === 'pending').reduce((acc, p) => acc + (p.netPay || 0), 0);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const handleExportBatchPay = () => {
+        const periodRecords = payrolls.filter(p => p.month === Number(generateMonth) && p.year === Number(generateYear));
+        if (periodRecords.length === 0) {
+            toast.error(`No payroll records found for ${months[generateMonth - 1]} ${generateYear}. Please run the generator first.`);
+            return;
+        }
+
+        const headers = ['DebitAccountNo', 'CreditAccountNo', 'CreditBankCode', 'BeneficiaryName', 'Narration', 'Amount'];
+        
+        const rows = periodRecords.map(p => {
+            const employee = p.userId || {};
+            const debitAcc = employee.debitAccountNo || '2045896422';
+            const creditAcc = employee.accountNumber || '';
+            const bankCode = employee.bankCode || '';
+            const fullName = `${employee.firstName || ''} ${employee.surname || ''}`.toUpperCase().trim();
+            const narration = `${months[generateMonth - 1]} SALARY ${String(generateYear).slice(-2)}`.toUpperCase();
+            const amount = p.netPay || 0;
+            
+            return [debitAcc, creditAcc, bankCode, fullName, narration, amount].join(',');
+        });
+
+        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `payroll_${months[generateMonth - 1].toLowerCase()}_${generateYear}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(`EFT Batch upload sheet for ${months[generateMonth - 1]} ${generateYear} downloaded!`);
+    };
 
     return (
         <div className="space-y-8 pb-16">
@@ -429,28 +462,28 @@ export default function SuperadminHR() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-indigo-900 border border-indigo-850 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                <div className="bg-emerald-800 border border-emerald-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                     <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-10">
                         <Wallet size={120} />
                     </div>
-                    <Wallet className="mb-4 text-indigo-300" size={28} />
-                    <p className="text-indigo-200 text-xs uppercase font-bold tracking-wider">Total Net Payout</p>
-                    <p className="text-3xl font-black mt-1">₦{totalNetPay.toLocaleString()}</p>
+                    <Wallet className="mb-4 text-emerald-300" size={28} />
+                    <p className="text-emerald-100 text-xs uppercase font-bold tracking-wider">Total Paid (Released)</p>
+                    <p className="text-3xl font-black mt-1">₦{totalPaidAmount.toLocaleString()}</p>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                     <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-10">
-                        <UserCheck size={120} />
+                        <Wallet size={120} />
                     </div>
-                    <UserCheck className="mb-4 text-emerald-400" size={28} />
-                    <p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Payroll Records</p>
-                    <p className="text-3xl font-black mt-1">{payrolls.length}</p>
+                    <Wallet className="mb-4 text-rose-455" size={28} />
+                    <p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total Pending (Accrued)</p>
+                    <p className="text-3xl font-black mt-1">₦{totalPendingAmount.toLocaleString()}</p>
                 </div>
                 <div className="bg-amber-600 border border-amber-550 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                     <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-10">
                         <Clock size={120} />
                     </div>
                     <Clock className="mb-4 text-amber-200" size={28} />
-                    <p className="text-amber-100 text-xs uppercase font-bold tracking-wider">Pending Release</p>
+                    <p className="text-amber-100 text-xs uppercase font-bold tracking-wider">Pending Releases Count</p>
                     <p className="text-3xl font-black mt-1">{totalPending}</p>
                 </div>
             </div>
@@ -514,6 +547,13 @@ export default function SuperadminHR() {
                             >
                                 {generating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
                                 Run Generator
+                            </button>
+                            <button 
+                                onClick={handleExportBatchPay}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+                            >
+                                <FileText size={13} />
+                                Export Batch Sheet
                             </button>
                         </div>
                     </div>

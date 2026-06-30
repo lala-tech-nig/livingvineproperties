@@ -20,6 +20,7 @@ const getNavigation = (role) => {
                 { name: 'User Management', href: '/crm/superadmin/users', icon: ShieldAlert },
                 { name: 'CRM Overview', href: '/crm/superadmin/crm', icon: Users },
                 { name: 'Payroll & HR', href: '/crm/superadmin/hr', icon: History },
+                { name: 'Accounts Ledger', href: '/crm/hr/accounts', icon: Landmark },
                 { name: 'WhatsApp Hub', href: '/crm/superadmin/whatsapp', icon: MessageSquare },
             ];
         case 'ceo':
@@ -28,6 +29,7 @@ const getNavigation = (role) => {
                 { name: 'Team Management',href: '/crm/ceo/team',        icon: ShieldAlert },
                 { name: 'Company CRM',    href: '/crm/ceo/crm',         icon: Users },
                 { name: 'Finance',        href: '/crm/ceo/finance',     icon: Landmark },
+                { name: 'Accounts Ledger', href: '/crm/hr/accounts',     icon: Landmark },
                 { name: 'Notifications',  href: '/crm/ceo/notifications',icon: Bell },
                 { name: 'WhatsApp Hub',   href: '/crm/ceo/whatsapp',    icon: MessageSquare },
             ];
@@ -53,6 +55,7 @@ const getNavigation = (role) => {
                 { name: 'HR Dashboard', href: '/crm/hr', icon: BarChart3 },
                 { name: 'Attendance', href: '/crm/hr/attendance', icon: History },
                 { name: 'Payroll', href: '/crm/hr/payroll', icon: Briefcase },
+                { name: 'Accounts Ledger', href: '/crm/hr/accounts', icon: Landmark },
                 { name: 'Staff', href: '/crm/hr/staff', icon: Users },
                 { name: 'WhatsApp Contacts', href: '/crm/whatsapp', icon: MessageSquare },
             ];

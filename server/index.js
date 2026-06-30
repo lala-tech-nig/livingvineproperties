@@ -4,7 +4,10 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => {
+    const seedLedger = require('./config/seedLedger');
+    seedLedger();
+});
 
 const app = express();
 
@@ -33,6 +36,7 @@ const whatsappRoutes = require('./routes/whatsapp');
 const notificationRoutes = require('./routes/notifications');
 const financeRoutes = require('./routes/finance');
 const supportRoutes = require('./routes/support');
+const ledgerRoutes = require('./routes/ledger');
 
 // Initialize Cron Jobs
 require('./services/cronJobs');
@@ -51,6 +55,7 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/ledger', ledgerRoutes);
 
 // Error Handler Middleware
 const errorHandler = require('./middlewares/errorMiddleware');

@@ -445,7 +445,7 @@ router.get('/contacts/export', protect, async (req, res) => {
 // @access  Private (Managers only)
 router.post('/create-staff', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
     try {
-        const { email, firstName, surname, phoneNumber, password, role, basicSalary, age, idNumber, bonuses, joiningDate } = req.body;
+        const { email, firstName, surname, phoneNumber, password, role, basicSalary, age, idNumber, bonuses, joiningDate, bankName, bankCode, accountNumber, debitAccountNo } = req.body;
         if (!email || !firstName || !surname || !phoneNumber || !password || !role) {
             return res.status(400).json({ message: 'Please provide all fields' });
         }
@@ -480,7 +480,11 @@ router.post('/create-staff', protect, authorize('management', 'ceo', 'superadmin
             age: age ? Number(age) : undefined,
             idNumber: idNumber || '',
             bonuses: bonuses ? Number(bonuses) : 0,
-            joiningDate: joiningDate ? new Date(joiningDate) : new Date()
+            joiningDate: joiningDate ? new Date(joiningDate) : new Date(),
+            bankName: bankName || null,
+            bankCode: bankCode || null,
+            accountNumber: accountNumber || null,
+            debitAccountNo: debitAccountNo || '2045896422'
         });
 
         res.status(201).json({
@@ -495,6 +499,10 @@ router.post('/create-staff', protect, authorize('management', 'ceo', 'superadmin
             idNumber: user.idNumber,
             bonuses: user.bonuses,
             joiningDate: user.joiningDate,
+            bankName: user.bankName,
+            bankCode: user.bankCode,
+            accountNumber: user.accountNumber,
+            debitAccountNo: user.debitAccountNo,
             message: 'Staff account created successfully.'
         });
     } catch (error) {

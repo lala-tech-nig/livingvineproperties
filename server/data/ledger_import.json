@@ -1,0 +1,443 @@
+[
+    {
+        "date": "2026-04-05T00:00:00",
+        "voucherNo": "AB/05/026/501",
+        "particulars": "Purchase of Office Tioletries",
+        "type": "expenditure",
+        "account": "UBA",
+        "category": "OFFICE MAINT.",
+        "amount": 8300.0
+    },
+    {
+        "date": "2026-04-05T00:00:00",
+        "voucherNo": "AB/05/026/502",
+        "particulars": "Staff Weekly Allowance: Mr. Kazeem",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "SALARY & ALL",
+        "amount": 10000.0
+    },
+    {
+        "date": "2026-04-05T00:00:00",
+        "voucherNo": "AB/05/026/503",
+        "particulars": "Deposit for the Purchase of Ibari Street Property (Deposit 2)",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "PURCHASE",
+        "amount": 50000000.0
+    },
+    {
+        "date": "2026-03-05T00:00:00",
+        "voucherNo": "AB/05/026/504",
+        "particulars": "Purchase of Rushewe Estate Property",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "PURCHASE",
+        "amount": 38000000.0
+    },
+    {
+        "date": "2026-04-05T00:00:00",
+        "voucherNo": "AB/05/026/505",
+        "particulars": "Monthly Airtime Purchase for MD",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "INTERNET &CUG",
+        "amount": 10000.0
+    },
+    {
+        "date": "2026-04-05T00:00:00",
+        "voucherNo": "AB/05/026/506",
+        "particulars": "Lunch allowance for new staff : Mr. Daniel Akpan",
+        "type": "expenditure",
+        "account": "CASH",
+        "category": "OFFICE MAINT.",
+        "amount": 2000.0
+    },
+    {
+        "date": "2026-04-05T00:00:00",
+        "voucherNo": "AB/05/026/507",
+        "particulars": "Transportation for Running MD's Errands",
+        "type": "expenditure",
+        "account": "CASH",
+        "category": "OFFICE MAINT.",
+        "amount": 500.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/508",
+        "particulars": "Purchase of 2 c-way bottle water",
+        "type": "expenditure",
+        "account": "CASH",
+        "category": "OFFICE MAINT.",
+        "amount": 2500.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/509",
+        "particulars": "Investment and ROI Payment to Mrs. Abiola Tina Omoye",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "INVESTMENT &ROI",
+        "amount": 5990000.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/510",
+        "particulars": "Investment and ROI Payment to Mr. Oladipupo Sunday Abolade",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "INVESTMENT &ROI",
+        "amount": 4193000.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/511",
+        "particulars": "Printing of Staff ID card and purchase of Hanging accessories",
+        "type": "expenditure",
+        "account": "CASH",
+        "category": "OFFICE MAINT.",
+        "amount": 3800.0
+    },
+    {
+        "date": "2026-04-05T00:00:00",
+        "voucherNo": "AB/05/026/512",
+        "particulars": "Cash withdraw from UBA",
+        "type": "income",
+        "account": "CASH",
+        "category": "OFFICE MAINT.",
+        "amount": 20000.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/513",
+        "particulars": "Tyre service (2 hyundai Red car and 1 Honda Pilot tyre)",
+        "type": "expenditure",
+        "account": "CASH",
+        "category": "VEHICLE MAINT",
+        "amount": 5500.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/514",
+        "particulars": "Purchase of 2 HP Laptops",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "ASSET",
+        "amount": 660000.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/515",
+        "particulars": "Issuance of Property Recovery Notice",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "LEGAL FEES",
+        "amount": 10000.0
+    },
+    {
+        "date": "2026-06-05T00:00:00",
+        "voucherNo": "AB/05/026/516",
+        "particulars": "Replace of Battery for Hyundai Red car remote control",
+        "type": "expenditure",
+        "account": "UBA",
+        "category": "VEHICLE MAINT",
+        "amount": 3000.0
+    },
+    {
+        "date": "2026-06-05T00:00:00",
+        "voucherNo": "AB/05/026/517",
+        "particulars": "Sales of Rusewe Estate Property",
+        "type": "income",
+        "account": "FBN",
+        "category": "SALES",
+        "amount": 6000.0
+    },
+    {
+        "date": "2026-06-05T00:00:00",
+        "voucherNo": "AB/05/026/518",
+        "particulars": "Operational Soft Loan From ABC",
+        "type": "income",
+        "account": "FBN",
+        "category": "INVESTMENT/LOAN",
+        "amount": 6000.0
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/519",
+        "particulars": "Purchase of Grease and Iron Clip for Corolla Shaft Replacement",
+        "type": "expenditure",
+        "account": "UBA",
+        "category": "VEHICLE MAINT",
+        "amount": 3100.0
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/520",
+        "particulars": "Refund to MD for Agents Logisitics on Rusewe Property Purchase",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "PROPERTY EXP",
+        "amount": 1450000.0
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/521",
+        "particulars": "Purchase of Additional One HP Laptop",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "ASSET",
+        "amount": 195000.0
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/522",
+        "particulars": "Production of BDM Complimentry Cards",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "OFFICE MAINT.",
+        "amount": 17100.0
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/523",
+        "particulars": "Legal Fees for Rusewe Estate Property",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "LEGAL FEES",
+        "amount": 95000.0
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/524",
+        "particulars": "Tizeti Internet Monthly Subscription",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "INTERNET &CUG",
+        "amount": 27890.47
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/525",
+        "particulars": "Agency fees on Purchase of Rusewe Property Part 1 of 2",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "AGENT COMM",
+        "amount": 361000.0
+    },
+    {
+        "date": "2026-08-05T00:00:00",
+        "voucherNo": "AB/05/026/526",
+        "particulars": "Agency fees on Purchase of Rusewe Property Part 2 of 2",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "AGENT COMM",
+        "amount": 541500.0
+    },
+    {
+        "date": "2026-05-05T00:00:00",
+        "voucherNo": "AB/05/026/527",
+        "particulars": "Car Park Fees at Mediation Center at Agege LGA",
+        "type": "expenditure",
+        "account": "CASH",
+        "category": "OFFICE MAINT.",
+        "amount": 500.0
+    },
+    {
+        "date": "2026-09-05T00:00:00",
+        "voucherNo": "AB/05/026/528",
+        "particulars": "12 Months Investment Subscription",
+        "type": "income",
+        "account": "FBN",
+        "category": "INVESTMENT/LOAN",
+        "amount": 6000.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/529",
+        "particulars": "Refund to MD on Cars repairs",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "VEHICLE MAINT",
+        "amount": 162000.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/530",
+        "particulars": "Refund to MD on Other Agent Logisticis on Shyllon Estate Property",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "PROPERTY EXP",
+        "amount": 50000.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/531",
+        "particulars": "Refund to MD on New BDM Training Transport Allowance",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "SALARY & ALL",
+        "amount": 20000.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/532",
+        "particulars": "Refund to MD on Honda Pilot Kick Repair",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "VEHICLE MAINT",
+        "amount": 21000.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/533",
+        "particulars": "Investment Referral Bonus on 24m Investment",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "REFERRAL C&B",
+        "amount": 561600.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/534",
+        "particulars": "Agency Fees on the Sales of Rusewe Estate Property",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "AGENT COMM",
+        "amount": 1662500.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/535",
+        "particulars": "Weekly Allowancce to Staff: Mr. Kazeem Adisa",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "SALARY & ALL",
+        "amount": 10000.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/536",
+        "particulars": "Part 1 of 3 Payment for 12 Month Investment Subscription",
+        "type": "income",
+        "account": "FBN",
+        "category": "INVESTMENT/LOAN",
+        "amount": 10000000.0
+    },
+    {
+        "date": "2026-11-05T00:00:00",
+        "voucherNo": "AB/05/026/537",
+        "particulars": "Mechanic Workmanship Balance on cars repair",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "VEHICLE MAINT",
+        "amount": 10000.0
+    },
+    {
+        "date": "2026-12-05T00:00:00",
+        "voucherNo": "AB/05/026/538",
+        "particulars": "Cash withdraw from UBA",
+        "type": "income",
+        "account": "CASH",
+        "category": "OFFICE MAINT.",
+        "amount": 20000.0
+    },
+    {
+        "date": "2026-12-05T00:00:00",
+        "voucherNo": "AB/05/026/539",
+        "particulars": "Part 2 of 3 Payment for 12 Month Investment Subscription",
+        "type": "income",
+        "account": "FBN",
+        "category": "INVESTMENT/LOAN",
+        "amount": 10000000.0
+    },
+    {
+        "date": "2026-12-05T00:00:00",
+        "voucherNo": "AB/05/026/540",
+        "particulars": "ROI Upfront payout on 400,000 investment subscription",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "INVESTMENT &ROI",
+        "amount": 86400.0
+    },
+    {
+        "date": "2026-12-05T00:00:00",
+        "voucherNo": "AB/05/026/541",
+        "particulars": "Investment and ROI Payout at Maturity",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "INVESTMENT &ROI",
+        "amount": 599000.0
+    },
+    {
+        "date": "2026-12-05T00:00:00",
+        "voucherNo": "AB/05/026/542",
+        "particulars": "Car Was of Red Hyundai Interior and Extrior",
+        "type": "expenditure",
+        "account": "CASH",
+        "category": "VEHICLE MAINT",
+        "amount": 2000.0
+    },
+    {
+        "date": "2026-07-05T00:00:00",
+        "voucherNo": "AB/05/026/543",
+        "particulars": "Conversion of All  Outstanding ABC Soft Loan to 12 Months Investment",
+        "type": "income",
+        "account": "FBN",
+        "category": "INVESTMENT/LOAN",
+        "amount": 24000000.0
+    },
+    {
+        "date": "2026-12-05T00:00:00",
+        "voucherNo": "AB/05/026/544",
+        "particulars": "Refund on Excess WHT Deduction from MD referral bonus paid",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "OFFICE MAINT.",
+        "amount": 31200.0
+    },
+    {
+        "date": "2026-13-05T00:00:00",
+        "voucherNo": "AB/05/026/545",
+        "particulars": "50% ROI Payout on 25M investment Subscription",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "OFFICE MAINT.",
+        "amount": 2700000.0
+    },
+    {
+        "date": "2026-13-05T00:00:00",
+        "voucherNo": "AB/05/026/546",
+        "particulars": "Investment Referral Bonus on 25m Investment",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "OFFICE MAINT.",
+        "amount": 570000.0
+    },
+    {
+        "date": "2026-13-05T00:00:00",
+        "voucherNo": "AB/05/026/547",
+        "particulars": "80% Advance Payment for Webapp and Mobileapp Development",
+        "type": "expenditure",
+        "account": "FBN",
+        "category": "OFFICE MAINT.",
+        "amount": 1840000.0
+    },
+    {
+        "date": "2026-13-05T00:00:00",
+        "voucherNo": "AB/05/026/548",
+        "particulars": "Payment 3of3 of the 25M 12 months Investment Subscription",
+        "type": "income",
+        "account": "FBN",
+        "category": "OFFICE MAINT.",
+        "amount": 5000000.0
+    },
+    {
+        "date": "2026-13-05T00:00:00",
+        "voucherNo": "AB/05/026/549",
+        "particulars": "Fueling of Red Hyundai Car",
+        "type": "expenditure",
+        "account": "UBA",
+        "category": "OFFICE MAINT.",
+        "amount": 20000.0
+    }
+]

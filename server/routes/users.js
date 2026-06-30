@@ -306,4 +306,40 @@ router.put('/:id/assign-officer', protect, async (req, res) => {
     }
 });
 
+// @route   PUT /api/users/:id
+// @desc    Update user/staff metadata details (HR / CEO / Superadmin)
+// @access  Private
+router.put('/:id', protect, async (req, res) => {
+    try {
+        const targetUser = await User.findById(req.params.id);
+        if (!targetUser) return res.status(404).json({ message: 'User not found' });
+
+        const currentTier = TIERS[req.user.role] || 0;
+        const targetTier = TIERS[targetUser.role] || 0;
+
+        if (currentTier < targetTier && req.user.id !== targetUser.id) {
+            return res.status(401).json({ message: 'Insufficient permissions to update this user' });
+        }
+
+        const allowed = ['firstName', 'surname', 'phoneNumber', 'basicSalary', 'bonuses', 'age', 'idNumber', 'bankName', 'bankCode', 'accountNumber', 'debitAccountNo'];
+        const updates = {};
+        allowed.forEach(key => {
+            if (req.body[key] !== undefined) {
+                if (['basicSalary', 'bonuses', 'age'].includes(key)) {
+                    updates[key] = Number(req.body[key]) || 0;
+                } else {
+                    updates[key] = req.body[key];
+                }
+            }
+        });
+
+        const updated = await User.findByIdAndUpdate(req.params.id, { $set: updates }, { new: true, runValidators: true })
+            .select('-password');
+
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
 module.exports = router;

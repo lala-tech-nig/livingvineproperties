@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Search, Shield, ShieldOff, ChevronDown, RefreshCw,
-    Mail, Phone, UserCog, CheckCircle, XCircle, Clock, Filter, UserCheck, ArrowRightLeft, X
+    Mail, Phone, UserCog, CheckCircle, XCircle, Clock, Filter, UserCheck, ArrowRightLeft, X, Plus
 } from 'lucide-react';
 
 const ROLES_ASSIGNABLE = ['management', 'hr', 'sales', 'marketing'];
@@ -46,6 +46,8 @@ export default function ManagementUsers() {
     const [transferSource, setTransferSource] = useState(null); // staff whose accounts we'll transfer
     const [transferTargetId, setTransferTargetId] = useState('');
     const [transferLoading, setTransferLoading] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [editingStaff, setEditingStaff] = useState(null);
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
@@ -151,13 +153,24 @@ export default function ManagementUsers() {
                     </h1>
                     <p className="text-gray-400 mt-1">Manage operational accounts and access roles across the organization.</p>
                 </div>
-                <button
-                    onClick={fetchUsers}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-medium"
-                >
-                    <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                    Refresh
-                </button>
+                <div className="flex gap-2.5">
+                    <button
+                        onClick={fetchUsers}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-medium"
+                    >
+                        <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                        Refresh
+                    </button>
+                    {['hr', 'ceo', 'superadmin', 'management'].includes(currentUser?.role) && (
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition-colors text-sm font-bold shadow-md shadow-amber-600/10"
+                        >
+                            <Plus size={16} />
+                            Add Staff Member
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Stats Bar */}
@@ -276,6 +289,17 @@ export default function ManagementUsers() {
                                                 <Mail size={12} className="text-gray-400" />
                                                 {u.email}
                                             </p>
+                                            <div className="pt-0.5">
+                                                {u.accountNumber ? (
+                                                    <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded inline-block" title={`${u.bankName || 'Bank'}`}>
+                                                        🏦 {u.bankName || 'Bank'}: {u.accountNumber} ({u.bankCode})
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded inline-block">
+                                                        ⚠️ Bank details missing
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </td>
 
@@ -344,6 +368,15 @@ export default function ManagementUsers() {
                                         <div className="flex items-center justify-end gap-2">
                                             {canModify(u) && (
                                                 <button
+                                                    onClick={() => setEditingStaff(u)}
+                                                    title="Edit Staff Metadata & Bank Info"
+                                                    className="p-2 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                                >
+                                                    <UserCog size={18} />
+                                                </button>
+                                            )}
+                                            {canModify(u) && (
+                                                <button
                                                     onClick={() => { setTransferSource(u); setTransferTargetId(''); }}
                                                     title="Transfer assigned accounts to another staff"
                                                     className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
@@ -383,96 +416,318 @@ export default function ManagementUsers() {
                 <div className="fixed inset-0 z-40" onClick={() => setOpenRoleMenu(null)} />
             )}
 
-            {/* Transfer Accounts Modal */}
+            {/* Modals */}
             <AnimatePresence>
-                {transferSource && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-                            className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
-                        >
-                            {/* Modal header */}
-                            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
-                                        <ArrowRightLeft size={18} className="text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900">Transfer Accounts</h3>
-                                        <p className="text-xs text-gray-400">Reassign all accounts from this staff member</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => { setTransferSource(null); setTransferTargetId(''); }} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
-                                    <X size={18} />
-                                </button>
-                            </div>
-
-                            <div className="p-6 space-y-5">
-                                {/* From */}
-                                <div className="bg-gray-50 rounded-2xl p-4">
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Transferring FROM</p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-sm">
-                                            {transferSource.firstName?.charAt(0)}{transferSource.surname?.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">{transferSource.firstName} {transferSource.surname}</p>
-                                            <p className="text-xs text-gray-500">{transferSource.email}</p>
-                                        </div>
-                                        <span className={`ml-auto text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${ROLE_COLORS[transferSource.role] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>{ROLE_LABELS[transferSource.role] || transferSource.role}</span>
-                                    </div>
-                                </div>
-
-                                {/* To */}
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Transfer TO</label>
-                                    <select
-                                        value={transferTargetId}
-                                        onChange={e => setTransferTargetId(e.target.value)}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-colors"
-                                    >
-                                        <option value="">— Select a staff member —</option>
-                                        {users
-                                            .filter(u => u._id !== transferSource._id && u.isActive && u.role !== 'investor')
-                                            .map(u => (
-                                                <option key={u._id} value={u._id}>
-                                                    {u.firstName} {u.surname} ({ROLE_LABELS[u.role] || u.role})
-                                                </option>
-                                            ))
-                                        }
-                                    </select>
-                                </div>
-
-                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
-                                    <strong>What will be transferred:</strong> All investor accounts, CRM customers, and leads currently assigned to <strong>{transferSource.firstName}</strong> will be reassigned to the selected staff member.
-                                </div>
-
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => { setTransferSource(null); setTransferTargetId(''); }}
-                                        className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleTransferAccounts}
-                                        disabled={!transferTargetId || transferLoading}
-                                        className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {transferLoading ? (
-                                            <><RefreshCw size={16} className="animate-spin" /> Transferring...</>
-                                        ) : (
-                                            <><ArrowRightLeft size={16} /> Confirm Transfer</>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
+                {showAddModal && (
+                    <AddStaffModal onClose={() => setShowAddModal(false)} onCreated={fetchUsers} />
+                )}
+                {editingStaff && (
+                    <EditStaffModal staff={editingStaff} onClose={() => setEditingStaff(null)} onUpdated={fetchUsers} />
                 )}
             </AnimatePresence>
+        </div>
+    );
+}
+
+// ── ADD STAFF MODAL ──────────────────────────────────────────────────────────
+function AddStaffModal({ onClose, onCreated }) {
+    const [form, setForm] = useState({
+        firstName: '', surname: '', email: '', password: '', phoneNumber: '',
+        role: 'sales', basicSalary: '', age: '', idNumber: '', bonuses: '',
+        joiningDate: new Date().toISOString().split('T')[0],
+        bankName: '', bankCode: '', accountNumber: '', debitAccountNo: '2045896422'
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!form.firstName || !form.surname || !form.email || !form.password || !form.phoneNumber) {
+            toast.error('First Name, Surname, Email, Password, and Phone Number are required.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await api.post('/whatsapp/create-staff', {
+                ...form,
+                basicSalary: Number(form.basicSalary) || 0,
+                bonuses: Number(form.bonuses) || 0,
+                age: Number(form.age) || undefined,
+            });
+            toast.success('Staff account created successfully!');
+            onCreated();
+            onClose();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to create staff account');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.93 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.93 }}
+                className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden max-h-[90vh] flex flex-col text-gray-800 text-xs">
+                <div className="bg-amber-600 p-5 text-white flex justify-between items-center shrink-0">
+                    <div>
+                        <h3 className="text-lg font-bold">Add Staff Member</h3>
+                        <p className="text-xs text-amber-100 font-medium">Create a new operational staff account with credentials & payroll details.</p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-white"><X size={18} /></button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">First Name *</label>
+                            <input type="text" required value={form.firstName} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Surname *</label>
+                            <input type="text" required value={form.surname} onChange={e => setForm(p => ({ ...p, surname: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Email Address *</label>
+                            <input type="email" required value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Password *</label>
+                            <input type="password" required value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Phone Number *</label>
+                            <input type="text" required value={form.phoneNumber} onChange={e => setForm(p => ({ ...p, phoneNumber: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Role *</label>
+                            <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
+                                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-gray-800 text-xs outline-none cursor-pointer">
+                                <option value="sales">Sales Rep</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="hr">HR Manager</option>
+                                <option value="management">Management</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-150">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Base Salary (₦)</label>
+                            <input type="number" value={form.basicSalary} onChange={e => setForm(p => ({ ...p, basicSalary: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Bonuses (₦)</label>
+                            <input type="number" value={form.bonuses} onChange={e => setForm(p => ({ ...p, bonuses: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Age</label>
+                            <input type="number" value={form.age} onChange={e => setForm(p => ({ ...p, age: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-800 text-xs outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">ID Number (Staff Code)</label>
+                            <input type="text" value={form.idNumber} onChange={e => setForm(p => ({ ...p, idNumber: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Joining Date</label>
+                            <input type="date" value={form.joiningDate} onChange={e => setForm(p => ({ ...p, joiningDate: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-150 space-y-3">
+                        <p className="font-bold text-slate-700 text-xs">Bank Accounts & Batch Payments Credentials</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Credit Account No</label>
+                                <input type="text" maxLength={10} placeholder="10-digit number" value={form.accountNumber} onChange={e => setForm(p => ({ ...p, accountNumber: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                            </div>
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Credit Bank Code</label>
+                                <input type="text" placeholder="e.g. 044 (Access), 058 (GTB)" value={form.bankCode} onChange={e => setForm(p => ({ ...p, bankCode: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Bank Name</label>
+                                <input type="text" placeholder="e.g. Access Bank" value={form.bankName} onChange={e => setForm(p => ({ ...p, bankName: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                            </div>
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Corporate Debit Account</label>
+                                <input type="text" value={form.debitAccountNo} onChange={e => setForm(p => ({ ...p, debitAccountNo: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none font-mono" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t border-gray-150 justify-end shrink-0">
+                        <button type="button" onClick={onClose}
+                            className="px-4 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl font-bold transition-colors">Cancel</button>
+                        <button type="submit" disabled={loading}
+                            className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-1.5 shadow-md shadow-amber-600/10">
+                            {loading && <RefreshCw size={14} className="animate-spin" />}
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
+}
+
+// ── EDIT STAFF MODAL ──────────────────────────────────────────────────────────
+function EditStaffModal({ staff, onClose, onUpdated }) {
+    const [form, setForm] = useState({
+        firstName: staff.firstName || '',
+        surname: staff.surname || '',
+        phoneNumber: staff.phoneNumber || '',
+        basicSalary: staff.basicSalary || '',
+        bonuses: staff.bonuses || '',
+        age: staff.age || '',
+        idNumber: staff.idNumber || '',
+        bankName: staff.bankName || '',
+        bankCode: staff.bankCode || '',
+        accountNumber: staff.accountNumber || '',
+        debitAccountNo: staff.debitAccountNo || '2045896422'
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await api.put(`/users/${staff._id}`, {
+                ...form,
+                basicSalary: Number(form.basicSalary) || 0,
+                bonuses: Number(form.bonuses) || 0,
+                age: Number(form.age) || undefined,
+            });
+            toast.success('Staff account updated successfully!');
+            onUpdated();
+            onClose();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update staff account');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.93 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.93 }}
+                className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden max-h-[90vh] flex flex-col text-gray-800 text-xs">
+                <div className="bg-indigo-600 p-5 text-white flex justify-between items-center shrink-0">
+                    <div>
+                        <h3 className="text-lg font-bold">Edit Staff Profile</h3>
+                        <p className="text-xs text-indigo-100 font-medium">Update operational configurations, compensation, and banking information.</p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-white"><X size={18} /></button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">First Name *</label>
+                            <input type="text" required value={form.firstName} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Surname *</label>
+                            <input type="text" required value={form.surname} onChange={e => setForm(p => ({ ...p, surname: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Phone Number *</label>
+                            <input type="text" required value={form.phoneNumber} onChange={e => setForm(p => ({ ...p, phoneNumber: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">ID Number (Staff Code)</label>
+                            <input type="text" value={form.idNumber} onChange={e => setForm(p => ({ ...p, idNumber: e.target.value }))}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-150">
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Base Salary (₦)</label>
+                            <input type="number" value={form.basicSalary} onChange={e => setForm(p => ({ ...p, basicSalary: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Bonuses (₦)</label>
+                            <input type="number" value={form.bonuses} onChange={e => setForm(p => ({ ...p, bonuses: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-800 text-xs outline-none" />
+                        </div>
+                        <div>
+                            <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Age</label>
+                            <input type="number" value={form.age} onChange={e => setForm(p => ({ ...p, age: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-800 text-xs outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-150 space-y-3">
+                        <p className="font-bold text-slate-700 text-xs">Bank Accounts & Batch Payments Credentials</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Credit Account No</label>
+                                <input type="text" maxLength={10} placeholder="10-digit number" value={form.accountNumber} onChange={e => setForm(p => ({ ...p, accountNumber: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                            </div>
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Credit Bank Code</label>
+                                <input type="text" placeholder="e.g. 044 (Access), 058 (GTB)" value={form.bankCode} onChange={e => setForm(p => ({ ...p, bankCode: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Bank Name</label>
+                                <input type="text" placeholder="e.g. Access Bank" value={form.bankName} onChange={e => setForm(p => ({ ...p, bankName: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none" />
+                            </div>
+                            <div>
+                                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Corporate Debit Account</label>
+                                <input type="text" value={form.debitAccountNo} onChange={e => setForm(p => ({ ...p, debitAccountNo: e.target.value }))}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-xs outline-none font-mono" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t border-gray-150 justify-end shrink-0">
+                        <button type="button" onClick={onClose}
+                            className="px-4 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl font-bold transition-colors">Cancel</button>
+                        <button type="submit" disabled={loading}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-1.5 shadow-md shadow-indigo-600/10">
+                            {loading && <RefreshCw size={14} className="animate-spin" />}
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
         </div>
     );
 }
