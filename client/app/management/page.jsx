@@ -132,6 +132,7 @@ function InvestorModal({ investor, onClose }) {
 
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 export default function ManagementDashboard() {
+    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState('investments');
     const [investments, setInvestments] = useState([]);
     const [investors, setInvestors] = useState([]);
