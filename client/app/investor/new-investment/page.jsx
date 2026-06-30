@@ -34,17 +34,24 @@ export default function NewInvestment() {
     const [hasNinOnFile, setHasNinOnFile] = useState(false);
     const [existingNin, setExistingNin] = useState('');
 
-    // Identity verification states (only shown on first investment)
-    const [idType, setIdType] = useState('nin');
-    const [idNumber, setIdNumber] = useState('');
-    const [verifiedRecord, setVerifiedRecord] = useState(null);
-
     const [formData, setFormData] = useState({
-        name: '', email: '', contactAddress: '', phoneNumber: '',
-        amountToInvest: '', displayAmount: '',
-        productId: '', selectedProduct: null,
-        durationInMonths: '', principalActionAfterMaturity: '',
-        nin: '', bvn: '',
+        firstName: '',
+        surname: '',
+        name: '',
+        email: '',
+        contactAddress: '',
+        phoneNumber: '',
+        amountToInvest: '',
+        displayAmount: '',
+        productId: '',
+        selectedProduct: null,
+        durationInMonths: '',
+        principalActionAfterMaturity: '',
+        nin: '',
+        dob: '',
+        gender: '',
+        state: '',
+        occupation: '',
         accountDetails: { bankName: '', accountNumber: '', accountName: '' },
         nextOfKin: { fullName: '', address: '', phoneNumber: '', relationship: '' }
     });
@@ -60,21 +67,25 @@ export default function NewInvestment() {
                 setProducts(prodRes.data);
 
                 const profile = profileRes.data;
-                // Pre-fill name/email/phone from profile
+                // Pre-fill name/email/phone/NIN details from profile
                 setFormData(prev => ({
                     ...prev,
+                    firstName: profile.firstName || '',
+                    surname: profile.surname || '',
                     name: `${profile.firstName || ''} ${profile.surname || ''}`.trim(),
                     email: profile.email || '',
                     phoneNumber: profile.phoneNumber || '',
                     contactAddress: profile.address || '',
                     nin: profile.nin || '',
+                    dob: profile.dob ? new Date(profile.dob).toISOString().slice(0, 10) : '',
+                    gender: profile.gender || '',
+                    state: profile.state || '',
+                    occupation: profile.occupation || '',
                 }));
 
                 if (profile.nin) {
                     setHasNinOnFile(true);
                     setExistingNin(profile.nin);
-                    // Auto-mark as verified so step 1 is skipped
-                    setVerifiedRecord({ name: `${profile.firstName} ${profile.surname}`, email: profile.email, phoneNumber: profile.phoneNumber, contactAddress: profile.address || '' });
                     // Skip directly to step 2
                     setStep(2);
                 }
@@ -103,32 +114,7 @@ export default function NewInvestment() {
         }
     };
 
-    const handleVerifyIdentity = async () => {
-        if (!idNumber || idNumber.trim().length < 10) {
-            toast.error('Please enter a valid NIN or BVN number.');
-            return;
-        }
-        setVerifying(true);
-        try {
-            const { data } = await api.get(`/investments/verify-identity?type=${idType}&number=${idNumber}`);
-            setVerifiedRecord(data);
-            setFormData(prev => ({
-                ...prev,
-                name: data.name,
-                email: data.email,
-                phoneNumber: data.phoneNumber,
-                contactAddress: data.contactAddress,
-                nin: idType === 'nin' ? idNumber : '',
-                bvn: idType === 'bvn' ? idNumber : ''
-            }));
-            toast.success(`Identity Verified: ${data.name}`);
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Identity verification failed.');
-            setVerifiedRecord(null);
-        } finally {
-            setVerifying(false);
-        }
-    };
+
 
     const handleProductSelect = (product) => {
         setFormData(prev => ({
@@ -152,9 +138,40 @@ export default function NewInvestment() {
         const capitalStep  = hasNinOnFile ? 2 : 3;
         const kinStep      = hasNinOnFile ? 3 : 4;
 
-        if (step === identityStep && !verifiedRecord) {
-            toast.error('Please verify your NIN/BVN identity to proceed.');
-            return;
+        if (step === identityStep) {
+            if (!formData.nin || formData.nin.length !== 11) {
+                toast.error('Please enter a valid 11-digit National Identity Number (NIN).');
+                return;
+            }
+            if (!formData.firstName || !formData.surname) {
+                toast.error('First name and surname are required.');
+                return;
+            }
+            if (!formData.phoneNumber) {
+                toast.error('Phone number is required.');
+                return;
+            }
+            if (!formData.dob) {
+                toast.error('Date of birth is required.');
+                return;
+            }
+            if (!formData.gender) {
+                toast.error('Gender is required.');
+                return;
+            }
+            if (!formData.state) {
+                toast.error('State is required.');
+                return;
+            }
+            if (!formData.occupation) {
+                toast.error('Occupation is required.');
+                return;
+            }
+            if (!formData.contactAddress) {
+                toast.error('Residential address is required.');
+                return;
+            }
+            setFormData(prev => ({ ...prev, name: `${formData.firstName} ${formData.surname}` }));
         }
         if (step === productStep && !formData.productId) {
             toast.error('Please select an investment product package.');
@@ -187,7 +204,23 @@ export default function NewInvestment() {
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            await api.post('/investments', { ...formData, date: new Date().toISOString() });
+            // Update user profile details in database
+            await api.put('/users/profile', {
+                gender: formData.gender,
+                state: formData.state,
+                address: formData.contactAddress,
+                occupation: formData.occupation,
+                dob: formData.dob,
+                nin: formData.nin
+            });
+
+            // Submit investment request
+            await api.post('/investments', { 
+                ...formData, 
+                name: `${formData.firstName} ${formData.surname}`,
+                date: new Date().toISOString() 
+            });
+            
             confetti({ particleCount: 150, spread: 80, origin: { y: 0.55 } });
             toast.success('Investment submitted successfully! It is now under review.', { duration: 6000 });
             setTimeout(() => router.push('/investor'), 3000);
@@ -289,58 +322,132 @@ export default function NewInvestment() {
                     {!hasNinOnFile && step === 1 && (
                         <motion.div key="step-identity" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">Identity Registry Check</h3>
-                                <p className="text-sm text-gray-500">Verify your NIN to pre-fill your application. This is only required for your first investment — we'll remember it automatically.</p>
-                            </div>
-
-                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs text-blue-800 space-y-1">
-                                <p className="font-bold flex items-center gap-1.5"><Info size={14} />One-time verification</p>
-                                <p>Your NIN will be securely stored on your profile. Future investments will skip this step entirely.</p>
-                            </div>
-
-                            <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100 text-xs text-orange-800 space-y-1.5">
-                                <p className="font-bold flex items-center gap-1.5"><Info size={14} />Mock Identity Database Credentials:</p>
-                                <ul className="list-disc pl-5 space-y-0.5">
-                                    <li><strong>NIN:</strong> 12345678901, 23456789012, or 34567890123</li>
-                                    <li><strong>BVN:</strong> 22222222222, 33333333333, or 44444444444</li>
-                                </ul>
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">NIN Identity Registration</h3>
+                                <p className="text-sm text-gray-500">Provide your 11-digit National Identity Number and registration details as they appear on your official NIN record. This setup is a one-time process.</p>
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex gap-4">
-                                    {['nin', 'bvn'].map(type => (
-                                        <button key={type} type="button" onClick={() => { setIdType(type); setVerifiedRecord(null); }}
-                                            className={`flex-1 py-3 px-4 rounded-xl border text-sm font-bold text-center transition-all ${idType === type ? 'bg-orange-50 border-[#de1f25] text-orange-900' : 'bg-white border-gray-200 text-gray-500'}`}>
-                                            {type === 'nin' ? 'National Identity Number (NIN)' : 'Bank Verification Number (BVN)'}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Enter {idType.toUpperCase()} Number</label>
-                                    <div className="flex gap-3">
-                                        <input type="text" value={idNumber}
-                                            onChange={e => { setIdNumber(e.target.value.replace(/\D/g, '')); setVerifiedRecord(null); }}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">National Identity Number (NIN)</label>
+                                        <input
+                                            type="text"
+                                            name="nin"
+                                            value={formData.nin}
+                                            onChange={e => handleChange({ target: { name: 'nin', value: e.target.value.replace(/\D/g, '') } })}
                                             maxLength="11"
-                                            className="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900 tracking-widest font-mono text-lg"
-                                            placeholder={`11-digit ${idType.toUpperCase()}`} />
-                                        <button type="button" onClick={handleVerifyIdentity} disabled={verifying || idNumber.length < 10}
-                                            className="bg-gray-900 hover:bg-black text-white font-bold text-sm px-6 py-3 rounded-xl transition-all disabled:opacity-40">
-                                            {verifying ? 'Verifying...' : 'Verify'}
-                                        </button>
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900 tracking-widest font-mono text-lg"
+                                            placeholder="Enter 11-digit NIN"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">First Name</label>
+                                        <input
+                                            type="text"
+                                            name="firstName"
+                                            value={formData.firstName}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900"
+                                            placeholder="First Name"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Surname</label>
+                                        <input
+                                            type="text"
+                                            name="surname"
+                                            value={formData.surname}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900"
+                                            placeholder="Surname"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            name="phoneNumber"
+                                            value={formData.phoneNumber}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900 font-medium"
+                                            placeholder="Phone Number"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Date of Birth</label>
+                                        <input
+                                            type="date"
+                                            name="dob"
+                                            value={formData.dob}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Gender</label>
+                                        <select
+                                            name="gender"
+                                            value={formData.gender}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 bg-white text-gray-900"
+                                        >
+                                            <option value="">Select Gender...</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">State of Origin / Residence</label>
+                                        <input
+                                            type="text"
+                                            name="state"
+                                            value={formData.state}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900"
+                                            placeholder="State"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Occupation</label>
+                                        <input
+                                            type="text"
+                                            name="occupation"
+                                            value={formData.occupation}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900"
+                                            placeholder="e.g. Civil Servant, Architect"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Residential Address</label>
+                                        <textarea
+                                            name="contactAddress"
+                                            value={formData.contactAddress}
+                                            onChange={handleChange}
+                                            required
+                                            rows="3"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-200 focus:border-[#de1f25] bg-gray-50 text-gray-900 outline-none resize-none"
+                                            placeholder="Full Residential Address"
+                                        />
                                     </div>
                                 </div>
-                                {verifiedRecord && (
-                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                        className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-2 text-emerald-800">
-                                        <div className="flex items-center gap-2 font-bold text-sm"><CheckCircle2 className="text-emerald-600" size={18} />Identity Verification Successful</div>
-                                        <div className="text-xs grid grid-cols-2 gap-3 text-emerald-900 font-medium border-t border-emerald-200/50 pt-2">
-                                            <div><span className="text-emerald-700 block font-normal">Full Name:</span>{verifiedRecord.name}</div>
-                                            <div><span className="text-emerald-700 block font-normal">Email:</span>{verifiedRecord.email}</div>
-                                            <div><span className="text-emerald-700 block font-normal">Phone:</span>{verifiedRecord.phoneNumber}</div>
-                                            <div><span className="text-emerald-700 block font-normal">Address:</span>{verifiedRecord.contactAddress}</div>
-                                        </div>
-                                    </motion.div>
-                                )}
                             </div>
                         </motion.div>
                     )}
