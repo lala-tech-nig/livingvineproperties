@@ -6,10 +6,12 @@ import api from '@/lib/axios';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Server, Activity, Users, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import InvestorListSidebar from '@/components/dashboard/InvestorListSidebar';
 
 export default function SuperAdminDashboard() {
     const { user } = useAuthStore();
     const [allUsers, setAllUsers] = useState([]);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -43,8 +45,14 @@ export default function SuperAdminDashboard() {
                     </h2>
                     <p className="text-slate-400">Global system control and multi-tier management.</p>
                 </div>
-                <div className="bg-indigo-950 px-4 py-2 rounded-full text-indigo-400 text-xs font-bold uppercase tracking-wider border border-indigo-900">
-                    Tier 100 Access
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setSidebarOpen(true)}
+                        className="bg-[#de1f25] hover:bg-[#b0181d] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-[#de1f25]/10 flex items-center gap-1.5 shrink-0">
+                        <Users size={14} /> Investor Insights
+                    </button>
+                    <div className="bg-indigo-950 px-4 py-2 rounded-full text-indigo-400 text-xs font-bold uppercase tracking-wider border border-indigo-900">
+                        Tier 100 Access
+                    </div>
                 </div>
             </header>
 
@@ -131,6 +139,8 @@ export default function SuperAdminDashboard() {
                     </table>
                 </div>
             </div>
+
+            <InvestorListSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         </div>
     );
 }

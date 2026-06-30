@@ -129,7 +129,7 @@ router.get('/my', protect, async (req, res) => {
 // @route   GET /api/investments
 // @desc    Get all investments (management / ceo)
 // @access  Private/Admin
-router.get('/', protect, authorize('management', 'ceo'), async (req, res) => {
+router.get('/', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
     try {
         const investments = await Investment.find({}).populate('user', 'id firstName surname email').sort('-createdAt');
         res.json(investments);

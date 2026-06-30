@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import InvestorListSidebar from '@/components/dashboard/InvestorListSidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Briefcase, AlertCircle, Eye, Users, UserCheck, Search, Filter,
@@ -134,6 +135,7 @@ function InvestorModal({ investor, onClose }) {
 export default function ManagementDashboard() {
     const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState('investments');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [investments, setInvestments] = useState([]);
     const [investors, setInvestors] = useState([]);
     const [staff, setStaff] = useState([]);
@@ -290,6 +292,10 @@ export default function ManagementDashboard() {
                     <h2 className="text-2xl font-bold text-white">Management Overview</h2>
                     <p className="text-gray-400">Monitor investments and manage the full investor registry.</p>
                 </div>
+                <button onClick={() => setSidebarOpen(true)}
+                    className="bg-[#de1f25] hover:bg-[#b0181d] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-[#de1f25]/10 flex items-center gap-1.5 shrink-0">
+                    <Users size={14} /> Investor Insights
+                </button>
             </div>
 
             {/* Top Stats */}
@@ -659,6 +665,7 @@ export default function ManagementDashboard() {
             <AnimatePresence>
                 {selectedInvestor && <InvestorModal investor={selectedInvestor} onClose={() => setSelectedInvestor(null)} />}
             </AnimatePresence>
+            <InvestorListSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         </div>
     );
 }

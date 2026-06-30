@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import InvestorListSidebar from '@/components/dashboard/InvestorListSidebar';
 import { motion } from 'framer-motion';
 import {
     TrendingUp, Users, CheckCircle, Clock, XCircle, Landmark,
@@ -24,6 +25,7 @@ const STATUS_COLOR = {
 export default function CEODashboard() {
     const { user } = useAuthStore();
     const [viewMode, setViewMode] = useState('overview'); // 'overview' or 'support'
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [investments, setInvestments] = useState([]);
     const [accounts, setAccounts]       = useState([]);
     const [staff, setStaff]             = useState([]);
@@ -159,15 +161,21 @@ export default function CEODashboard() {
                     <h2 className="text-2xl font-bold text-white">CEO Executive Terminal</h2>
                     <p className="text-gray-400 mt-1">Welcome back, {user?.firstName}. Here's the platform at a glance.</p>
                 </div>
-                <div className="flex bg-white/15 p-1 rounded-xl w-fit shrink-0 border border-white/10">
-                    <button onClick={() => setViewMode('overview')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'overview' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-300 hover:text-white'}`}>
-                        Overview
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setSidebarOpen(true)}
+                        className="bg-[#de1f25] hover:bg-[#b0181d] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-[#de1f25]/10 flex items-center gap-1.5 shrink-0">
+                        <Users size={14} /> Investor Insights
                     </button>
-                    <button onClick={() => setViewMode('support')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'support' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-300 hover:text-white'}`}>
-                        Support Messages
-                    </button>
+                    <div className="flex bg-white/15 p-1 rounded-xl w-fit shrink-0 border border-white/10">
+                        <button onClick={() => setViewMode('overview')}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'overview' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-300 hover:text-white'}`}>
+                            Overview
+                        </button>
+                        <button onClick={() => setViewMode('support')}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'support' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-300 hover:text-white'}`}>
+                            Support Messages
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -463,6 +471,8 @@ export default function CEODashboard() {
                     </div>
                 </div>
             )}
+
+            <InvestorListSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         </div>
     );
 }
