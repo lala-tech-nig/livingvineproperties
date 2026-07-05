@@ -366,6 +366,10 @@ const websiteSettingSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    projectsPageStrategyImage: {
+        type: String,
+        default: ''
+    },
 
     // Privacy Policy Page
     privacyPageTitle: {

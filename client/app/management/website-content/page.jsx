@@ -64,6 +64,7 @@ export default function WebsiteContentEditor() {
 
         // Projects page
         projectsPageHeroTitle: '', projectsPageHeroSubtitle: '',
+        projectsPageStrategyImage: '',
 
         // Policies
         privacyPageTitle: '', privacyPageEffectiveDate: '', privacyPageContent: '',
@@ -192,6 +193,7 @@ export default function WebsiteContentEditor() {
 
                     projectsPageHeroTitle: settingsRes.projectsPageHeroTitle || '',
                     projectsPageHeroSubtitle: settingsRes.projectsPageHeroSubtitle || '',
+                    projectsPageStrategyImage: settingsRes.projectsPageStrategyImage || '',
 
                     privacyPageTitle: settingsRes.privacyPageTitle || '',
                     privacyPageEffectiveDate: settingsRes.privacyPageEffectiveDate || '',
@@ -948,11 +950,13 @@ export default function WebsiteContentEditor() {
                                                 <img src={member.img} className="w-full h-full object-cover" alt={member.name} />
                                             </div>
                                             {/* Image upload for existing member */}
-                                            <label className="flex items-center justify-center gap-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-[10px] font-bold px-2 py-1 rounded cursor-pointer border border-amber-700/30 transition-colors">
-                                                <UploadCloud size={10} /> Change Photo
-                                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                            <label className={`flex items-center justify-center gap-1 text-[10px] font-bold px-2 py-1 rounded cursor-pointer border transition-colors ${teamUploading ? 'bg-gray-700 text-gray-400 border-gray-700 cursor-not-allowed' : 'bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border-amber-700/30'}`}>
+                                                <UploadCloud size={10} /> {teamUploading ? 'Uploading...' : 'Change Photo'}
+                                                <input type="file" accept="image/*" className="hidden" disabled={teamUploading} onChange={async (e) => {
                                                     const file = e.target.files?.[0];
                                                     if (!file) return;
+                                                    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB'); return; }
+                                                    setTeamUploading(true);
                                                     const reader = new FileReader();
                                                     reader.onload = async (ev) => {
                                                         try {
@@ -961,7 +965,8 @@ export default function WebsiteContentEditor() {
                                                             updated[idx] = { ...member, img: data.url };
                                                             setSettings({ ...settings, aboutPageTeam: updated });
                                                             toast.success('Photo updated!');
-                                                        } catch { toast.error('Upload failed'); }
+                                                        } catch (err) { toast.error(err?.response?.data?.message || 'Upload failed. Try a smaller image.'); }
+                                                        finally { setTeamUploading(false); }
                                                     };
                                                     reader.readAsDataURL(file);
                                                 }} />
@@ -1022,14 +1027,15 @@ export default function WebsiteContentEditor() {
                                                     <input type="file" accept="image/*" className="hidden" disabled={teamUploading} onChange={async (e) => {
                                                         const file = e.target.files?.[0];
                                                         if (!file) return;
+                                                        if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB'); return; }
                                                         setTeamUploading(true);
                                                         const reader = new FileReader();
                                                         reader.onload = async (ev) => {
                                                             try {
                                                                 const { data } = await api.post('/website/upload-image', { imageBase64: ev.target.result, folder: 'team' });
                                                                 setNewTeam(prev => ({ ...prev, img: data.url }));
-                                                                toast.success('Photo uploaded!');
-                                                            } catch { toast.error('Upload failed'); }
+                                                                toast.success('Photo uploaded! ✓');
+                                                            } catch (err) { toast.error(err?.response?.data?.message || 'Upload failed. Try a smaller image.'); }
                                                             finally { setTeamUploading(false); }
                                                         };
                                                         reader.readAsDataURL(file);
@@ -1360,6 +1366,67 @@ export default function WebsiteContentEditor() {
                                         <input type="text" value={settings.projectsPageHeroSubtitle} onChange={e => setSettings({...settings, projectsPageHeroSubtitle: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm" />
                                     </div>
                                     
+                                    {/* Strategy Cover Image */}
+                                    <div className="border border-gray-800 rounded-xl p-4 space-y-3 bg-gray-900/50">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-xs font-bold text-amber-400 uppercase tracking-widest">Strategy Cover Image</label>
+                                            {settings.projectsPageStrategyImage && (
+                                                <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                                                    <CheckCircle2 size={10} /> Image set
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Preview */}
+                                        {settings.projectsPageStrategyImage && (
+                                            <div className="relative rounded-lg overflow-hidden border border-gray-800" style={{ height: '120px' }}>
+                                                <img
+                                                    src={settings.projectsPageStrategyImage}
+                                                    alt="Strategy cover"
+                                                    className="w-full h-full object-cover"
+                                                    onError={e => { e.target.style.display = 'none'; }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* URL input + Upload */}
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={settings.projectsPageStrategyImage}
+                                                onChange={e => setSettings({ ...settings, projectsPageStrategyImage: e.target.value })}
+                                                placeholder="Paste image URL or upload below..."
+                                                className="flex-1 bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:ring-2 focus:ring-amber-500"
+                                            />
+                                            <label className={`shrink-0 flex items-center gap-1 text-[11px] font-bold px-3 py-2 rounded-lg cursor-pointer border transition-colors ${
+                                                uploading ? 'bg-gray-700 text-gray-400 border-gray-700 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600'
+                                            }`}>
+                                                <UploadCloud size={12} />
+                                                {uploading ? 'Uploading...' : 'Upload'}
+                                                <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB'); return; }
+                                                    setUploading(true);
+                                                    const reader = new FileReader();
+                                                    reader.onload = async (ev) => {
+                                                        try {
+                                                            const { data } = await api.post('/website/upload-image', { imageBase64: ev.target.result, folder: 'strategy' });
+                                                            setSettings(prev => ({ ...prev, projectsPageStrategyImage: data.url }));
+                                                            toast.success('Strategy cover image uploaded! ✓');
+                                                        } catch (err) {
+                                                            toast.error(err?.response?.data?.message || 'Upload failed. Try a smaller image.');
+                                                        } finally {
+                                                            setUploading(false);
+                                                        }
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }} />
+                                            </label>
+                                        </div>
+                                        <p className="text-[10px] text-gray-500">This image appears as the strategy banner / cover on the Portfolio page.</p>
+                                    </div>
+
                                     <div className="border-t border-gray-855 pt-4 flex justify-between items-center">
                                         <h5 className="text-xs font-bold text-gray-450">Available Developments (Estates list)</h5>
                                         <button onClick={() => { setProjectForm({ id: null, title: '', location: '', status: 'Selling Fast', image: '', category: 'Ongoing', description: '' }); setShowModal('project'); }} className="bg-amber-600 text-white px-2 py-1 rounded hover:bg-amber-700 transition-all text-xs font-bold flex items-center gap-1">

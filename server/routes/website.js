@@ -59,7 +59,7 @@ router.get('/projects', getProjects);
 router.get('/settings', getSettings);
 router.post('/inquiries', submitInquiry);
 
-// Upload Endpoint
+// Upload Endpoint (multipart form)
 router.post('/upload', protect, authorize(...contentAdmins), upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
@@ -72,6 +72,26 @@ router.post('/upload', protect, authorize(...contentAdmins), upload.single('imag
         res.status(500).json({ message: error.message });
     }
 });
+
+// Upload Endpoint (base64) — used by website-content editor for team photos etc.
+router.post('/upload-image', protect, authorize(...contentAdmins), async (req, res) => {
+    try {
+        const { imageBase64, folder } = req.body;
+        if (!imageBase64) {
+            return res.status(400).json({ message: 'No image data provided.' });
+        }
+        const uploadFolder = folder ? `livingvine/${folder}` : 'livingvine';
+        const result = await cloudinary.uploader.upload(imageBase64, {
+            folder: uploadFolder,
+            allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif'],
+        });
+        res.json({ url: result.secure_url });
+    } catch (error) {
+        console.error('Cloudinary base64 upload error:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 router.route('/hero')
     .post(protect, authorize(...contentAdmins), addHeroSlide);
