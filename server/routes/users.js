@@ -5,6 +5,7 @@ const Customer = require('../models/Customer');
 const Lead = require('../models/Lead');
 const { protect, authorize } = require('../middlewares/authMiddleware');
 const cloudinary = require('cloudinary').v2;
+const bcrypt = require('bcryptjs');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -37,14 +38,104 @@ router.get('/profile', protect, async (req, res) => {
 // @access  Private
 router.put('/profile', protect, async (req, res) => {
     try {
-        const allowed = ['gender', 'religion', 'state', 'address', 'occupation', 'dob', 'age', 'celebrationDates', 'profileImage'];
+        const allowed = ['gender', 'religion', 'state', 'address', 'occupation', 'dob', 'age', 'celebrationDates', 'profileImage', 'bankName', 'bankCode', 'accountNumber'];
         const updates = {};
         allowed.forEach(key => { if (req.body[key] !== undefined) updates[key] = req.body[key]; });
 
-        const user = await User.findByIdAndUpdate(req.user._id, { $set: updates }, { new: true, runValidators: true })
-            .select('-password')
+        // If updating sensitive fields, log the reason
+        const sensitiveFields = ['accountNumber', 'bankName', 'bankCode'];
+        const hasSensitiveUpdate = sensitiveFields.some(f => req.body[f] !== undefined);
+        if (hasSensitiveUpdate && req.body.updateReason) {
+            const reasonEntries = sensitiveFields
+                .filter(f => req.body[f] !== undefined)
+                .map(f => ({ reason: req.body.updateReason, field: f, updatedAt: new Date() }));
+            updates['$push'] = { bioUpdateReasons: { $each: reasonEntries } };
+        }
+
+        const { $push, ...setUpdates } = updates;
+        const mongoUpdate = { $set: setUpdates };
+        if ($push) mongoUpdate.$push = $push;
+
+        const user = await User.findByIdAndUpdate(req.user._id, mongoUpdate, { new: true, runValidators: true })
+            .select('-password -transactionPin')
             .populate('accountOfficer', 'firstName surname email phoneNumber role');
         res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   POST /api/users/set-transaction-pin
+// @desc    Set or update transaction PIN (hashed)
+// @access  Private
+router.post('/set-transaction-pin', protect, async (req, res) => {
+    try {
+        const { pin, currentPin } = req.body;
+        if (!pin) return res.status(400).json({ message: 'PIN is required.' });
+        if (!/^[0-9]{4,6}$/.test(pin)) return res.status(400).json({ message: 'PIN must be 4–6 digits.' });
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        // If PIN already set, require current PIN
+        if (user.transactionPinSet) {
+            if (!currentPin) return res.status(400).json({ message: 'Current PIN is required to change PIN.' });
+            const match = await bcrypt.compare(currentPin, user.transactionPin);
+            if (!match) return res.status(401).json({ message: 'Current PIN is incorrect.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.transactionPin = await bcrypt.hash(pin, salt);
+        user.transactionPinSet = true;
+        await user.save();
+
+        res.json({ message: 'Transaction PIN set successfully.' });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   GET /api/users/pin-status
+// @desc    Check if transaction PIN is set for the current user
+// @access  Private
+router.get('/pin-status', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('transactionPinSet');
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+        res.json({ transactionPinSet: !!user.transactionPinSet });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   POST /api/users/verify-transaction-pin
+// @desc    Verify transaction PIN before a sensitive action
+// @access  Private
+router.post('/verify-transaction-pin', protect, async (req, res) => {
+    try {
+        const { pin } = req.body;
+        if (!pin) return res.status(400).json({ message: 'PIN is required.' });
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+        if (!user.transactionPinSet) return res.status(400).json({ message: 'Transaction PIN not set. Please set a PIN first.' });
+
+        const match = await bcrypt.compare(pin, user.transactionPin);
+        if (!match) return res.status(401).json({ message: 'Incorrect transaction PIN.' });
+
+        res.json({ message: 'PIN verified successfully.', verified: true });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   GET /api/users/pin-status
+// @desc    Check if transaction PIN is set for the user
+// @access  Private
+router.get('/pin-status', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('transactionPinSet');
+        res.json({ transactionPinSet: !!user?.transactionPinSet });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }

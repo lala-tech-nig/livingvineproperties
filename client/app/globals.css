@@ -89,3 +89,25 @@ h6 {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Extra border widths */
+.border-3 {
+  border-width: 3px;
+}
+
+/* Line clamp utilities */
+.line-clamp-6 {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

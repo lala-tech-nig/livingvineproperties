@@ -34,6 +34,14 @@ export default function NewInvestment() {
     const [hasNinOnFile, setHasNinOnFile] = useState(false);
     const [existingNin, setExistingNin] = useState('');
 
+    // Whether previous NOK / bank details exist (second+ investment)
+    const [hasNokOnFile, setHasNokOnFile] = useState(false);
+    const [hasBankOnFile, setHasBankOnFile] = useState(false);
+    const [nokDismissed, setNokDismissed] = useState(false);
+    const [bankDismissed, setBankDismissed] = useState(false);
+    const [prevNok, setPrevNok] = useState(null);
+    const [prevBank, setPrevBank] = useState(null);
+
     const [formData, setFormData] = useState({
         firstName: '',
         surname: '',
@@ -81,6 +89,12 @@ export default function NewInvestment() {
                     gender: profile.gender || '',
                     state: profile.state || '',
                     occupation: profile.occupation || '',
+                    // Pre-fill bank from profile if available
+                    accountDetails: {
+                        bankName: profile.bankName || '',
+                        accountNumber: profile.accountNumber || '',
+                        accountName: profile.accountNumber ? profile.firstName + ' ' + profile.surname : '',
+                    },
                 }));
 
                 if (profile.nin) {
@@ -89,6 +103,23 @@ export default function NewInvestment() {
                     // Skip directly to step 2
                     setStep(2);
                 }
+
+                // Fetch last investment for NOK + bank reuse
+                try {
+                    const lastRes = await api.get('/investments/my-last');
+                    const { nextOfKin: prevKin, accountDetails: prevAcc } = lastRes.data;
+                    if (prevKin?.fullName) {
+                        setPrevNok(prevKin);
+                        setHasNokOnFile(true);
+                    }
+                    if (prevAcc?.accountNumber) {
+                        setPrevBank(prevAcc);
+                        setHasBankOnFile(true);
+                        // Auto-fill bank from last investment (user can override)
+                        setFormData(prev => ({ ...prev, accountDetails: prevAcc }));
+                    }
+                } catch (_) { /* no prior investments — first time */ }
+
             } catch (err) {
                 toast.error('Failed to load profile.');
             } finally {
@@ -502,6 +533,30 @@ export default function NewInvestment() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">Capital & Payout Bank</h3>
                                 <p className="text-sm text-gray-500">Set investment capital (min ₦100,000) and your ROI payout bank details.</p>
                             </div>
+
+                            {/* Bank reuse banner */}
+                            {hasBankOnFile && !bankDismissed && (
+                                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                                    className="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4">
+                                    <span className="text-emerald-500 text-lg shrink-0">🏦</span>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-bold text-emerald-800">Previous Bank Details Loaded ✓</p>
+                                        <p className="text-xs text-emerald-600 mt-0.5">
+                                            <span className="font-semibold">{prevBank?.bankName}</span> · ···{prevBank?.accountNumber?.slice(-4)} has been pre-filled from your last investment.
+                                        </p>
+                                        <div className="flex gap-2 mt-3">
+                                            <button type="button" onClick={() => setBankDismissed(true)}
+                                                className="text-xs font-bold px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
+                                                Keep these details
+                                            </button>
+                                            <button type="button" onClick={() => { setFormData(prev => ({ ...prev, accountDetails: { bankName: '', accountNumber: '', accountName: '' } })); setBankDismissed(true); }}
+                                                className="text-xs font-semibold px-3 py-1.5 bg-white border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors">
+                                                Enter new account
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
                             <div className="space-y-5">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Amount to Invest (₦)</label>
@@ -551,6 +606,31 @@ export default function NewInvestment() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">Next of Kin Details</h3>
                                 <p className="text-sm text-gray-500">Provide details for the designated beneficiary of your real estate yields.</p>
                             </div>
+
+                            {/* NOK reuse banner */}
+                            {hasNokOnFile && !nokDismissed && (
+                                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                                    className="flex items-start gap-3 bg-sky-50 border border-sky-200 rounded-2xl px-5 py-4">
+                                    <span className="text-sky-500 text-lg shrink-0">👤</span>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-bold text-sky-800">Reuse Previous Next of Kin?</p>
+                                        <p className="text-xs text-sky-600 mt-0.5">
+                                            We found <span className="font-semibold">{prevNok?.fullName}</span> ({prevNok?.relationship}) from your previous investment.
+                                        </p>
+                                        <div className="flex gap-2 mt-3">
+                                            <button type="button"
+                                                onClick={() => { setFormData(prev => ({ ...prev, nextOfKin: prevNok })); setNokDismissed(true); toast.success('Next of Kin details loaded!'); }}
+                                                className="text-xs font-bold px-3 py-1.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors">
+                                                Yes, reuse details
+                                            </button>
+                                            <button type="button" onClick={() => setNokDismissed(true)}
+                                                className="text-xs font-semibold px-3 py-1.5 bg-white border border-sky-200 text-sky-700 rounded-lg hover:bg-sky-50 transition-colors">
+                                                No, I'll enter new details
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Full Name</label>

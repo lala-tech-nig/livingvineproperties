@@ -29,7 +29,6 @@ const whatsappContactSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Ensure indices for faster search/dedup
-whatsappContactSchema.index({ phoneNumber: 1 });
 whatsappContactSchema.index({ collectedBy: 1 });
 
 module.exports = mongoose.model('WhatsAppContact', whatsappContactSchema);

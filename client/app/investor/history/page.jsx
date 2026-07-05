@@ -6,6 +6,8 @@ import { toast } from 'react-hot-toast';
 import { History, FileText, CalendarDays, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import InvestmentDocuments from '@/components/ui/InvestmentDocuments';
+
 
 export default function InvestorHistory() {
     const [history, setHistory] = useState([]);
@@ -77,10 +79,13 @@ export default function InvestorHistory() {
                                     {inv.durationInMonths} Months • <span className="text-gray-400">Target ROI: ₦{inv.expectedROI?.toLocaleString()}</span>
                                 </p>
                             </div>
+                                <div className="mt-4">
+                                    <InvestmentDocuments investment={inv} />
+                                </div>
 
                             <Link
                                 href={`/investor/investment/${inv._id}`}
-                                className="mt-6 flex items-center justify-center gap-2 w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-xl transition-colors"
+                                className="mt-3 flex items-center justify-center gap-2 w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-xl transition-colors"
                             >
                                 View Details <ArrowRight size={18} />
                             </Link>

@@ -4,14 +4,16 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
-import { Home, PlusCircle, History, MessageSquare, LogOut, Bell, Building2, Headphones, Settings } from 'lucide-react';
+import { Home, PlusCircle, History, MessageSquare, LogOut, Bell, Building2, Headphones, Settings, Receipt } from 'lucide-react';
 import api from '@/lib/axios';
 import SurveyModal from '@/components/ui/SurveyModal';
+import OnboardingTour from '@/components/ui/OnboardingTour';
 
 const INVESTOR_NAV = [
     { name: 'Overview',         href: '/investor',                  icon: Home },
     { name: 'New Investment',   href: '/investor/new-investment',   icon: PlusCircle },
     { name: 'History',          href: '/investor/history',          icon: History },
+    { name: 'Transactions',     href: '/investor/transactions',     icon: Receipt },
     { name: 'Messages',         href: '/investor/messages',         icon: MessageSquare },
     { name: 'Account Settings', href: '/investor/account-settings', icon: Settings },
 ];
@@ -22,12 +24,19 @@ export default function InvestorLayout({ children }) {
     const { user, isAuthenticated, initializeAuth, logout, setUser } = useAuthStore();
     const [mounted, setMounted] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [showOnboarding, setShowOnboarding] = useState(false);
     
     // Survey state
     const [activeSurvey, setActiveSurvey] = useState(null);
     const [showSurvey, setShowSurvey] = useState(false);
 
-    const isPublicPage = pathname === '/investor/login' || pathname === '/investor/register';
+    const isPublicPage = [
+        '/investor/login',
+        '/investor/register',
+        '/investor/verify-email',
+        '/investor/forgot-password',
+    ].some(p => pathname === p || pathname.startsWith(p));
+
 
     useEffect(() => {
         initializeAuth();
@@ -52,6 +61,14 @@ export default function InvestorLayout({ children }) {
         // Redirect admin roles away from investor-only pages (not detail pages)
         if (user && adminRoles.includes(user.role) && !isReviewPage) {
             router.back();
+        }
+
+        // Show onboarding tour for first-time investors
+        if (user && user.role === 'investor') {
+            const onboardingKey = `onboardingDone_${user.id || user.email}`;
+            if (!localStorage.getItem(onboardingKey)) {
+                setTimeout(() => setShowOnboarding(true), 800);
+            }
         }
     }, [mounted, isAuthenticated, user, router, pathname, isPublicPage]);
 
@@ -151,11 +168,11 @@ export default function InvestorLayout({ children }) {
 
     // Mobile bottom nav — matches the mockup: Home · Invest · History · Properties · Support
     const MOBILE_NAV_ITEMS = [
-        { name: 'Home',       href: '/investor',                  icon: Home         },
-        { name: 'Invest',     href: '/investor/new-investment',   icon: PlusCircle   },
-        { name: 'History',    href: '/investor/history',          icon: History      },
-        { name: 'Properties', href: '/investor/properties',          icon: Building2    },
-        { name: 'Support',    href: '/investor/messages',         icon: Headphones   },
+        { name: 'Home',         href: '/investor',                  icon: Home         },
+        { name: 'Invest',       href: '/investor/new-investment',   icon: PlusCircle   },
+        { name: 'History',      href: '/investor/history',          icon: History      },
+        { name: 'Transactions', href: '/investor/transactions',     icon: Receipt      },
+        { name: 'Support',      href: '/investor/messages',         icon: Headphones   },
     ];
 
     return (
@@ -300,6 +317,17 @@ export default function InvestorLayout({ children }) {
                 <SurveyModal 
                     survey={activeSurvey} 
                     onClose={() => setShowSurvey(false)} 
+                />
+            )}
+
+            {/* Onboarding Tour — shown once to new investors */}
+            {showOnboarding && (
+                <OnboardingTour
+                    onComplete={() => {
+                        const key = `onboardingDone_${user?.id || user?.email}`;
+                        localStorage.setItem(key, 'true');
+                        setShowOnboarding(false);
+                    }}
                 />
             )}
         </div>

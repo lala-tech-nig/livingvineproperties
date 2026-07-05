@@ -205,9 +205,33 @@ const websiteSettingSchema = new mongoose.Schema({
         type: [{
             name: String,
             role: String,
-            img: String
+            img: String,
+            bio: { type: String, default: '' },
+            shortProfile: { type: String, default: '' },
         }],
         default: []
+    },
+
+    // Company Profile Section
+    companyProfileTitle: {
+        type: String,
+        default: '',
+    },
+    companyProfileHistory: {
+        type: String,
+        default: '',
+    },
+    companyProfileOverview: {
+        type: String,
+        default: '',
+    },
+    companyProfileHighlights: {
+        type: [String],
+        default: [],
+    },
+    companyProfileImage: {
+        type: String,
+        default: '',
     },
     aboutPageCertificationsTitle: {
         type: String,

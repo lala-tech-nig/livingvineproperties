@@ -11,8 +11,9 @@ import {
     CreditCard, Shield, Users, MessageSquare, Send, ChevronLeft,
     CheckCircle, XCircle, RotateCcw, Banknote, Calendar, Hash,
     AlertTriangle, Loader2, Building2, Upload, Receipt, Copy,
-    PlayCircle, Eye, ExternalLink
+    PlayCircle, Eye, ExternalLink, Edit3, FileText, Award, Pencil, X
 } from 'lucide-react';
+import InvestmentDocuments from '@/components/ui/InvestmentDocuments';
 
 /* ── helpers ─────────────────────────────────────────────── */
 const fmt     = (n) => n ? `₦${Number(n).toLocaleString()}` : '—';
@@ -89,6 +90,14 @@ export default function InvestmentReviewPage() {
     const [companyAccountId, setCompanyAccountId] = useState('');
     const [companyAccounts, setCompanyAccounts]   = useState([]);
     const [deciding, setDeciding]               = useState(false);
+
+    // Duration editing (management only)
+    const [showDurationModal, setShowDurationModal] = useState(false);
+    const [newDuration, setNewDuration] = useState('');
+    const [durationSaving, setDurationSaving] = useState(false);
+
+    // Send documents
+    const [sendingDocs, setSendingDocs] = useState(false);
 
     const commentBottom = useRef(null);
     const fileRef       = useRef(null);
@@ -206,6 +215,39 @@ export default function InvestmentReviewPage() {
         setCopied(true);
         toast.success('Account number copied!');
         setTimeout(() => setCopied(false), 3000);
+    };
+
+    /* Management: edit investment duration */
+    const handleSaveDuration = async () => {
+        if (!newDuration || isNaN(newDuration) || Number(newDuration) < 1) {
+            toast.error('Please enter a valid duration in months.');
+            return;
+        }
+        setDurationSaving(true);
+        try {
+            const { data } = await api.put(`/investments/${id}/duration`, { durationInMonths: Number(newDuration) });
+            setInv(prev => ({ ...prev, durationInMonths: data.durationInMonths }));
+            toast.success(`Duration updated to ${data.durationInMonths} months.`);
+            setShowDurationModal(false);
+            setNewDuration('');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update duration.');
+        } finally {
+            setDurationSaving(false);
+        }
+    };
+
+    /* Management: send receipt + certificate to investor email */
+    const handleSendDocuments = async () => {
+        setSendingDocs(true);
+        try {
+            const { data } = await api.post(`/investments/${id}/send-documents`);
+            toast.success(data.message || 'Documents sent to investor.');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to send documents.');
+        } finally {
+            setSendingDocs(false);
+        }
     };
 
     /* ── loading ─────────────────────────────────────────── */
@@ -559,7 +601,44 @@ export default function InvestmentReviewPage() {
                 </div>
             )}
 
+            {/* ── Management: Extra Tools ── */}
+            {isManagement && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50">
+                        <Edit3 size={16} className="text-purple-500" />
+                        <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider">Management Tools</h3>
+                    </div>
+                    <div className="p-6 flex flex-wrap gap-3">
+                        {/* Edit Duration */}
+                        <button
+                            onClick={() => { setNewDuration(String(inv.durationInMonths || '')); setShowDurationModal(true); }}
+                            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-all"
+                        >
+                            <Pencil size={15} /> Edit Duration
+                        </button>
+
+                        {/* Send Documents to Investor */}
+                        {['approved', 'active', 'liquidated'].includes(inv.status) && (
+                            <button
+                                onClick={handleSendDocuments}
+                                disabled={sendingDocs}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-all"
+                            >
+                                {sendingDocs ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
+                                {sendingDocs ? 'Sending...' : 'Email Receipt & Certificate'}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Investor: Download Documents ── */}
+            {!isManagement && (
+                <InvestmentDocuments investment={inv} />
+            )}
+
             {/* ── Comments / Messaging ── */}
+
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                 <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
                     <MessageSquare size={16} className="text-gray-400" />
@@ -604,6 +683,43 @@ export default function InvestmentReviewPage() {
                     </button>
                 </form>
             </div>
+
+            {/* ── Duration Edit Modal ── */}
+            {showDurationModal && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDurationModal(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-bold text-gray-900 text-lg">Edit Investment Duration</h3>
+                            <button onClick={() => setShowDurationModal(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Duration (months)</label>
+                            <input
+                                type="number"
+                                value={newDuration}
+                                onChange={e => setNewDuration(e.target.value)}
+                                min={1}
+                                max={120}
+                                placeholder="e.g. 12"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-gray-50 text-gray-900 text-lg font-mono"
+                            />
+                            <p className="text-xs text-gray-400 mt-1.5">Current: {inv.durationInMonths} months</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowDurationModal(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button onClick={handleSaveDuration} disabled={durationSaving}
+                                className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                                {durationSaving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle size={15} />}
+                                {durationSaving ? 'Saving...' : 'Save Duration'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

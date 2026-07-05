@@ -78,7 +78,8 @@ export default function WebsiteContentEditor() {
 
     // Form editing sub-objects states
     const [newVal, setNewVal] = useState({ title: '', desc: '', iconName: 'CheckCircle' });
-    const [newTeam, setNewTeam] = useState({ name: '', role: '', img: '' });
+    const [newTeam, setNewTeam] = useState({ name: '', role: '', img: '', bio: '', shortProfile: '' });
+    const [teamUploading, setTeamUploading] = useState(false);
 
     useEffect(() => {
         fetchAllData();
@@ -946,6 +947,25 @@ export default function WebsiteContentEditor() {
                                             <div className="w-20 h-20 rounded-full overflow-hidden mx-auto bg-gray-950 border border-gray-800">
                                                 <img src={member.img} className="w-full h-full object-cover" alt={member.name} />
                                             </div>
+                                            {/* Image upload for existing member */}
+                                            <label className="flex items-center justify-center gap-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-[10px] font-bold px-2 py-1 rounded cursor-pointer border border-amber-700/30 transition-colors">
+                                                <UploadCloud size={10} /> Change Photo
+                                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    const reader = new FileReader();
+                                                    reader.onload = async (ev) => {
+                                                        try {
+                                                            const { data } = await api.post('/website/upload-image', { imageBase64: ev.target.result, folder: 'team' });
+                                                            const updated = [...settings.aboutPageTeam];
+                                                            updated[idx] = { ...member, img: data.url };
+                                                            setSettings({ ...settings, aboutPageTeam: updated });
+                                                            toast.success('Photo updated!');
+                                                        } catch { toast.error('Upload failed'); }
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }} />
+                                            </label>
                                             <div>
                                                 <label className="block text-[9px] text-gray-500 font-bold mb-1">Name</label>
                                                 <input type="text" value={member.name} onChange={e => {
@@ -961,6 +981,22 @@ export default function WebsiteContentEditor() {
                                                     updated[idx] = { ...member, role: e.target.value };
                                                     setSettings({ ...settings, aboutPageTeam: updated });
                                                 }} className="w-full bg-gray-955 border border-gray-800 rounded px-2 py-0.5 text-xs text-amber-500 text-center font-mono" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[9px] text-gray-500 font-bold mb-1">Short Profile (1–2 sentences)</label>
+                                                <input type="text" value={member.shortProfile || ''} onChange={e => {
+                                                    const updated = [...settings.aboutPageTeam];
+                                                    updated[idx] = { ...member, shortProfile: e.target.value };
+                                                    setSettings({ ...settings, aboutPageTeam: updated });
+                                                }} placeholder="Brief profile intro..." className="w-full bg-gray-955 border border-gray-800 rounded px-2 py-0.5 text-xs text-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[9px] text-gray-500 font-bold mb-1">Full Bio</label>
+                                                <textarea value={member.bio || ''} onChange={e => {
+                                                    const updated = [...settings.aboutPageTeam];
+                                                    updated[idx] = { ...member, bio: e.target.value };
+                                                    setSettings({ ...settings, aboutPageTeam: updated });
+                                                }} rows={3} placeholder="Full biographical text..." className="w-full bg-gray-955 border border-gray-800 rounded px-2 py-0.5 text-xs text-white resize-none" />
                                             </div>
                                         </div>
                                     ))}
@@ -978,20 +1014,42 @@ export default function WebsiteContentEditor() {
                                             <input type="text" placeholder="General Counsel" value={newTeam.role} onChange={e => setNewTeam({...newTeam, role: e.target.value})} className="w-full bg-gray-955 border border-gray-855 rounded px-2.5 py-1 text-xs text-white" />
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] text-gray-400 uppercase font-bold mb-1">Upload Photo</label>
+                                            <label className="block text-[10px] text-gray-400 uppercase font-bold mb-1">Photo</label>
                                             <div className="flex gap-2">
                                                 <input type="text" placeholder="Image URL" value={newTeam.img} onChange={e => setNewTeam({...newTeam, img: e.target.value})} className="flex-1 bg-gray-955 border border-gray-855 rounded px-2 py-1 text-xs text-white" />
                                                 <label className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[10px] px-2 py-1.5 rounded cursor-pointer transition-colors shrink-0">
-                                                    {uploading ? '...' : 'Upload'}
-                                                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'newTeamPhoto')} disabled={uploading} className="hidden" />
+                                                    {teamUploading ? '...' : 'Upload'}
+                                                    <input type="file" accept="image/*" className="hidden" disabled={teamUploading} onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        setTeamUploading(true);
+                                                        const reader = new FileReader();
+                                                        reader.onload = async (ev) => {
+                                                            try {
+                                                                const { data } = await api.post('/website/upload-image', { imageBase64: ev.target.result, folder: 'team' });
+                                                                setNewTeam(prev => ({ ...prev, img: data.url }));
+                                                                toast.success('Photo uploaded!');
+                                                            } catch { toast.error('Upload failed'); }
+                                                            finally { setTeamUploading(false); }
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }} />
                                                 </label>
                                             </div>
                                         </div>
+                                        <div className="sm:col-span-3">
+                                            <label className="block text-[10px] text-gray-400 uppercase font-bold mb-1">Short Profile (1–2 sentences)</label>
+                                            <input type="text" placeholder="Brief introduction shown on team card..." value={newTeam.shortProfile} onChange={e => setNewTeam({...newTeam, shortProfile: e.target.value})} className="w-full bg-gray-955 border border-gray-855 rounded px-2.5 py-1 text-xs text-white" />
+                                        </div>
+                                        <div className="sm:col-span-3">
+                                            <label className="block text-[10px] text-gray-400 uppercase font-bold mb-1">Full Bio</label>
+                                            <textarea rows={3} placeholder="Detailed biographical text for the team member..." value={newTeam.bio} onChange={e => setNewTeam({...newTeam, bio: e.target.value})} className="w-full bg-gray-955 border border-gray-855 rounded px-2.5 py-1 text-xs text-white resize-none" />
+                                        </div>
                                     </div>
                                     <button type="button" onClick={() => {
-                                        if (!newTeam.name || !newTeam.role || !newTeam.img) return toast.error('Please fill Name, Role, and Image URL/upload photo');
+                                        if (!newTeam.name || !newTeam.role) return toast.error('Please fill Name and Role');
                                         setSettings({ ...settings, aboutPageTeam: [...settings.aboutPageTeam, newTeam] });
-                                        setNewTeam({ name: '', role: '', img: '' });
+                                        setNewTeam({ name: '', role: '', img: '', bio: '', shortProfile: '' });
                                         toast.success('Leader profile added to list!');
                                     }} className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2 rounded-lg"><Plus size={12} className="inline mr-1" /> Add Team Member</button>
                                 </div>

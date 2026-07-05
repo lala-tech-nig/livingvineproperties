@@ -5,6 +5,7 @@ const path = require('path');
 const Investment = require('../models/Investment');
 const InvestmentProduct = require('../models/InvestmentProduct');
 const { protect, authorize } = require('../middlewares/authMiddleware');
+const { sendEmail, templates, baseTemplate } = require('../services/emailService');
 
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
@@ -126,6 +127,25 @@ router.get('/my', protect, async (req, res) => {
     }
 });
 
+// @route   GET /api/investments/my-last
+// @desc    Get the most recent investment for the current investor (for NOK + bank reuse)
+// @access  Private
+router.get('/my-last', protect, async (req, res) => {
+    try {
+        const investment = await Investment.findOne({ user: req.user._id })
+            .sort('-createdAt')
+            .select('nextOfKin accountDetails');
+        if (!investment) return res.status(404).json({ message: 'No previous investments found.' });
+        res.json({
+            nextOfKin: investment.nextOfKin || null,
+            accountDetails: investment.accountDetails || null,
+        });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+
 // @route   GET /api/investments
 // @desc    Get all investments (management / ceo)
 // @access  Private/Admin
@@ -232,6 +252,7 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
         // Create notification for the investor
         try {
             const Notification = require('../models/Notification');
+            const User = require('../models/User');
             const statusMessages = {
                 approved:   'Your investment has been approved! Please proceed with payment to the provided account.',
                 declined:   'Your investment application has been declined. Contact your account officer for details.',
@@ -246,6 +267,35 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
                     message: statusMessages[status],
                 });
             }
+
+            // Send email notification to investor
+            const investorUser = await User.findById(investment.user).select('email firstName surname');
+            if (investorUser) {
+                const investorData = {
+                    name: investment.name || `${investorUser.firstName} ${investorUser.surname}`,
+                    amountToInvest: investment.amountToInvest,
+                    durationInMonths: investment.durationInMonths,
+                    expectedROI: investment.expectedROI,
+                    startDate: investment.startDate,
+                    maturityDate: investment.startDate
+                        ? new Date(new Date(investment.startDate).setMonth(new Date(investment.startDate).getMonth() + (investment.durationInMonths || 0))).toLocaleDateString('en-NG', { year:'numeric', month:'long', day:'numeric' })
+                        : 'See portal',
+                };
+
+                if (status === 'approved') {
+                    sendEmail(
+                        investorUser.email,
+                        '✅ Your Investment Has Been Approved — Living Vine Properties',
+                        templates.investmentApproved(investorData)
+                    ).catch(err => console.error('Investment approval email error:', err));
+                } else if (status === 'active') {
+                    sendEmail(
+                        investorUser.email,
+                        '🚀 Your Investment is Now Active — Living Vine Properties',
+                        templates.investmentActive(investorData)
+                    ).catch(err => console.error('Investment active email error:', err));
+                }
+            }
         } catch (_) { /* non-blocking */ }
 
         res.json(updatedInvestment);
@@ -253,6 +303,118 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
 });
+
+// @route   PUT /api/investments/:id/duration
+// @desc    Management edits investment duration
+// @access  Private (management / ceo / superadmin)
+router.put('/:id/duration', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
+    try {
+        const { durationInMonths } = req.body;
+        if (!durationInMonths || isNaN(durationInMonths) || Number(durationInMonths) < 1) {
+            return res.status(400).json({ message: 'A valid duration (months) is required.' });
+        }
+
+        const investment = await Investment.findById(req.params.id);
+        if (!investment) return res.status(404).json({ message: 'Investment not found.' });
+
+        investment.durationInMonths = Number(durationInMonths);
+        const updated = await investment.save();
+
+        // Notify investor of duration change
+        try {
+            const Notification = require('../models/Notification');
+            await Notification.create({
+                userId: investment.user,
+                title: 'Investment Duration Updated',
+                message: `Your investment duration has been updated to ${durationInMonths} months.`,
+            });
+        } catch (_) { /* non-blocking */ }
+
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   POST /api/investments/:id/send-documents
+// @desc    Manager sends receipt/certificate email to investor
+// @access  Private (management / ceo / superadmin)
+router.post('/:id/send-documents', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
+    try {
+        const investment = await Investment.findById(req.params.id).populate('user', 'email firstName surname');
+        if (!investment) return res.status(404).json({ message: 'Investment not found.' });
+
+        const investorName = investment.name || `${investment.user.firstName} ${investment.user.surname}`;
+        const receiptNo = `LVP-${investment._id.toString().slice(-6).toUpperCase()}`;
+        const certNo    = `LVP-CERT-${investment._id.toString().slice(-6).toUpperCase()}`;
+        const maturity  = investment.startDate
+            ? new Date(new Date(investment.startDate).setMonth(new Date(investment.startDate).getMonth() + (investment.durationInMonths || 0)))
+                .toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })
+            : 'See investor portal';
+        const fmtAmt    = (n) => `₦${Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+
+        const html = templates.baseTemplate(`
+            <div style="text-align:center; padding: 20px 0 10px;">
+                <div style="font-size:40px; margin-bottom:8px;">📄</div>
+                <h2 style="color:#1a1a1a; font-size:22px; font-weight:800; margin:0;">Your Investment Documents</h2>
+                <p style="color:#888; font-size:13px; margin-top:4px;">Official receipt and certificate are ready for download</p>
+            </div>
+
+            <p style="color:#444; font-size:14px; line-height:1.7; margin-bottom:20px;">
+                Dear <strong>${investorName}</strong>,<br/>
+                We are pleased to confirm that your investment has been processed. 
+                Please find your official investment details below. You can also download your 
+                <strong>Receipt</strong> and <strong>Certificate of Investment</strong> directly from your investor portal.
+            </p>
+
+            <div style="background:linear-gradient(135deg,#de1f25,#b0181d); border-radius:16px; padding:24px; margin-bottom:20px; color:white; text-align:center;">
+                <div style="font-size:11px; text-transform:uppercase; letter-spacing:2px; opacity:0.8; margin-bottom:4px;">Principal Investment</div>
+                <div style="font-size:36px; font-weight:900; margin-bottom:4px;">${fmtAmt(investment.amountToInvest)}</div>
+                <div style="font-size:13px; opacity:0.9;">Expected Return: <strong>${fmtAmt(investment.expectedROI)}</strong></div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+                ${[
+                    ['Receipt Number', receiptNo],
+                    ['Certificate Number', certNo],
+                    ['Duration', `${investment.durationInMonths || '—'} months`],
+                    ['Start Date', investment.startDate ? new Date(investment.startDate).toLocaleDateString('en-NG', { year:'numeric', month:'long', day:'numeric' }) : '—'],
+                    ['Maturity Date', maturity],
+                    ['Status', (investment.status || '').toUpperCase()],
+                ].map(([label, value]) => `
+                    <tr style="border-bottom:1px solid #f3f4f6;">
+                        <td style="padding:10px 12px; font-size:13px; color:#888; font-weight:600;">${label}</td>
+                        <td style="padding:10px 12px; font-size:13px; color:#1a1a1a; font-weight:700; text-align:right;">${value}</td>
+                    </tr>
+                `).join('')}
+            </table>
+
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:16px; margin-bottom:20px;">
+                <p style="margin:0; font-size:13px; color:#166534;">
+                    🔒 <strong>Security Notice:</strong> Log in to your investor portal to download official copies of your Receipt and Certificate of Investment. Keep these documents safe.
+                </p>
+            </div>
+
+            <div style="text-align:center; margin-top:24px;">
+                <a href="${process.env.CLIENT_URL || 'https://livingvineproperties.com'}/investor" 
+                   style="display:inline-block; background:#de1f25; color:white; padding:14px 32px; border-radius:12px; font-weight:700; font-size:14px; text-decoration:none;">
+                    View Documents in Portal →
+                </a>
+            </div>
+        `);
+
+        await sendEmail(
+            investment.user.email,
+            `📄 Your Investment Documents — Receipt ${receiptNo}`,
+            html
+        );
+
+        res.json({ message: `Documents sent successfully to ${investment.user.email}.` });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
 
 // @route   PUT /api/investments/:id/receipt
 // @desc    Investor uploads payment receipt for their investment

@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import {
     User, Calendar, Gift, Plus, Trash2, Save, CheckCircle2,
     ChevronLeft, Loader2, Heart, Cake, Star, Sparkles,
-    MapPin, Briefcase, Shield, Camera, Phone, Mail, UserCheck, TrendingUp
+    MapPin, Briefcase, Shield, Camera, Phone, Mail, UserCheck, TrendingUp, Lock, Eye, EyeOff, Banknote
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,10 +55,15 @@ export default function AccountSettingsPage() {
     const [photoUploading, setPhotoUploading] = useState(false);
     const photoInputRef = useRef(null);
 
-    // Profile fields
     const [profile, setProfile] = useState({
         gender: '', religion: '', state: '', address: '', occupation: '', dob: '',
+        bankName: '', bankCode: '', accountNumber: '',
     });
+    const [bankUpdateReason, setBankUpdateReason] = useState('');
+    const [showBankReason, setShowBankReason] = useState(false);
+
+    // Transaction PIN state
+    const [pinSection, setPinSection] = useState({ pin: '', confirmPin: '', currentPin: '', showPin: false, pinSet: false, saving: false });
 
     // Celebration dates
     const [celebrationDates, setCelebrationDates] = useState([]);
@@ -80,13 +85,21 @@ export default function AccountSettingsPage() {
             ]);
             const p = profileRes.data;
             setProfile({
-                gender:     p.gender     || '',
-                religion:   p.religion   || '',
-                state:      p.state      || '',
-                address:    p.address    || '',
-                occupation: p.occupation || '',
-                dob:        p.dob        ? p.dob.split('T')[0] : '',
+                gender:        p.gender        || '',
+                religion:      p.religion      || '',
+                state:         p.state         || '',
+                address:       p.address       || '',
+                occupation:    p.occupation    || '',
+                dob:           p.dob ? p.dob.split('T')[0] : '',
+                bankName:      p.bankName      || '',
+                bankCode:      p.bankCode      || '',
+                accountNumber: p.accountNumber || '',
             });
+            // Check PIN status
+            try {
+                const pinRes = await api.get('/users/pin-status');
+                setPinSection(prev => ({ ...prev, pinSet: !!pinRes.data.transactionPinSet }));
+            } catch (_) {}
             setCelebrationDates(p.celebrationDates || []);
             setPhotoUrl(p.profileImage || '');
             setCompletion(completionRes.data);
@@ -101,14 +114,43 @@ export default function AccountSettingsPage() {
     const handleSaveProfile = async () => {
         setSaving(true);
         try {
-            await api.put('/users/profile', { ...profile });
+            const payload = { ...profile };
+            // If bank details changed, require a reason
+            if ((payload.bankName || payload.bankCode || payload.accountNumber) && !bankUpdateReason.trim()) {
+                toast.error('Please provide a reason for updating your bank details.');
+                setSaving(false);
+                setShowBankReason(true);
+                return;
+            }
+            if (bankUpdateReason.trim()) payload.updateReason = bankUpdateReason.trim();
+            await api.put('/users/profile', payload);
             const { data } = await api.get('/users/profile/completion');
             setCompletion(data);
+            setBankUpdateReason('');
+            setShowBankReason(false);
             toast.success('Profile updated successfully!');
         } catch {
             toast.error('Failed to save profile');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleSavePin = async () => {
+        if (pinSection.pin.length < 4) { toast.error('PIN must be at least 4 digits.'); return; }
+        if (pinSection.pin !== pinSection.confirmPin) { toast.error('PINs do not match.'); return; }
+        if (!/^[0-9]+$/.test(pinSection.pin)) { toast.error('PIN must contain digits only.'); return; }
+        setPinSection(prev => ({ ...prev, saving: true }));
+        try {
+            await api.post('/users/set-transaction-pin', {
+                pin: pinSection.pin,
+                currentPin: pinSection.currentPin || undefined,
+            });
+            toast.success(pinSection.pinSet ? 'Transaction PIN changed successfully!' : 'Transaction PIN set successfully!');
+            setPinSection(prev => ({ ...prev, pin: '', confirmPin: '', currentPin: '', pinSet: true, saving: false }));
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to save PIN.');
+            setPinSection(prev => ({ ...prev, saving: false }));
         }
     };
 
@@ -250,14 +292,16 @@ export default function AccountSettingsPage() {
             )}
 
             {/* Section Tabs */}
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl">
+            <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl overflow-x-auto no-scrollbar">
                 {[
-                    { key: 'profile',  label: 'Personal Info',     icon: User },
-                    { key: 'celebrate',label: 'Anniversary Dates', icon: Gift },
+                    { key: 'profile',   label: 'Personal Info',    icon: User },
+                    { key: 'bank',      label: 'Bank Details',     icon: Banknote },
+                    { key: 'pin',       label: 'Transaction PIN',  icon: Lock },
+                    { key: 'celebrate', label: 'Anniversaries',    icon: Gift },
                 ].map(tab => (
                     <button key={tab.key} onClick={() => setActiveSection(tab.key)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeSection === tab.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                        <tab.icon size={15} /> {tab.label}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap px-2 ${activeSection === tab.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                        <tab.icon size={13} /> {tab.label}
                     </button>
                 ))}
             </div>
@@ -349,8 +393,168 @@ export default function AccountSettingsPage() {
                 </motion.div>
             )}
 
+            {/* ── Section: Bank Details ── */}
+            {activeSection === 'bank' && (
+                <motion.div key="bank" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center"><Banknote size={18} className="text-green-600" /></div>
+                        <div>
+                            <h3 className="font-bold text-gray-900">Bank Account Details</h3>
+                            <p className="text-xs text-gray-400">Your account for receiving investment returns. Updates require a reason.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Bank Name</label>
+                            <input type="text" value={profile.bankName} onChange={e => { setProfile(p => ({ ...p, bankName: e.target.value })); setShowBankReason(true); }}
+                                placeholder="e.g. Access Bank" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-gray-50 text-gray-900" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Account Number</label>
+                            <input type="text" value={profile.accountNumber} onChange={e => { setProfile(p => ({ ...p, accountNumber: e.target.value })); setShowBankReason(true); }}
+                                placeholder="10-digit account number" maxLength={10} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-gray-50 text-gray-900 font-mono" />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Bank Code <span className="font-normal text-gray-400">(Optional, for transfers)</span></label>
+                            <input type="text" value={profile.bankCode} onChange={e => { setProfile(p => ({ ...p, bankCode: e.target.value })); setShowBankReason(true); }}
+                                placeholder="e.g. 044 for Access Bank" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-gray-50 text-gray-900 font-mono" />
+                        </div>
+                    </div>
+
+                    {/* Reason field — required for bank updates */}
+                    {showBankReason && (
+                        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                            className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
+                            <p className="text-xs font-bold text-amber-700 flex items-center gap-2">
+                                <Shield size={12} /> Reason Required for Bank Update
+                            </p>
+                            <textarea
+                                value={bankUpdateReason}
+                                onChange={e => setBankUpdateReason(e.target.value)}
+                                rows={2}
+                                placeholder="Please explain why you are updating your bank account details (e.g. changed banks, wrong account entered)..."
+                                className="w-full px-3 py-2.5 rounded-xl border border-amber-200 focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 bg-white text-sm text-gray-700 resize-none"
+                            />
+                            <p className="text-[10px] text-amber-600">This reason will be recorded for audit purposes.</p>
+                        </motion.div>
+                    )}
+
+                    <div className="flex justify-end">
+                        <button onClick={handleSaveProfile} disabled={saving}
+                            className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] text-white font-bold px-6 py-3 rounded-xl shadow-md shadow-[#de1f25]/20 transition-all disabled:opacity-60">
+                            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                            {saving ? 'Saving...' : 'Save Bank Details'}
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* ── Section: Transaction PIN ── */}
+            {activeSection === 'pin' && (
+                <motion.div key="pin" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center"><Lock size={18} className="text-purple-600" /></div>
+                        <div>
+                            <h3 className="font-bold text-gray-900">Transaction PIN</h3>
+                            <p className="text-xs text-gray-400">
+                                {pinSection.pinSet
+                                    ? 'Change your 4–6 digit security PIN used to confirm sensitive actions.'
+                                    : 'Set a 4–6 digit PIN to secure your account transactions.'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {pinSection.pinSet && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-3">
+                            <CheckCircle2 size={18} className="text-green-500 shrink-0" />
+                            <div>
+                                <p className="text-sm font-semibold text-green-800">Transaction PIN is Active</p>
+                                <p className="text-xs text-green-600">Fill in the form below to change your PIN.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        {/* Current PIN — only if PIN already set */}
+                        {pinSection.pinSet && (
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Current PIN</label>
+                                <div className="relative">
+                                    <input
+                                        type={pinSection.showPin ? 'text' : 'password'}
+                                        value={pinSection.currentPin}
+                                        onChange={e => setPinSection(p => ({ ...p, currentPin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                                        placeholder="Enter current PIN"
+                                        className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-gray-50 text-gray-900 font-mono tracking-[0.3em] text-xl"
+                                        maxLength={6}
+                                        inputMode="numeric"
+                                    />
+                                    <button type="button" onClick={() => setPinSection(p => ({ ...p, showPin: !p.showPin }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                        {pinSection.showPin ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* New PIN */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{pinSection.pinSet ? 'New PIN' : 'Create PIN'}</label>
+                            <input
+                                type={pinSection.showPin ? 'text' : 'password'}
+                                value={pinSection.pin}
+                                onChange={e => setPinSection(p => ({ ...p, pin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                                placeholder="4–6 digit PIN"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-gray-50 text-gray-900 font-mono tracking-[0.3em] text-xl"
+                                maxLength={6}
+                                inputMode="numeric"
+                            />
+                        </div>
+
+                        {/* Confirm PIN */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Confirm PIN</label>
+                            <input
+                                type={pinSection.showPin ? 'text' : 'password'}
+                                value={pinSection.confirmPin}
+                                onChange={e => setPinSection(p => ({ ...p, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                                placeholder="Re-enter PIN"
+                                className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-gray-50 text-gray-900 font-mono tracking-[0.3em] text-xl ${pinSection.confirmPin && pinSection.confirmPin !== pinSection.pin ? 'border-red-300' : 'border-gray-200'}`}
+                                maxLength={6}
+                                inputMode="numeric"
+                            />
+                            {pinSection.confirmPin && pinSection.confirmPin !== pinSection.pin && (
+                                <p className="mt-1 text-xs text-red-500">PINs do not match</p>
+                            )}
+                        </div>
+
+                        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                            <input type="checkbox" checked={pinSection.showPin} onChange={e => setPinSection(p => ({ ...p, showPin: e.target.checked }))} className="rounded" />
+                            Show PIN digits
+                        </label>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+                        <p className="text-xs text-amber-700 leading-relaxed">
+                            <strong>⚠️ Keep your PIN private.</strong> Your Transaction PIN is required to confirm sensitive account changes and liquidation requests. Never share it with anyone, including our staff.
+                        </p>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <button onClick={handleSavePin} disabled={pinSection.saving}
+                            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-3 rounded-xl shadow-md shadow-purple-600/20 transition-all disabled:opacity-60">
+                            {pinSection.saving ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
+                            {pinSection.saving ? 'Saving...' : pinSection.pinSet ? 'Change PIN' : 'Set Transaction PIN'}
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+
             {/* ── Section: Celebration Dates ── */}
             {activeSection === 'celebrate' && (
+
                 <motion.div key="celebrate" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
                     {/* Intro */}
                     <div className="bg-gradient-to-br from-rose-50 to-amber-50 border border-rose-100 rounded-3xl p-6">

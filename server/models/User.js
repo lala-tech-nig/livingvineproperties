@@ -111,6 +111,48 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: '2045896422',
     },
+
+    // ── Email Verification ─────────────────────────────────────────────
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    emailOtp: {
+        type: String,
+        default: null,
+    },
+    emailOtpExpiry: {
+        type: Date,
+        default: null,
+    },
+
+    // ── Password Reset ────────────────────────────────────────────────
+    passwordResetToken: {
+        type: String,
+        default: null,
+    },
+    passwordResetExpiry: {
+        type: Date,
+        default: null,
+    },
+
+    // ── Transaction PIN ───────────────────────────────────────────────
+    transactionPin: {
+        type: String,
+        default: null,
+    },
+    transactionPinSet: {
+        type: Boolean,
+        default: false,
+    },
+
+    // ── Bio update audit ──────────────────────────────────────────────
+    bioUpdateReasons: [{
+        reason: { type: String },
+        updatedAt: { type: Date, default: Date.now },
+        field: { type: String },
+    }],
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

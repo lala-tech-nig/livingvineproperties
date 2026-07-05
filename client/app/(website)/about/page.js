@@ -176,14 +176,24 @@ export default function About() {
                 <div className="grid md:grid-cols-3 gap-10">
                     {settings.aboutPageTeam.map((member, i) => (
                         <div key={i} className="group text-center">
-                            <div className="relative h-80 w-full mb-6 overflow-hidden rounded-xl bg-gray-200">
+                            {/* Photo */}
+                            <div className="relative h-80 w-full mb-6 overflow-hidden rounded-xl bg-gray-200 shadow-md">
                                 <div
                                     className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                                     style={{ backgroundImage: `url('${member.img}')` }}
                                 />
+                                {/* Bio overlay on hover */}
+                                {member.bio && (
+                                    <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
+                                        <p className="text-white text-sm leading-relaxed text-left line-clamp-6">{member.bio}</p>
+                                    </div>
+                                )}
                             </div>
                             <h4 className="text-2xl font-serif font-bold text-foreground">{member.name}</h4>
-                            <p className="text-primary font-medium uppercase tracking-wider text-sm">{member.role}</p>
+                            <p className="text-primary font-medium uppercase tracking-wider text-sm mb-2">{member.role}</p>
+                            {member.shortProfile && (
+                                <p className="text-gray-500 text-sm leading-relaxed max-w-xs mx-auto">{member.shortProfile}</p>
+                            )}
                         </div>
                     ))}
                 </div>
