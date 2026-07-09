@@ -1,0 +1,88 @@
+name: Deploy Client & Server to cPanel
+
+on:
+  push:
+    branches:
+      - main # Change this to master if your default branch is master
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Apps
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      # Step 3: Install dependencies & compile the Next.js client app
+      - name: Install & Build Client
+        run: |
+          cd client
+          npm ci
+          npm run build
+
+      # Step 4: Prepare the Client Deployment Package
+      # We collect only the files required to run the production client app
+      - name: Prepare Client Deploy Directory
+        run: |
+          mkdir deploy_client
+          cp -r client/.next deploy_client/
+          cp -r client/public deploy_client/
+          cp client/package.json deploy_client/
+          cp client/package-lock.json deploy_client/
+          cp client/server.js deploy_client/
+          cp client/.env.production deploy_client/
+          mkdir -p deploy_client/tmp
+          touch deploy_client/tmp/restart.txt
+
+      # Step 5: Prepare the Server (Backend API) Deployment Package
+      # We collect only the required runtime folders and files for the Express API
+      - name: Prepare Server Deploy Directory
+        run: |
+          mkdir deploy_server
+          cp -r server/config deploy_server/ || true
+          cp -r server/controllers deploy_server/ || true
+          cp -r server/middlewares deploy_server/ || true
+          cp -r server/models deploy_server/ || true
+          cp -r server/routes deploy_server/ || true
+          cp -r server/services deploy_server/ || true
+          cp -r server/data deploy_server/ || true
+          cp server/index.js deploy_server/
+          cp server/package.json deploy_server/
+          cp server/package-lock.json deploy_server/
+          mkdir -p deploy_server/tmp
+          touch deploy_server/tmp/restart.txt
+
+      # Step 6: Upload Client Files to cPanel
+      - name: Sync Client to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./deploy_client/
+          # Destination path for the client app (fallback to public_html/client/)
+          server-dir: ${{ secrets.FTP_CLIENT_DIR || './public_html/client/' }}
+          dangerous-clean-html: false
+
+      # Step 7: Upload Server Files to cPanel
+      - name: Sync Server to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./deploy_server/
+          # Destination path for the API server app (fallback to public_html/server/)
+          server-dir: ${{ secrets.FTP_SERVER_DIR || './public_html/server/' }}
+          dangerous-clean-html: false
+
