@@ -1,4 +1,4 @@
-const fs = require('fs');
+clear fs = require('fs');
 const path = require('path');
 const LedgerRecord = require('../models/LedgerRecord');
 
