@@ -66,7 +66,7 @@ router.get('/attendance/my', protect, async (req, res) => {
 // @desc    Get all attendance records (HR/Management/CEO/SuperAdmin)
 router.get('/attendance/all', protect, async (req, res) => {
     try {
-        if (!['hr', 'management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (!req.hasRole('hr', 'management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Access denied' });
         }
         const records = await Attendance.find({})
@@ -84,7 +84,7 @@ router.get('/attendance/all', protect, async (req, res) => {
 router.get('/payroll', protect, async (req, res) => {
     try {
         let query = { userId: req.user.id };
-        if (['hr', 'management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (req.hasRole('hr', 'management', 'ceo', 'superadmin')) {
             query = {}; // See all
         }
         
@@ -99,7 +99,7 @@ router.get('/payroll', protect, async (req, res) => {
 // @desc    Create a new payroll record (HR/Management only)
 router.post('/payroll', protect, async (req, res) => {
     try {
-        if (!['hr', 'management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (!req.hasRole('hr', 'management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Only HR and above can create payroll records' });
         }
         const { userId, month, year, baseSalary, bonuses = 0, deductions = 0, notes } = req.body;
@@ -120,7 +120,7 @@ router.post('/payroll', protect, async (req, res) => {
 // @desc    Update payroll status (mark paid, processed)
 router.put('/payroll/:id', protect, async (req, res) => {
     try {
-        if (!['hr', 'management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (!req.hasRole('hr', 'management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Not authorized' });
         }
         const existingPayroll = await Payroll.findById(req.params.id);
@@ -153,7 +153,7 @@ router.put('/payroll/:id', protect, async (req, res) => {
 router.get('/loans', protect, async (req, res) => {
     try {
         let query = { userId: req.user.id };
-        if (['hr', 'management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (req.hasRole('hr', 'management', 'ceo', 'superadmin')) {
             query = {};
         }
         const loans = await Loan.find(query).populate('userId', 'firstName surname email role');
@@ -167,7 +167,7 @@ router.get('/loans', protect, async (req, res) => {
 // @desc    Create a new loan record (HR/management only)
 router.post('/loans', protect, async (req, res) => {
     try {
-        if (!['hr', 'management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (!req.hasRole('hr', 'management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Only HR and above can record loans' });
         }
         const { userId, amount, totalPayable, monthlyInstallment, repaymentPlan } = req.body;
@@ -195,7 +195,7 @@ router.post('/loans', protect, async (req, res) => {
 // @desc    Auto-generate monthly payroll for all staff
 router.post('/payroll/generate', protect, async (req, res) => {
     try {
-        if (!['hr', 'management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (!req.hasRole('hr', 'management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Only HR and above can generate payroll' });
         }
         const { month, year } = req.body;

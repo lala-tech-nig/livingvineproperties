@@ -109,6 +109,23 @@ export default function ManagementUsers() {
         }
     };
 
+    const handleExtraRoleToggle = async (userId, extraRole, currentRoles = []) => {
+        const alreadyHas = currentRoles.includes(extraRole);
+        const newRoles = alreadyHas
+            ? currentRoles.filter(r => r !== extraRole)
+            : [...currentRoles, extraRole];
+        setActionLoading(userId + '-roles');
+        try {
+            const { data } = await api.put(`/users/${userId}/roles`, { roles: newRoles });
+            setUsers(prev => prev.map(u => u._id === userId ? { ...u, roles: newRoles } : u));
+            toast.success(alreadyHas ? `Removed ${extraRole} access` : `Added ${extraRole} access`);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Multi-role update failed');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     const handleTransferAccounts = async () => {
         if (!transferSource || !transferTargetId) return;
         setTransferLoading(true);
@@ -303,56 +320,98 @@ export default function ManagementUsers() {
                                         </div>
                                     </td>
 
-                                    {/* Role — with dropdown for reassignment */}
+                                    {/* Role — with dropdown for reassignment + multi-role chips */}
                                     <td className="px-6 py-4">
-                                        {canModify(u) ? (
-                                            <div className="relative inline-block">
-                                                <button
-                                                    onClick={() => setOpenRoleMenu(openRoleMenu === u._id ? null : u._id)}
-                                                    disabled={actionLoading === u._id + '-role'}
-                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold uppercase hover:opacity-80 transition-all ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-700 border-gray-200'}`}
-                                                >
-                                                    {actionLoading === u._id + '-role' ? (
-                                                        <span className="animate-spin">⟳</span>
-                                                    ) : (
-                                                        <>
-                                                            {ROLE_LABELS[u.role] || u.role}
-                                                            <ChevronDown size={12} />
-                                                        </>
-                                                    )}
-                                                </button>
+                                        <div className="space-y-1.5">
+                                            {/* Primary role badge with dropdown */}
+                                            {canModify(u) ? (
+                                                <div className="relative inline-block">
+                                                    <button
+                                                        onClick={() => setOpenRoleMenu(openRoleMenu === u._id ? null : u._id)}
+                                                        disabled={actionLoading === u._id + '-role'}
+                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold uppercase hover:opacity-80 transition-all ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-700 border-gray-200'}`}
+                                                    >
+                                                        {actionLoading === u._id + '-role' ? (
+                                                            <span className="animate-spin">⟳</span>
+                                                        ) : (
+                                                            <>
+                                                                {ROLE_LABELS[u.role] || u.role}
+                                                                <ChevronDown size={12} />
+                                                            </>
+                                                        )}
+                                                    </button>
 
-                                                <AnimatePresence>
-                                                    {openRoleMenu === u._id && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                                                            transition={{ duration: 0.15 }}
-                                                            className="absolute z-50 top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[160px]"
+                                                    <AnimatePresence>
+                                                        {openRoleMenu === u._id && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                                                                transition={{ duration: 0.15 }}
+                                                                className="absolute z-50 top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[160px]"
+                                                            >
+                                                                <p className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Primary Role</p>
+                                                                {getAssignableRoles()
+                                                                    .filter(r => r !== u.role)
+                                                                    .map(r => (
+                                                                        <button
+                                                                            key={r}
+                                                                            onClick={() => handleRoleChange(u._id, r)}
+                                                                            className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-800 transition-colors flex items-center gap-2"
+                                                                        >
+                                                                            <span className={`w-2 h-2 rounded-full inline-block ${ROLE_COLORS[r]?.split(' ')[0] || 'bg-gray-400'}`} />
+                                                                            {ROLE_LABELS[r] || r}
+                                                                        </button>
+                                                                    ))}
+
+                                                                {/* Multi-role section */}
+                                                                <p className="px-3 py-2 text-[10px] font-bold text-indigo-400 uppercase tracking-widest border-t border-gray-100 mt-1">+ Additional Access</p>
+                                                                {getAssignableRoles()
+                                                                    .filter(r => r !== u.role)
+                                                                    .map(r => {
+                                                                        const extraRoles = u.roles || [];
+                                                                        const hasExtra = extraRoles.includes(r);
+                                                                        return (
+                                                                            <button
+                                                                                key={r + '-extra'}
+                                                                                onClick={() => handleExtraRoleToggle(u._id, r, extraRoles)}
+                                                                                className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center justify-between gap-2 ${hasExtra ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                                            >
+                                                                                <span className="flex items-center gap-2">
+                                                                                    <span className={`w-1.5 h-1.5 rounded-full ${hasExtra ? 'bg-indigo-500' : 'bg-gray-300'}`} />
+                                                                                    {ROLE_LABELS[r]}
+                                                                                </span>
+                                                                                <span className={`text-[9px] font-bold uppercase tracking-wider ${hasExtra ? 'text-indigo-500' : 'text-gray-400'}`}>
+                                                                                    {hasExtra ? '✓ On' : '+ Add'}
+                                                                                </span>
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            ) : (
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-bold uppercase ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                                                    {ROLE_LABELS[u.role] || u.role}
+                                                </span>
+                                            )}
+
+                                            {/* Extra roles as chips */}
+                                            {Array.isArray(u.roles) && u.roles.filter(r => r !== u.role).length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {u.roles.filter(r => r !== u.role).map(r => (
+                                                        <span
+                                                            key={r}
+                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-indigo-50 text-indigo-600 border border-indigo-200"
                                                         >
-                                                            <p className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Assign Role</p>
-                                                            {getAssignableRoles()
-                                                                .filter(r => r !== u.role)
-                                                                .map(r => (
-                                                                    <button
-                                                                        key={r}
-                                                                        onClick={() => handleRoleChange(u._id, r)}
-                                                                        className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-800 transition-colors flex items-center gap-2"
-                                                                    >
-                                                                        <span className={`w-2 h-2 rounded-full inline-block ${ROLE_COLORS[r]?.split(' ')[0] || 'bg-gray-400'}`} />
-                                                                        {ROLE_LABELS[r] || r}
-                                                                    </button>
-                                                                ))}
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        ) : (
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-bold uppercase ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                                                {ROLE_LABELS[u.role] || u.role}
-                                            </span>
-                                        )}
+                                                            <span className="w-1 h-1 rounded-full bg-indigo-400" />
+                                                            {ROLE_LABELS[r] || r}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
 
                                     {/* Status */}

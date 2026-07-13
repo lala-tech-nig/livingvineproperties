@@ -180,11 +180,11 @@ export default function InvestorLayout({ children }) {
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar (Desktop Only) */}
                 <aside className="hidden lg:flex fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 lg:static w-72 flex-col">
-                    <div className="h-16 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
-                        <Link href="/" className="text-xl font-bold text-orange-900 font-serif hover:text-primary transition-colors">
-                            Living Vine
+                    <div className="h-16 flex items-center px-6 border-b border-gray-100 flex-shrink-0 gap-2">
+                        <Link href="/" className="hover:opacity-85 transition-opacity flex items-center">
+                            <img src="/living-logo.png" alt="LIVING VINE PRPPERTIES INVESTMENT LIMITED" className="h-8 w-auto object-contain" />
                         </Link>
-                        <span className="ml-2 text-xs bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Investor</span>
+                        <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Investor</span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
@@ -264,7 +264,7 @@ export default function InvestorLayout({ children }) {
                                         <p className="text-base font-black text-gray-900 leading-tight">
                                             Hello, {user?.firstName} 👋
                                         </p>
-                                        <p className="text-[11px] text-gray-400">Welcome back to Living Vine Properties</p>
+                                        <p className="text-[11px] text-gray-400">Welcome back to LIVING VINE PRPPERTIES INVESTMENT LIMITED</p>
                                     </div>
                                 </div>
                                 <Link href="/investor/notifications" className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">

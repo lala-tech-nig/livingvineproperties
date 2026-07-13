@@ -401,6 +401,55 @@ const websiteSettingSchema = new mongoose.Schema({
     loginBackground: {
         type: String,
         default: ''
+    },
+
+    // Website Loader / Splash Screen
+    loaderEnabled: {
+        type: Boolean,
+        default: true
+    },
+    loaderCaption: {
+        type: String,
+        default: 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED'
+    },
+    // Left Certificate Signee (Admin Manager)
+    certSigneeLeftName: {
+        type: String,
+        default: ''
+    },
+    certSigneeLeftPosition: {
+        type: String,
+        default: 'Admin Manager'
+    },
+    certSigneeLeftSignature: {
+        type: String,
+        default: ''
+    },
+    // Right Certificate Signee (BDM)
+    certSigneeRightName: {
+        type: String,
+        default: ''
+    },
+    certSigneeRightPosition: {
+        type: String,
+        default: 'BDM'
+    },
+    certSigneeRightSignature: {
+        type: String,
+        default: ''
+    },
+    // Receipt Signee
+    receiptSigneeName: {
+        type: String,
+        default: ''
+    },
+    receiptSigneePosition: {
+        type: String,
+        default: 'Authorized Signature'
+    },
+    receiptSigneeSignature: {
+        type: String,
+        default: ''
     }
 }, { timestamps: true });
 

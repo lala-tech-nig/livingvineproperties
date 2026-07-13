@@ -405,7 +405,7 @@ router.get('/contacts/staff-performance', protect, authorize('management', 'ceo'
 // @access  Private (Staff exports their own; manager exports queried/all)
 router.get('/contacts/export', protect, async (req, res) => {
     try {
-        const isManager = ['management', 'ceo', 'superadmin'].includes(req.user.role);
+        const isManager = req.hasRole('management', 'ceo', 'superadmin');
         let query = {};
 
         if (!isManager) {

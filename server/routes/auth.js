@@ -107,7 +107,7 @@ router.post('/register', async (req, res) => {
         // Send OTP email (non-blocking)
         sendEmail(
             email,
-            `Verify your email — ${process.env.EMAIL_FROM_NAME || 'Living Vine Properties'}`,
+            `Verify your email — ${process.env.EMAIL_FROM_NAME || 'LIVING VINE PRPPERTIES INVESTMENT LIMITED'}`,
             templates.emailVerificationOtp(`${firstName} ${surname}`, otp)
         ).catch(err => console.error('OTP email error:', err));
 
@@ -175,7 +175,7 @@ router.post('/resend-otp', async (req, res) => {
 
         await sendEmail(
             email,
-            `Your new verification OTP — Living Vine Properties`,
+            `Your new verification OTP — LIVING VINE PRPPERTIES INVESTMENT LIMITED`,
             templates.emailVerificationOtp(`${user.firstName} ${user.surname}`, otp)
         );
 
@@ -233,10 +233,23 @@ router.post('/login', async (req, res) => {
             });
             sendEmail(
                 user.email,
-                'New login to your Living Vine Properties account',
+                'New login to your LIVING VINE PRPPERTIES INVESTMENT LIMITED account',
                 templates.loginNotification(`${user.firstName} ${user.surname}`, userAgent, ip, time, 'Nigeria')
             ).catch(err => console.error('Login notification email error:', err));
         } catch (_) { /* non-blocking */ }
+
+        // Build the full list of roles this user has access to
+        // Combine primary role + any extra roles assigned, deduplicated
+        const primaryRole = user.role;
+        const extraRoles = Array.isArray(user.roles) ? user.roles : [];
+        const allRoles = [...new Set([primaryRole, ...extraRoles])];
+
+        // Staff roles that can use the management/CRM portal
+        const staffRoles = ['sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin'];
+        const userStaffRoles = allRoles.filter(r => staffRoles.includes(r));
+
+        // If user has more than one staff role, require them to pick a dashboard
+        const requiresRoleSelection = userStaffRoles.length > 1;
 
         res.json({
             _id: user.id,
@@ -244,6 +257,8 @@ router.post('/login', async (req, res) => {
             firstName: user.firstName,
             surname: user.surname,
             role: user.role,
+            roles: allRoles,
+            requiresRoleSelection,
             accountOfficer: user.accountOfficer,
             profileImage: user.profileImage || null,
             token: generateToken(user._id),
@@ -277,7 +292,7 @@ router.post('/forgot-password', async (req, res) => {
 
         await sendEmail(
             email,
-            'Reset your Living Vine Properties password',
+            'Reset your LIVING VINE PRPPERTIES INVESTMENT LIMITED password',
             templates.passwordResetEmail(`${user.firstName} ${user.surname}`, resetLink)
         );
 

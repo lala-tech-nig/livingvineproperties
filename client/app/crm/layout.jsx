@@ -79,7 +79,7 @@ export default function CRMLayout({ children }) {
     const [mounted, setMounted] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
 
-    const isLoginPage = pathname === '/crm/login';
+    const isLoginPage = pathname === '/crm/login' || pathname === '/login';
 
     useEffect(() => {
         initializeAuth();
@@ -89,8 +89,13 @@ export default function CRMLayout({ children }) {
     useEffect(() => {
         if (!mounted) return;
         if (isLoginPage) return;
-        if (!isAuthenticated) { router.push('/crm/login'); return; }
-        if (user && !CRM_ROLES.includes(user.role)) { router.push('/crm/login'); }
+        if (!isAuthenticated) { router.push('/login'); return; }
+        // Allow primary CRM role, or any user with a CRM role in their extra roles array
+        const hasCRMAccess = user && (
+            CRM_ROLES.includes(user.role) ||
+            (Array.isArray(user.roles) && user.roles.some(r => CRM_ROLES.includes(r)))
+        );
+        if (user && !hasCRMAccess) { router.push('/login'); }
     }, [mounted, isAuthenticated, user, router, pathname, isLoginPage]);
 
     // Poll unread notifications every 60s
@@ -113,7 +118,12 @@ export default function CRMLayout({ children }) {
         return <>{children}</>;
     }
 
-    if (!mounted || !isAuthenticated || (user && !CRM_ROLES.includes(user.role))) {
+    const hasCRMAccess = user && (
+        CRM_ROLES.includes(user.role) ||
+        (Array.isArray(user.roles) && user.roles.some(r => CRM_ROLES.includes(r)))
+    );
+
+    if (!mounted || !isAuthenticated || (user && !hasCRMAccess)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-950">
                 <div className="text-center">
@@ -125,18 +135,18 @@ export default function CRMLayout({ children }) {
     }
 
     const navigation = getNavigation(user?.role);
-    const handleLogout = () => { logout(); router.push('/crm/login'); };
+    const handleLogout = () => { logout(); router.push('/login'); };
 
     return (
         <div className="min-h-screen bg-gray-950 flex text-white">
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
                 <aside className="hidden lg:flex fixed inset-y-0 left-0 z-50 bg-gray-900 border-r border-gray-800 lg:static w-72 flex-col">
-                    <div className="h-16 flex items-center px-6 border-b border-gray-800 flex-shrink-0 gap-3">
-                        <Link href="/" className="text-xl font-bold text-white font-serif hover:text-[#de1f25] transition-colors">
-                            Living Vine
+                    <div className="h-16 flex items-center px-6 border-b border-gray-800 flex-shrink-0 gap-2">
+                        <Link href="/" className="hover:opacity-85 transition-opacity flex items-center">
+                            <img src="/living-logo.png" alt="Living Vine Properties" className="h-8 w-auto object-contain brightness-0 invert" />
                         </Link>
-                        <span className="text-xs bg-[#de1f25]/20 text-[#de1f25] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">CRM</span>
+                        <span className="text-[10px] bg-[#de1f25]/20 text-[#de1f25] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">CRM</span>
                     </div>
 
                     <div className="px-4 py-4 border-b border-gray-800">

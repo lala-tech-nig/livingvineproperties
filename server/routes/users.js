@@ -202,7 +202,7 @@ router.get('/profile/completion', protect, async (req, res) => {
 // @access  Private
 router.get('/all', protect, async (req, res) => {
     try {
-        if (!['superadmin', 'ceo', 'management', 'hr'].includes(req.user.role)) {
+        if (!req.hasRole('superadmin', 'ceo', 'management', 'hr')) {
             return res.status(401).json({ message: 'Not authorized to view all users' });
         }
         const users = await User.find().select('-password');
@@ -217,7 +217,8 @@ router.get('/all', protect, async (req, res) => {
 // @access  Private (any staff)
 router.get('/investors', protect, async (req, res) => {
     try {
-        if (req.user.role === 'investor') {
+        // Block pure investors (those with only investor role)
+        if (req.user.role === 'investor' && !req.hasRole('sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -246,7 +247,7 @@ router.get('/investors', protect, async (req, res) => {
 // @access  Private (any staff)
 router.get('/my-investors', protect, async (req, res) => {
     try {
-        if (req.user.role === 'investor') {
+        if (req.user.role === 'investor' && !req.hasRole('sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Investors cannot have sub-accounts' });
         }
         const investors = await User.find({ role: 'investor', accountOfficer: req.user._id })
@@ -311,12 +312,46 @@ router.put('/:id/role', protect, async (req, res) => {
     }
 });
 
+// @route   PUT /api/users/:id/roles
+// @desc    Update user additional roles array (multi-role support)
+// @access  Private (Tiered access)
+router.put('/:id/roles', protect, async (req, res) => {
+    try {
+        const { roles } = req.body;
+        if (!Array.isArray(roles)) {
+            return res.status(400).json({ message: 'roles must be an array' });
+        }
+
+        const targetUser = await User.findById(req.params.id);
+        if (!targetUser) return res.status(404).json({ message: 'User not found' });
+
+        const currentTier = TIERS[req.user.role] || 0;
+        const targetTier = TIERS[targetUser.role] || 0;
+
+        if (currentTier <= targetTier) {
+            return res.status(401).json({ message: 'Insufficient permissions to modify this user' });
+        }
+
+        const validRoles = ['investor', 'sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin'];
+        const invalid = roles.filter(r => !validRoles.includes(r));
+        if (invalid.length > 0) {
+            return res.status(400).json({ message: `Invalid roles: ${invalid.join(', ')}` });
+        }
+
+        targetUser.roles = roles;
+        await targetUser.save();
+        res.json({ message: 'Additional roles updated', user: targetUser });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
 // @route   POST /api/users/:id/transfer-accounts
 // @desc    Transfer all assigned accounts from one staff to another
 // @access  Private (Management / CEO / Superadmin)
 router.post('/:id/transfer-accounts', protect, async (req, res) => {
     try {
-        if (!['management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (!req.hasRole('management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Only management and above can transfer accounts' });
         }
 
@@ -364,7 +399,7 @@ router.post('/:id/transfer-accounts', protect, async (req, res) => {
 // @access  Private
 router.put('/:id/assign-officer', protect, async (req, res) => {
     try {
-        if (!['management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (!req.hasRole('management', 'ceo', 'superadmin')) {
             return res.status(403).json({ message: 'Only management and above can assign account officers' });
         }
 

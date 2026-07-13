@@ -37,7 +37,7 @@ router.put('/:id', protect, async (req, res) => {
         if (!task) return res.status(404).json({ message: 'Task not found' });
         
         // Ensure user owns task or is manager/admin
-        if (task.assignedTo.toString() !== req.user.id && !['management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (task.assignedTo.toString() !== req.user.id && !req.hasRole('management', 'ceo', 'superadmin')) {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
@@ -55,7 +55,7 @@ router.delete('/:id', protect, async (req, res) => {
         const task = await Task.findById(req.params.id);
         if (!task) return res.status(404).json({ message: 'Task not found' });
 
-        if (task.assignedTo.toString() !== req.user.id && !['management', 'ceo', 'superadmin'].includes(req.user.role)) {
+        if (task.assignedTo.toString() !== req.user.id && !req.hasRole('management', 'ceo', 'superadmin')) {
             return res.status(401).json({ message: 'Not authorized to delete this task' });
         }
 

@@ -39,7 +39,7 @@ export default function ManagementLayout({ children }) {
     const hasWelcomedRef = useRef(false);
     const prevNotificationsRef = useRef([]);
 
-    const isLoginPage = pathname === '/management/login';
+    const isLoginPage = pathname === '/management/login' || pathname === '/login';
 
     useEffect(() => {
         initializeAuth();
@@ -50,11 +50,17 @@ export default function ManagementLayout({ children }) {
         if (!mounted) return;
         if (isLoginPage) return;
         if (!isAuthenticated) {
-            router.push('/management/login');
+            router.push('/login');
             return;
         }
-        if (user && user.role !== 'management') {
-            router.push('/management/login');
+        // Allow management primary role, OR any user with management in their extra roles array
+        const hasManagementAccess = user && (
+            user.role === 'management' ||
+            user.role === 'superadmin' ||
+            (Array.isArray(user.roles) && (user.roles.includes('management') || user.roles.includes('superadmin')))
+        );
+        if (user && !hasManagementAccess) {
+            router.push('/login');
         }
     }, [mounted, isAuthenticated, user, router, pathname, isLoginPage]);
 
@@ -89,7 +95,13 @@ export default function ManagementLayout({ children }) {
         return <>{children}</>;
     }
 
-    if (!mounted || !isAuthenticated || (user && user.role !== 'management')) {
+    const hasManagementAccess = user && (
+        user.role === 'management' ||
+        user.role === 'superadmin' ||
+        (Array.isArray(user.roles) && (user.roles.includes('management') || user.roles.includes('superadmin')))
+    );
+
+    if (!mounted || !isAuthenticated || (user && !hasManagementAccess)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-950">
                 <div className="text-center">
@@ -102,7 +114,7 @@ export default function ManagementLayout({ children }) {
 
     const handleLogout = () => {
         logout();
-        router.push('/management/login');
+        router.push('/login');
     };
 
     return (
@@ -110,11 +122,11 @@ export default function ManagementLayout({ children }) {
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
                 <aside className="hidden lg:flex fixed inset-y-0 left-0 z-50 bg-gray-900 border-r border-gray-800 lg:static w-72 flex-col">
-                    <div className="h-16 flex items-center px-6 border-b border-gray-800 flex-shrink-0 gap-3">
-                        <Link href="/" className="text-xl font-bold text-white font-serif hover:text-amber-500 transition-colors">
-                            Living Vine
+                    <div className="h-16 flex items-center px-6 border-b border-gray-800 flex-shrink-0 gap-2">
+                        <Link href="/" className="hover:opacity-85 transition-opacity flex items-center">
+                            <img src="/living-logo.png" alt="Living Vine Properties" className="h-8 w-auto object-contain brightness-0 invert" />
                         </Link>
-                        <span className="text-xs bg-amber-500/20 text-amber-500 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Mgt</span>
+                        <span className="text-[10px] bg-amber-500/20 text-amber-500 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Mgt</span>
                     </div>
 
                     <div className="px-4 py-4 border-b border-gray-800">

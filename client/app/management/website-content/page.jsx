@@ -68,7 +68,22 @@ export default function WebsiteContentEditor() {
 
         // Policies
         privacyPageTitle: '', privacyPageEffectiveDate: '', privacyPageContent: '',
-        termsPageTitle: '', termsPageEffectiveDate: '', termsPageContent: ''
+        termsPageTitle: '', termsPageEffectiveDate: '', termsPageContent: '',
+
+        // Loader
+        loaderEnabled: true,
+        loaderCaption: 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+
+        // Document Signatures & Signees
+        certSigneeLeftName: '',
+        certSigneeLeftPosition: 'Admin Manager',
+        certSigneeLeftSignature: '',
+        certSigneeRightName: '',
+        certSigneeRightPosition: 'BDM',
+        certSigneeRightSignature: '',
+        receiptSigneeName: '',
+        receiptSigneePosition: 'Authorized Signature',
+        receiptSigneeSignature: ''
     });
 
     // Modals / Form States
@@ -200,7 +215,19 @@ export default function WebsiteContentEditor() {
                     privacyPageContent: settingsRes.privacyPageContent || '',
                     termsPageTitle: settingsRes.termsPageTitle || '',
                     termsPageEffectiveDate: settingsRes.termsPageEffectiveDate || '',
-                    termsPageContent: settingsRes.termsPageContent || ''
+                    termsPageContent: settingsRes.termsPageContent || '',
+
+                    loaderEnabled: settingsRes.loaderEnabled !== undefined ? settingsRes.loaderEnabled : true,
+                    loaderCaption: settingsRes.loaderCaption || 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                    certSigneeLeftName: settingsRes.certSigneeLeftName || '',
+                    certSigneeLeftPosition: settingsRes.certSigneeLeftPosition || 'Admin Manager',
+                    certSigneeLeftSignature: settingsRes.certSigneeLeftSignature || '',
+                    certSigneeRightName: settingsRes.certSigneeRightName || '',
+                    certSigneeRightPosition: settingsRes.certSigneeRightPosition || 'BDM',
+                    certSigneeRightSignature: settingsRes.certSigneeRightSignature || '',
+                    receiptSigneeName: settingsRes.receiptSigneeName || '',
+                    receiptSigneePosition: settingsRes.receiptSigneePosition || 'Authorized Signature',
+                    receiptSigneeSignature: settingsRes.receiptSigneeSignature || ''
                 });
             }
         } catch (error) {
@@ -556,6 +583,231 @@ export default function WebsiteContentEditor() {
                                             <img src={settings.loginBackground} alt="Login Background Preview" className="w-full h-full object-cover" />
                                         </div>
                                     )}
+                                </div>
+                            </div>
+
+                            {/* Website Loader / Splash Screen */}
+                            <div className="bg-gray-950 p-6 rounded-xl border border-gray-800 space-y-5">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest">Website Loading Screen</h4>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Controls the animated splash screen shown on the public website while API data loads. The loader disappears automatically once all data is ready.
+                                        </p>
+                                    </div>
+                                    {/* Toggle switch */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSettings(prev => ({ ...prev, loaderEnabled: !prev.loaderEnabled }))}
+                                        className={`relative shrink-0 inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                                            settings.loaderEnabled ? 'bg-amber-600' : 'bg-gray-700'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                                                settings.loaderEnabled ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
+
+                                <div className={`space-y-3 transition-opacity ${settings.loaderEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                                    <label className="block text-xs font-bold text-gray-400">Loader Caption Text</label>
+                                    <input
+                                        type="text"
+                                        value={settings.loaderCaption || ''}
+                                        onChange={e => setSettings({ ...settings, loaderCaption: e.target.value })}
+                                        placeholder="Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED"
+                                        className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none text-sm"
+                                    />
+                                    <p className="text-[11px] text-gray-500">This text appears below the animated logo spinner on the website loading screen.</p>
+
+                                    {/* Live preview pill */}
+                                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center gap-3">
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Preview</p>
+                                        <div className="flex items-center gap-1.5">
+                                            {[0,1,2,3].map(i => (
+                                                <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#de1f25] opacity-60" />
+                                            ))}
+                                        </div>
+                                        <p className="text-xs font-semibold text-gray-400 text-center">{settings.loaderCaption || 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED'}</p>
+                                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-600">LIVING VINE PRPPERTIES INVESTMENT LIMITED</p>
+                                    </div>
+                                </div>
+
+                                <div className={`flex items-center gap-2 text-xs ${settings.loaderEnabled ? 'text-emerald-400' : 'text-gray-500'}`}>
+                                    <span className={`w-2 h-2 rounded-full ${settings.loaderEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
+                                    {settings.loaderEnabled ? 'Loader is ACTIVE — visitors see the splash screen on every visit' : 'Loader is DISABLED — website loads without splash screen'}
+                                </div>
+                            </div>
+
+                            {/* Official Document Signatures & Signees */}
+                            <div className="bg-gray-950 p-6 rounded-xl border border-gray-800 space-y-6">
+                                <div>
+                                    <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest">Official Document Signatures & Signees</h4>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Configure the signees, positions, and signature images rendered on client investment receipts and official certificates.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+                                    {/* Certificate Left Signee (Admin Manager) */}
+                                    <div className="p-5 bg-gray-900/40 rounded-xl border border-gray-800/80 space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
+                                            <Award size={16} /> Certificate Left Signee
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Signee Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={settings.certSigneeLeftName || ''} 
+                                                onChange={e => setSettings({...settings, certSigneeLeftName: e.target.value})} 
+                                                placeholder="e.g. ESV. (DR.) ABIODUN O. BEWAJI"
+                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Signee Position (Left)</label>
+                                            <input 
+                                                type="text" 
+                                                value={settings.certSigneeLeftPosition || 'Admin Manager'} 
+                                                onChange={e => setSettings({...settings, certSigneeLeftPosition: e.target.value})} 
+                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Upload Signature Image</label>
+                                            <div className="flex gap-3">
+                                                <input 
+                                                    type="text" 
+                                                    value={settings.certSigneeLeftSignature || ''} 
+                                                    onChange={e => setSettings({...settings, certSigneeLeftSignature: e.target.value})} 
+                                                    placeholder="URL or Upload"
+                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                                />
+                                                <label className="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer flex items-center justify-center gap-1 transition-colors shrink-0">
+                                                    <UploadCloud size={14} /> Upload
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        className="hidden" 
+                                                        onChange={e => handleImageUpload(e, 'certSigneeLeftSignature')} 
+                                                    />
+                                                </label>
+                                            </div>
+                                            {settings.certSigneeLeftSignature && (
+                                                <div className="mt-3 p-2 bg-white rounded-lg inline-block border border-gray-200">
+                                                    <img src={settings.certSigneeLeftSignature} alt="Left Signature Preview" className="h-10 w-auto object-contain max-w-[200px]" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Certificate Right Signee (BDM) */}
+                                    <div className="p-5 bg-gray-900/40 rounded-xl border border-gray-800/80 space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
+                                            <Award size={16} /> Certificate Right Signee
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Signee Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={settings.certSigneeRightName || ''} 
+                                                onChange={e => setSettings({...settings, certSigneeRightName: e.target.value})} 
+                                                placeholder="e.g. BUKOLA O. AJAYI (MR.)"
+                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Signee Position (Right)</label>
+                                            <input 
+                                                type="text" 
+                                                value={settings.certSigneeRightPosition || 'BDM'} 
+                                                onChange={e => setSettings({...settings, certSigneeRightPosition: e.target.value})} 
+                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Upload Signature Image</label>
+                                            <div className="flex gap-3">
+                                                <input 
+                                                    type="text" 
+                                                    value={settings.certSigneeRightSignature || ''} 
+                                                    onChange={e => setSettings({...settings, certSigneeRightSignature: e.target.value})} 
+                                                    placeholder="URL or Upload"
+                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                                />
+                                                <label className="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer flex items-center justify-center gap-1 transition-colors shrink-0">
+                                                    <UploadCloud size={14} /> Upload
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        className="hidden" 
+                                                        onChange={e => handleImageUpload(e, 'certSigneeRightSignature')} 
+                                                    />
+                                                </label>
+                                            </div>
+                                            {settings.certSigneeRightSignature && (
+                                                <div className="mt-3 p-2 bg-white rounded-lg inline-block border border-gray-200">
+                                                    <img src={settings.certSigneeRightSignature} alt="Right Signature Preview" className="h-10 w-auto object-contain max-w-[200px]" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Receipt Signee (Authorized Signatory) */}
+                                    <div className="md:col-span-2 p-5 bg-gray-900/40 rounded-xl border border-gray-800/80 space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
+                                            <FileText size={16} /> Payment Receipt Signee
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Signee Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={settings.receiptSigneeName || ''} 
+                                                    onChange={e => setSettings({...settings, receiptSigneeName: e.target.value})} 
+                                                    placeholder="e.g. Finance Admin"
+                                                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Signee Position / Title</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={settings.receiptSigneePosition || 'Authorized Signature'} 
+                                                    onChange={e => setSettings({...settings, receiptSigneePosition: e.target.value})} 
+                                                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-400 mb-1.5">Upload Signature Image</label>
+                                            <div className="flex gap-3">
+                                                <input 
+                                                    type="text" 
+                                                    value={settings.receiptSigneeSignature || ''} 
+                                                    onChange={e => setSettings({...settings, receiptSigneeSignature: e.target.value})} 
+                                                    placeholder="URL or Upload"
+                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs" 
+                                                />
+                                                <label className="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer flex items-center justify-center gap-1 transition-colors shrink-0">
+                                                    <UploadCloud size={14} /> Upload
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        className="hidden" 
+                                                        onChange={e => handleImageUpload(e, 'receiptSigneeSignature')} 
+                                                    />
+                                                </label>
+                                            </div>
+                                            {settings.receiptSigneeSignature && (
+                                                <div className="mt-3 p-2 bg-white rounded-lg inline-block border border-gray-200">
+                                                    <img src={settings.receiptSigneeSignature} alt="Receipt Signature Preview" className="h-10 w-auto object-contain max-w-[200px]" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

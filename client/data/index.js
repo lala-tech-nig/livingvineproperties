@@ -47,4 +47,4 @@ export const SERVICES = [
     }
 ];
 
-export const COMPANY_NAME = "Living Vine Properties";
+export const COMPANY_NAME = "LIVING VINE PRPPERTIES INVESTMENT LIMITED";

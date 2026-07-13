@@ -150,7 +150,7 @@ function PayslipModal({ payroll, onClose }) {
                 {/* Payslip Header */}
                 <div className="bg-slate-900 text-white p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 className="text-xl font-extrabold tracking-wider">LIVING VINE PROPERTIES</h2>
+                        <h2 className="text-xl font-extrabold tracking-wider">LIVING VINE PRPPERTIES INVESTMENT LIMITED</h2>
                         <p className="text-xs text-gray-400 mt-0.5">Staff Payslip Statement</p>
                     </div>
                     <div className="text-left sm:text-right">

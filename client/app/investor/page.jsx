@@ -121,20 +121,31 @@ function VisaCard({ inv, index, isActive: cardActive }) {
 }
 
 /* ── Countdown Timer Row ────────────────────────────────── */
+const fmtShortDate = (d) => {
+    if (!d) return '—';
+    const dt = new Date(d);
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const yy = String(dt.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+};
+
 function CountdownTimer({ inv }) {
     const [cd, setCd]         = useState({ d: 0, h: 0, m: 0, s: 0 });
     const [progress, setProgress] = useState(0);
 
+    const startMs = new Date(inv.startDate || inv.createdAt).getTime();
+    const endMs   = startMs + (inv.durationInMonths || 6) * 30 * 24 * 60 * 60 * 1000;
+    const endDate = new Date(endMs);
+
     useEffect(() => {
         if (inv.status !== 'active') return;
         const tick = () => {
-            const start   = new Date(inv.startDate || inv.createdAt).getTime();
-            const end     = start + (inv.durationInMonths || 6) * 30 * 24 * 60 * 60 * 1000;
             const now     = Date.now();
-            const rem     = end - now;
+            const rem     = endMs - now;
             if (rem <= 0) { setCd({ d: 0, h: 0, m: 0, s: 0 }); setProgress(100); return; }
-            const total   = end - start;
-            setProgress(Math.min(Math.round(((now - start) / total) * 100), 100));
+            const total   = endMs - startMs;
+            setProgress(Math.min(Math.round(((now - startMs) / total) * 100), 100));
             setCd({
                 d: Math.floor(rem / (1000 * 60 * 60 * 24)),
                 h: Math.floor((rem % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
@@ -160,7 +171,16 @@ function CountdownTimer({ inv }) {
                             <div className="text-[8px] text-gray-400 font-bold tracking-wider mt-0.5">{l}</div>
                         </div>
                     ))}
-                    {/* separators */}
+                </div>
+                {/* Start & End date pills */}
+                <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <span className="text-gray-400">Start:</span> {fmtShortDate(inv.startDate || inv.createdAt)}
+                    </span>
+                    <span className="text-[9px] text-gray-300">→</span>
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#de1f25] bg-red-50 px-2 py-0.5 rounded-full">
+                        <span className="text-red-300">End:</span> {fmtShortDate(endDate)}
+                    </span>
                 </div>
             </div>
             <div className="relative shrink-0">
@@ -359,7 +379,7 @@ export default function InvestorDashboard() {
                             <p className="text-base font-black text-gray-900 leading-tight">
                                 Hello, {user?.firstName} 👋
                             </p>
-                            <p className="text-[11px] text-gray-400">Welcome back to Living Vine Properties</p>
+                            <p className="text-[11px] text-gray-400">Welcome back to LIVING VINE PRPPERTIES INVESTMENT LIMITED</p>
                         </div>
                     </div>
                     <Link href="/investor/notifications"
@@ -557,7 +577,7 @@ export default function InvestorDashboard() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">Hello, {user?.firstName} 👋</h2>
-                        <p className="text-gray-400 text-sm mt-0.5">Welcome back to Living Vine Properties</p>
+                        <p className="text-gray-400 text-sm mt-0.5">Welcome back to LIVING VINE PRPPERTIES INVESTMENT LIMITED</p>
                     </div>
                     <Link href="/investor/new-investment"
                         className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] text-white px-5 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-[#de1f25]/20 text-sm">

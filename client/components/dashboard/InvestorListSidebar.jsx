@@ -71,6 +71,18 @@ export default function InvestorListSidebar({ isOpen, onClose }) {
                 0
             );
 
+            // Total ROI earned across all investments (expectedROI - capital)
+            const totalROI = userInvestments.reduce(
+                (sum, inv) => sum + ((inv.expectedROI || 0) - (inv.amountToInvest || 0)),
+                0
+            );
+
+            // Total due at maturity = sum of expectedROI for active investments
+            const totalDueAtMaturity = activePortfolios.reduce(
+                (sum, inv) => sum + (inv.expectedROI || 0),
+                0
+            );
+
             let nextMaturityDate = null;
             let daysToMaturity = null;
             
@@ -94,6 +106,8 @@ export default function InvestorListSidebar({ isOpen, onClose }) {
                 activePortfolios,
                 totalActiveCapital,
                 totalCapitalAll,
+                totalROI,
+                totalDueAtMaturity,
                 activePortfoliosCount: activePortfolios.length,
                 totalPortfoliosCount: userInvestments.length,
                 nextMaturityDate,
@@ -189,6 +203,8 @@ export default function InvestorListSidebar({ isOpen, onClose }) {
             'Religion',
             'Active Investments Count',
             'Total Active Capital (NGN)',
+            'Total ROI (NGN)',
+            'Total Due at Maturity (NGN)',
             'Total Portfolios (All-Time)',
             'Next Maturity Date',
             'Account Officer'
@@ -204,6 +220,8 @@ export default function InvestorListSidebar({ isOpen, onClose }) {
             inv.religion || '',
             inv.activePortfoliosCount,
             inv.totalActiveCapital,
+            inv.totalROI,
+            inv.totalDueAtMaturity,
             inv.totalPortfoliosCount,
             inv.nextMaturityDate ? new Date(inv.nextMaturityDate).toLocaleDateString() : 'N/A',
             inv.accountOfficer ? `${inv.accountOfficer.firstName} ${inv.accountOfficer.surname}` : 'Unassigned'
@@ -223,7 +241,7 @@ export default function InvestorListSidebar({ isOpen, onClose }) {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `investor_list_export_${new Date().toISOString().slice(0,10)}.csv`);
+        link.setAttribute("download", `investor_insights_export_${new Date().toISOString().slice(0,10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

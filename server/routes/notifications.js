@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, hasRole } = require('../middlewares/authMiddleware');
 
 // @route   GET /api/notifications
 // @desc    Get notifications for the logged-in user
@@ -20,7 +20,7 @@ router.get('/', protect, async (req, res) => {
 // @desc    Get all system-wide notifications (Management/CEO/SuperAdmin)
 router.get('/all', protect, async (req, res) => {
     try {
-        if (!['superadmin', 'ceo', 'management'].includes(req.user.role)) {
+        if (!hasRole(req.user, 'superadmin', 'ceo', 'management')) {
             return res.status(403).json({ message: 'Access denied' });
         }
         const notifications = await Notification.find({})

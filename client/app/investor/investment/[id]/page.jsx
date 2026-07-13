@@ -18,6 +18,21 @@ import InvestmentDocuments from '@/components/ui/InvestmentDocuments';
 /* ── helpers ─────────────────────────────────────────────── */
 const fmt     = (n) => n ? `₦${Number(n).toLocaleString()}` : '—';
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+const fmtShortDate = (d) => {
+    if (!d) return '—';
+    const dt = new Date(d);
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const yy = String(dt.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+};
+
+const computeEndDate = (startDate, durationInMonths) => {
+    if (!startDate || !durationInMonths) return null;
+    const d = new Date(startDate);
+    d.setMonth(d.getMonth() + Number(durationInMonths));
+    return d;
+};
 
 const maturityLabel = {
     rollover_all:  'Rollover Capital + ROI',
@@ -411,7 +426,27 @@ export default function InvestmentReviewPage() {
                     <InfoRow icon={Banknote}   label="Amount to Invest"       value={fmt(inv.amountToInvest)} />
                     <InfoRow icon={TrendingUp} label="Expected Total Returns" value={fmt(inv.expectedROI)} />
                     <InfoRow icon={Clock}      label="Duration"               value={`${inv.durationInMonths} months`} />
-                    <InfoRow icon={Calendar}   label="Start Date"             value={fmtDate(inv.startDate)} />
+                    <div className="flex items-start gap-3 py-3 border-b border-gray-100">
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 mt-0.5">
+                            <Calendar size={15} className="text-gray-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[11px] text-gray-400 uppercase tracking-widest font-semibold mb-1">Investment Period</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-lg">
+                                    <span className="text-gray-400 text-[10px]">Start</span>
+                                    {fmtDate(inv.startDate)}
+                                    <span className="text-gray-300 text-[9px] ml-1">({fmtShortDate(inv.startDate)})</span>
+                                </span>
+                                <span className="text-gray-300">→</span>
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#16a34a] bg-green-50 px-2.5 py-1 rounded-lg">
+                                    <span className="text-green-400 text-[10px]">End</span>
+                                    {fmtDate(computeEndDate(inv.startDate, inv.durationInMonths))}
+                                    <span className="text-green-300 text-[9px] ml-1">({fmtShortDate(computeEndDate(inv.startDate, inv.durationInMonths))})</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                     <InfoRow icon={RotateCcw}  label="On Maturity"            value={maturityLabel[inv.principalActionAfterMaturity] || inv.principalActionAfterMaturity} />
                 </Section>
 

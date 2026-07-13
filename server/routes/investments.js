@@ -5,7 +5,7 @@ const path = require('path');
 const Investment = require('../models/Investment');
 const InvestmentProduct = require('../models/InvestmentProduct');
 const { protect, authorize } = require('../middlewares/authMiddleware');
-const { sendEmail, templates, baseTemplate } = require('../services/emailService');
+const { sendEmail, templates, baseTemplate, generateReceiptHTML, generateCertificateHTML } = require('../services/emailService');
 
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
@@ -180,8 +180,8 @@ router.get('/:id', protect, async (req, res) => {
 router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
     try {
         const { status, companyAccountId } = req.body;
-        const isCEO = ['ceo', 'superadmin', 'management'].includes(req.user.role);
-        const isManager = req.user.role === 'management';
+        const isCEO = req.hasRole('ceo', 'superadmin', 'management');
+        const isManager = req.hasRole('management');
 
         // Management can now approve, decline or liquidate — same as CEO
         const ceoOnlyStatuses = ['approved', 'declined', 'liquidated'];
@@ -271,6 +271,9 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
             // Send email notification to investor
             const investorUser = await User.findById(investment.user).select('email firstName surname');
             if (investorUser) {
+                const WebsiteSetting = require('../models/WebsiteSetting');
+                const settings = await WebsiteSetting.findOne() || {};
+
                 const investorData = {
                     name: investment.name || `${investorUser.firstName} ${investorUser.surname}`,
                     amountToInvest: investment.amountToInvest,
@@ -283,17 +286,61 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
                 };
 
                 if (status === 'approved') {
-                    sendEmail(
-                        investorUser.email,
-                        '✅ Your Investment Has Been Approved — Living Vine Properties',
-                        templates.investmentApproved(investorData)
-                    ).catch(err => console.error('Investment approval email error:', err));
+                    const receiptHtml = generateReceiptHTML(investment, settings);
+                    const certHtml = generateCertificateHTML(investment, settings);
+                    
+                    (async () => {
+                        try {
+                            const { htmlToPdfBuffer } = require('../services/emailService');
+                            const receiptPdf = await htmlToPdfBuffer(receiptHtml, { landscape: false });
+                            const certPdf = await htmlToPdfBuffer(certHtml, { landscape: true });
+                            
+                            await sendEmail(
+                                investorUser.email,
+                                'Your Investment Has Been Approved — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                templates.investmentApproved(investorData),
+                                [
+                                    { filename: 'LVP-Receipt.pdf', content: receiptPdf },
+                                    { filename: 'LVP-Certificate.pdf', content: certPdf }
+                                ]
+                            );
+                        } catch (pdfErr) {
+                            console.error('Failed to generate PDF attachments:', pdfErr);
+                            // Send approval email without attachments if PDF fails, but do not send HTML attachments
+                            await sendEmail(
+                                investorUser.email,
+                                'Your Investment Has Been Approved — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                templates.investmentApproved(investorData)
+                            );
+                        }
+                    })().catch(err => console.error('Investment approval email error:', err));
+                    
                 } else if (status === 'active') {
-                    sendEmail(
-                        investorUser.email,
-                        '🚀 Your Investment is Now Active — Living Vine Properties',
-                        templates.investmentActive(investorData)
-                    ).catch(err => console.error('Investment active email error:', err));
+                    const certHtml = generateCertificateHTML(investment, settings);
+                    
+                    (async () => {
+                        try {
+                            const { htmlToPdfBuffer } = require('../services/emailService');
+                            const certPdf = await htmlToPdfBuffer(certHtml, { landscape: true });
+                            
+                            await sendEmail(
+                                investorUser.email,
+                                'Your Investment is Now Active — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                templates.investmentActive(investorData),
+                                [
+                                    { filename: 'LVP-Certificate.pdf', content: certPdf }
+                                ]
+                            );
+                        } catch (pdfErr) {
+                            console.error('Failed to generate PDF attachment:', pdfErr);
+                            // Send active email without attachments if PDF fails, but do not send HTML attachments
+                            await sendEmail(
+                                investorUser.email,
+                                'Your Investment is Now Active — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                templates.investmentActive(investorData)
+                            );
+                        }
+                    })().catch(err => console.error('Investment active email error:', err));
                 }
             }
         } catch (_) { /* non-blocking */ }
@@ -353,7 +400,7 @@ router.post('/:id/send-documents', protect, authorize('management', 'ceo', 'supe
             : 'See investor portal';
         const fmtAmt    = (n) => `₦${Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
 
-        const html = templates.baseTemplate(`
+        const html = baseTemplate(`
             <div style="text-align:center; padding: 20px 0 10px;">
                 <div style="font-size:40px; margin-bottom:8px;">📄</div>
                 <h2 style="color:#1a1a1a; font-size:22px; font-weight:800; margin:0;">Your Investment Documents</h2>
@@ -403,11 +450,36 @@ router.post('/:id/send-documents', protect, authorize('management', 'ceo', 'supe
             </div>
         `);
 
-        await sendEmail(
-            investment.user.email,
-            `📄 Your Investment Documents — Receipt ${receiptNo}`,
-            html
-        );
+        // Load settings and attach documents as PDFs (with HTML fallback)
+        const WebsiteSetting = require('../models/WebsiteSetting');
+        const settings = await WebsiteSetting.findOne() || {};
+        
+        const receiptHtml = generateReceiptHTML(investment, settings);
+        const certHtml = generateCertificateHTML(investment, settings);
+
+        try {
+            const { htmlToPdfBuffer } = require('../services/emailService');
+            const receiptPdf = await htmlToPdfBuffer(receiptHtml, { landscape: false });
+            const certPdf = await htmlToPdfBuffer(certHtml, { landscape: true });
+
+            await sendEmail(
+                investment.user.email,
+                `Your Investment Documents — Receipt ${receiptNo}`,
+                html,
+                [
+                    { filename: 'LVP-Receipt.pdf', content: receiptPdf },
+                    { filename: 'LVP-Certificate.pdf', content: certPdf }
+                ]
+            );
+        } catch (pdfErr) {
+            console.error('Failed to generate PDF attachments:', pdfErr);
+            // Send email without attachments if PDF fails, but do not send HTML attachments
+            await sendEmail(
+                investment.user.email,
+                `Your Investment Documents — Receipt ${receiptNo}`,
+                html
+            );
+        }
 
         res.json({ message: `Documents sent successfully to ${investment.user.email}.` });
     } catch (error) {

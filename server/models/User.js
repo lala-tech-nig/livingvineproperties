@@ -27,6 +27,14 @@ const userSchema = new mongoose.Schema({
         enum: ['investor', 'sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin'],
         default: 'investor',
     },
+    // Multi-role support: allows a single user to access multiple dashboards
+    roles: {
+        type: [{
+            type: String,
+            enum: ['investor', 'sales', 'marketing', 'hr', 'management', 'ceo', 'superadmin']
+        }],
+        default: []
+    },
     profileImage: {
         type: String,
     },

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const SupportMessage = require('../models/SupportMessage');
 const User = require('../models/User');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, hasRole } = require('../middlewares/authMiddleware');
 
 // @route   POST /api/support/messages
 // @desc    Send a support message (investor to support, or staff reply)
@@ -14,7 +14,7 @@ router.post('/messages', protect, async (req, res) => {
             return res.status(400).json({ message: 'Message content is required.' });
         }
 
-        const isStaff = ['management', 'ceo', 'superadmin', 'sales', 'marketing', 'hr'].includes(req.user.role);
+        const isStaff = req.hasRole('management', 'ceo', 'superadmin', 'sales', 'marketing', 'hr');
         
         let targetInvestorId;
         let isAdminReply = false;
@@ -85,7 +85,7 @@ router.post('/messages', protect, async (req, res) => {
 // @access  Private
 router.get('/messages', protect, async (req, res) => {
     try {
-        const isStaff = ['management', 'ceo', 'superadmin', 'sales', 'marketing', 'hr'].includes(req.user.role);
+        const isStaff = req.hasRole('management', 'ceo', 'superadmin', 'sales', 'marketing', 'hr');
         let targetInvestorId;
 
         if (isStaff) {
@@ -112,7 +112,7 @@ router.get('/messages', protect, async (req, res) => {
 // @access  Private (Staff only)
 router.get('/threads', protect, async (req, res) => {
     try {
-        const isStaff = ['management', 'ceo', 'superadmin', 'sales', 'marketing', 'hr'].includes(req.user.role);
+        const isStaff = req.hasRole('management', 'ceo', 'superadmin', 'sales', 'marketing', 'hr');
         if (!isStaff) {
             return res.status(403).json({ message: 'Not authorized.' });
         }

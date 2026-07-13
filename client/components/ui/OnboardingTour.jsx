@@ -11,7 +11,7 @@ const SLIDES = [
     {
         icon: '🏡',
         color: 'from-[#de1f25] to-orange-500',
-        title: 'Welcome to Living Vine Properties',
+        title: 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED',
         subtitle: 'Your Trusted Investment Partner',
         description: 'We help you grow your wealth through secure, high-yield real estate investments. This quick tour will show you how to get started.',
         illustration: null,
@@ -67,7 +67,7 @@ const SLIDES = [
         color: 'from-[#de1f25] to-orange-500',
         title: 'You\'re All Set!',
         subtitle: 'Ready to Invest',
-        description: 'You\'re ready to start your investment journey with Living Vine Properties. Let\'s grow your wealth together!',
+        description: 'You\'re ready to start your investment journey with LIVING VINE PRPPERTIES INVESTMENT LIMITED. Let\'s grow your wealth together!',
         tip: null,
         isFinal: true,
     },

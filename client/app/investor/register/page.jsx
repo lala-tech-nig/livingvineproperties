@@ -313,7 +313,7 @@ export default function RegisterPage() {
                                     <Link href="/privacy" target="_blank" className="font-semibold text-[#de1f25] hover:underline inline-flex items-center gap-0.5">
                                         Privacy Policy <ChevronRight size={12} />
                                     </Link>
-                                    {' '}of Living Vine Properties.
+                                    {' '}of LIVING VINE PRPPERTIES INVESTMENT LIMITED.
                                 </span>
                             </label>
                         </div>
