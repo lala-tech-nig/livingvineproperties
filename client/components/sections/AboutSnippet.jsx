@@ -11,7 +11,7 @@ const AboutSnippet = () => {
     const [settings, setSettings] = useState({
         aboutTitle: "Proudly Indigenous. \n Global Standards.",
         aboutSubtitle: "Who We Are",
-        aboutDescription1: "LIVING VINE PRPPERTIES INVESTMENT LIMITED isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.",
+        aboutDescription1: "LIVING VINE PROPERTIES INVESTMENT LIMITED isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.",
         aboutDescription2: "We exist to prove that trust, transparency, and high returns can coexist in the indigenous market. When you invest with us, you aren't just buying land—you are securing a legacy.",
         aboutImage: "/lagos.jpg",
         aboutFeature1: "100% Verified Documentation",
@@ -27,7 +27,7 @@ const AboutSnippet = () => {
                     setSettings({
                         aboutTitle: data.aboutTitle || "Proudly Indigenous. \n Global Standards.",
                         aboutSubtitle: data.aboutSubtitle || "Who We Are",
-                        aboutDescription1: data.aboutDescription1 || "LIVING VINE PRPPERTIES INVESTMENT LIMITED isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.",
+                        aboutDescription1: data.aboutDescription1 || "LIVING VINE PROPERTIES INVESTMENT LIMITED isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.",
                         aboutDescription2: data.aboutDescription2 || "We exist to prove that trust, transparency, and high returns can coexist in the indigenous market. When you invest with us, you aren't just buying land—you are securing a legacy.",
                         aboutImage: data.aboutImage || "/lagos.jpg",
                         aboutFeature1: data.aboutFeature1 || "100% Verified Documentation",

@@ -7,7 +7,7 @@ import api from '@/lib/axios';
 const MIN_DISPLAY_MS = 1200; // Minimum loader display time for smooth UX
 
 export default function WebsiteLoaderWrapper({ children }) {
-    const [loaderCaption, setLoaderCaption] = useState('Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED');
+    const [loaderCaption, setLoaderCaption] = useState('Welcome to LIVING VINE PROPERTIES INVESTMENT LIMITED');
     const [loaderEnabled, setLoaderEnabled] = useState(true);
     const [settingsFetched, setSettingsFetched] = useState(false);
     const hideFnRef = useRef(null);

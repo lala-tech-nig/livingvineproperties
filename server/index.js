@@ -3,6 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
+// Global crash handlers — log unhandled errors to help diagnose cPanel startup failures
+process.on('uncaughtException', (err) => {
+    console.error('[UNCAUGHT EXCEPTION]', err.message, err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('[UNHANDLED REJECTION]', reason);
+});
+
 // Connect to MongoDB
 connectDB().then(() => {
     const seedLedger = require('./config/seedLedger');
@@ -21,6 +29,10 @@ app.use(cors({
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
+// Health check — use this to verify the server is running on production
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -65,4 +77,3 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-

@@ -379,7 +379,7 @@ export default function InvestorDashboard() {
                             <p className="text-base font-black text-gray-900 leading-tight">
                                 Hello, {user?.firstName} 👋
                             </p>
-                            <p className="text-[11px] text-gray-400">Welcome back to LIVING VINE PRPPERTIES INVESTMENT LIMITED</p>
+                            <p className="text-[11px] text-gray-400">Welcome back to LIVING VINE PROPERTIES INVESTMENT LIMITED</p>
                         </div>
                     </div>
                     <Link href="/investor/notifications"
@@ -577,7 +577,7 @@ export default function InvestorDashboard() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">Hello, {user?.firstName} 👋</h2>
-                        <p className="text-gray-400 text-sm mt-0.5">Welcome back to LIVING VINE PRPPERTIES INVESTMENT LIMITED</p>
+                        <p className="text-gray-400 text-sm mt-0.5">Welcome back to LIVING VINE PROPERTIES INVESTMENT LIMITED</p>
                     </div>
                     <Link href="/investor/new-investment"
                         className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] text-white px-5 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-[#de1f25]/20 text-sm">

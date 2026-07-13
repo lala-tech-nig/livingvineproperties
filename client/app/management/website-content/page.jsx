@@ -72,7 +72,7 @@ export default function WebsiteContentEditor() {
 
         // Loader
         loaderEnabled: true,
-        loaderCaption: 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+        loaderCaption: 'Welcome to LIVING VINE PROPERTIES INVESTMENT LIMITED',
 
         // Document Signatures & Signees
         certSigneeLeftName: '',
@@ -218,7 +218,7 @@ export default function WebsiteContentEditor() {
                     termsPageContent: settingsRes.termsPageContent || '',
 
                     loaderEnabled: settingsRes.loaderEnabled !== undefined ? settingsRes.loaderEnabled : true,
-                    loaderCaption: settingsRes.loaderCaption || 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                    loaderCaption: settingsRes.loaderCaption || 'Welcome to LIVING VINE PROPERTIES INVESTMENT LIMITED',
                     certSigneeLeftName: settingsRes.certSigneeLeftName || '',
                     certSigneeLeftPosition: settingsRes.certSigneeLeftPosition || 'Admin Manager',
                     certSigneeLeftSignature: settingsRes.certSigneeLeftSignature || '',
@@ -617,7 +617,7 @@ export default function WebsiteContentEditor() {
                                         type="text"
                                         value={settings.loaderCaption || ''}
                                         onChange={e => setSettings({ ...settings, loaderCaption: e.target.value })}
-                                        placeholder="Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED"
+                                        placeholder="Welcome to LIVING VINE PROPERTIES INVESTMENT LIMITED"
                                         className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 text-white outline-none text-sm"
                                     />
                                     <p className="text-[11px] text-gray-500">This text appears below the animated logo spinner on the website loading screen.</p>
@@ -630,8 +630,8 @@ export default function WebsiteContentEditor() {
                                                 <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#de1f25] opacity-60" />
                                             ))}
                                         </div>
-                                        <p className="text-xs font-semibold text-gray-400 text-center">{settings.loaderCaption || 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED'}</p>
-                                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-600">LIVING VINE PRPPERTIES INVESTMENT LIMITED</p>
+                                        <p className="text-xs font-semibold text-gray-400 text-center">{settings.loaderCaption || 'Welcome to LIVING VINE PROPERTIES INVESTMENT LIMITED'}</p>
+                                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-600">LIVING VINE PROPERTIES INVESTMENT LIMITED</p>
                                     </div>
                                 </div>
 

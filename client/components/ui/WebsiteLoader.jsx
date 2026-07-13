@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function WebsiteLoader({ caption = 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED', onReady }) {
+export default function WebsiteLoader({ caption = 'Welcome to LIVING VINE PROPERTIES INVESTMENT LIMITED', onReady }) {
     const [visible, setVisible] = useState(true);
     const hideRef = useRef(null);
 
@@ -59,7 +59,7 @@ export default function WebsiteLoader({ caption = 'Welcome to LIVING VINE PRPPER
                         >
                             <img
                                 src="/living-logo.png"
-                                alt="LIVING VINE PRPPERTIES INVESTMENT LIMITED"
+                                alt="LIVING VINE PROPERTIES INVESTMENT LIMITED"
                                 className="w-10 h-10 object-contain"
                                 onError={(e) => { e.target.style.display = 'none'; }}
                             />
@@ -94,7 +94,7 @@ export default function WebsiteLoader({ caption = 'Welcome to LIVING VINE PRPPER
                         transition={{ delay: 0.5, duration: 0.8 }}
                         className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400"
                     >
-                        LIVING VINE PRPPERTIES INVESTMENT LIMITED
+                        LIVING VINE PROPERTIES INVESTMENT LIMITED
                     </motion.p>
                 </motion.div>
             )}

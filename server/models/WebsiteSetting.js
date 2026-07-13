@@ -410,7 +410,7 @@ const websiteSettingSchema = new mongoose.Schema({
     },
     loaderCaption: {
         type: String,
-        default: 'Welcome to LIVING VINE PRPPERTIES INVESTMENT LIMITED'
+        default: 'Welcome to LIVING VINE PROPERTIES INVESTMENT LIMITED'
     },
     // Left Certificate Signee (Admin Manager)
     certSigneeLeftName: {

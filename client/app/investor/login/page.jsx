@@ -107,7 +107,7 @@ export default function InvestorLoginPage() {
                 >
                     <div className="w-14 h-14 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6 text-2xl">🏡</div>
                     <h1 className="text-4xl font-bold font-serif mb-4 leading-tight">Your Investments,<br />Secured.</h1>
-                    <p className="text-white/70 leading-relaxed">Log in to track your portfolio, view returns, and manage your account with LIVING VINE PRPPERTIES INVESTMENT LIMITED.</p>
+                    <p className="text-white/70 leading-relaxed">Log in to track your portfolio, view returns, and manage your account with LIVING VINE PROPERTIES INVESTMENT LIMITED.</p>
                 </motion.div>
             </div>
 

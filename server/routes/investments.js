@@ -297,7 +297,7 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
                             
                             await sendEmail(
                                 investorUser.email,
-                                'Your Investment Has Been Approved — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                'Your Investment Has Been Approved — LIVING VINE PROPERTIES INVESTMENT LIMITED',
                                 templates.investmentApproved(investorData),
                                 [
                                     { filename: 'LVP-Receipt.pdf', content: receiptPdf },
@@ -309,7 +309,7 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
                             // Send approval email without attachments if PDF fails, but do not send HTML attachments
                             await sendEmail(
                                 investorUser.email,
-                                'Your Investment Has Been Approved — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                'Your Investment Has Been Approved — LIVING VINE PROPERTIES INVESTMENT LIMITED',
                                 templates.investmentApproved(investorData)
                             );
                         }
@@ -325,7 +325,7 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
                             
                             await sendEmail(
                                 investorUser.email,
-                                'Your Investment is Now Active — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                'Your Investment is Now Active — LIVING VINE PROPERTIES INVESTMENT LIMITED',
                                 templates.investmentActive(investorData),
                                 [
                                     { filename: 'LVP-Certificate.pdf', content: certPdf }
@@ -336,7 +336,7 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
                             // Send active email without attachments if PDF fails, but do not send HTML attachments
                             await sendEmail(
                                 investorUser.email,
-                                'Your Investment is Now Active — LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+                                'Your Investment is Now Active — LIVING VINE PROPERTIES INVESTMENT LIMITED',
                                 templates.investmentActive(investorData)
                             );
                         }

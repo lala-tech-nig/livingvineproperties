@@ -313,7 +313,7 @@ export default function CEOFinancePage() {
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Account Name</label>
                                     <input type="text" value={newAcc.accountName}
                                         onChange={e => setNewAcc(p => ({ ...p, accountName: e.target.value }))}
-                                        placeholder="LIVING VINE PRPPERTIES INVESTMENT LIMITED" required
+                                        placeholder="LIVING VINE PROPERTIES INVESTMENT LIMITED" required
                                         className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900" />
                                 </div>
                                 <div>

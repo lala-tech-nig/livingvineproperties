@@ -16,7 +16,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
-  title: "LIVING VINE PRPPERTIES INVESTMENT LIMITED | Indigenous Excellence in Real Estate",
+  title: "LIVING VINE PROPERTIES INVESTMENT LIMITED | Indigenous Excellence in Real Estate",
   description: "Secure land ownership and high-yield property development in Nigeria. Trusted by hundreds of investors.",
 };
 

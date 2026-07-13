@@ -107,7 +107,7 @@ router.post('/register', async (req, res) => {
         // Send OTP email (non-blocking)
         sendEmail(
             email,
-            `Verify your email — ${process.env.EMAIL_FROM_NAME || 'LIVING VINE PRPPERTIES INVESTMENT LIMITED'}`,
+            `Verify your email — ${process.env.EMAIL_FROM_NAME || 'LIVING VINE PROPERTIES INVESTMENT LIMITED'}`,
             templates.emailVerificationOtp(`${firstName} ${surname}`, otp)
         ).catch(err => console.error('OTP email error:', err));
 
@@ -175,7 +175,7 @@ router.post('/resend-otp', async (req, res) => {
 
         await sendEmail(
             email,
-            `Your new verification OTP — LIVING VINE PRPPERTIES INVESTMENT LIMITED`,
+            `Your new verification OTP — LIVING VINE PROPERTIES INVESTMENT LIMITED`,
             templates.emailVerificationOtp(`${user.firstName} ${user.surname}`, otp)
         );
 
@@ -233,7 +233,7 @@ router.post('/login', async (req, res) => {
             });
             sendEmail(
                 user.email,
-                'New login to your LIVING VINE PRPPERTIES INVESTMENT LIMITED account',
+                'New login to your LIVING VINE PROPERTIES INVESTMENT LIMITED account',
                 templates.loginNotification(`${user.firstName} ${user.surname}`, userAgent, ip, time, 'Nigeria')
             ).catch(err => console.error('Login notification email error:', err));
         } catch (_) { /* non-blocking */ }
@@ -292,7 +292,7 @@ router.post('/forgot-password', async (req, res) => {
 
         await sendEmail(
             email,
-            'Reset your LIVING VINE PRPPERTIES INVESTMENT LIMITED password',
+            'Reset your LIVING VINE PROPERTIES INVESTMENT LIMITED password',
             templates.passwordResetEmail(`${user.firstName} ${user.surname}`, resetLink)
         );
 

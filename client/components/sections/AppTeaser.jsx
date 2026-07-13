@@ -210,7 +210,7 @@ const AppTeaser = () => {
                                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">M</div>
                                     <div>
                                         <div className="text-[9px] text-gray-400 leading-none">Hello, Michael 👋</div>
-                                        <div className="text-[11px] font-bold text-gray-800 leading-tight">Welcome back to<br/><span className="text-primary">LIVING VINE PRPPERTIES INVESTMENT LIMITED</span></div>
+                                        <div className="text-[11px] font-bold text-gray-800 leading-tight">Welcome back to<br/><span className="text-primary">LIVING VINE PROPERTIES INVESTMENT LIMITED</span></div>
                                     </div>
                                 </div>
                                 <div className="relative">

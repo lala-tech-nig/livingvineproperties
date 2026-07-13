@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 
 // Default values used while loading or if the API fails
 const DEFAULTS = {
-    marqueeTitle: 'LIVING VINE PRPPERTIES INVESTMENT LIMITED',
+    marqueeTitle: 'LIVING VINE PROPERTIES INVESTMENT LIMITED',
     marqueeTagline: '"...Quest for uniqueness in service..."',
     marqueeEmail: 'info@livingvineproperties.com',
     marqueePhone: '+234 (0) 800 000 0001',

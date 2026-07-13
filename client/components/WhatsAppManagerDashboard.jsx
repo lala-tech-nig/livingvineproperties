@@ -27,7 +27,7 @@ export default function WhatsAppManagerDashboard() {
 
     // Messaging states
     const [selectedContacts, setSelectedContacts] = useState([]);
-    const [messageTemplate, setMessageTemplate] = useState('Hello {name}, thank you for connecting with LIVING VINE PRPPERTIES INVESTMENT LIMITED. We have premium investment products available for you. Let us know when we can discuss!');
+    const [messageTemplate, setMessageTemplate] = useState('Hello {name}, thank you for connecting with LIVING VINE PROPERTIES INVESTMENT LIMITED. We have premium investment products available for you. Let us know when we can discuss!');
     const [sentStatus, setSentStatus] = useState({}); // phone -> boolean
 
     // Staff accounts creation

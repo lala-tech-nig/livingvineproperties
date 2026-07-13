@@ -37,14 +37,14 @@ export const SERVICES = [
         title: "Real Estate Advisory",
         description: "Expert guidance for navigating the Nigerian real estate market with confidence.",
         icon: "Briefcase",
-        href: "/services#advisory"
+        href: "/investments#advisory"
     },
     {
         title: "Digital Investment",
         description: "Invest in fractional real estate ownership through our upcoming digital platform.",
         icon: "Smartphone",
-        href: "/app"
+        href: "/investments#digital"
     }
 ];
 
-export const COMPANY_NAME = "LIVING VINE PRPPERTIES INVESTMENT LIMITED";
+export const COMPANY_NAME = "LIVING VINE PROPERTIES INVESTMENT LIMITED";

@@ -91,7 +91,7 @@ function RoleSelectModal({ roles, userData, onSelect, onClose }) {
                         })}
                     </div>
                     <div className="px-4 pb-4">
-                        <p className="text-center text-[11px] text-gray-400">Access controlled by LIVING VINE PRPPERTIES INVESTMENT LIMITED · Role-based authorization</p>
+                        <p className="text-center text-[11px] text-gray-400">Access controlled by LIVING VINE PROPERTIES INVESTMENT LIMITED · Role-based authorization</p>
                     </div>
                 </motion.div>
             </motion.div>
@@ -204,7 +204,7 @@ export default function UnifiedStaffLoginPage() {
                 >
                     <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/40 to-black/60" />
                     <div className="relative z-10">
-                        <img src="/living-logo.png" alt="LIVING VINE PRPPERTIES INVESTMENT LIMITED" className="h-10 w-auto" onError={e => e.target.style.display = 'none'} />
+                        <img src="/living-logo.png" alt="LIVING VINE PROPERTIES INVESTMENT LIMITED" className="h-10 w-auto" onError={e => e.target.style.display = 'none'} />
                     </div>
                     <div className="relative z-10">
                         <h1 className="text-4xl font-black text-white leading-tight mb-4">
@@ -212,7 +212,7 @@ export default function UnifiedStaffLoginPage() {
                             <span className="text-amber-400">Access Control</span>
                         </h1>
                         <p className="text-white/70 text-sm leading-relaxed">
-                            Unified login for all LIVING VINE PRPPERTIES INVESTMENT LIMITED staff. CRM, Management, HR, Sales, and Marketing teams use this portal.
+                            Unified login for all LIVING VINE PROPERTIES INVESTMENT LIMITED staff. CRM, Management, HR, Sales, and Marketing teams use this portal.
                         </p>
                     </div>
                 </div>
