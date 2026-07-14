@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
 
 const STATIC_SLIDES = [
     {
@@ -29,7 +29,9 @@ const STATIC_SLIDES = [
 ];
 
 const HeroCarousel = () => {
-    const [slides, setSlides] = useState(STATIC_SLIDES);
+    const { hero: apiSlides, loading } = useWebsiteData();
+    // Show static slides while loading, swap to API slides when ready
+    const slides = apiSlides && apiSlides.length > 0 ? apiSlides : (loading.hero ? STATIC_SLIDES : STATIC_SLIDES);
     const [current, setCurrent] = useState(0);
     const [amount, setAmount] = useState(1000000);
 
@@ -40,20 +42,6 @@ const HeroCarousel = () => {
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(value);
     };
-
-    useEffect(() => {
-        const fetchSlides = async () => {
-            try {
-                const { data } = await api.get('/website/hero');
-                if (data && data.length > 0) {
-                    setSlides(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch hero slides:", error);
-            }
-        };
-        fetchSlides();
-    }, []);
 
     useEffect(() => {
         if (slides.length <= 1) return;

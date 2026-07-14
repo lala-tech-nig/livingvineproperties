@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import api from '@/lib/axios';
+import { useWebsiteData } from '@/lib/websiteData';
 
 // Default values used while loading or if the API fails
 const DEFAULTS = {
@@ -14,26 +13,14 @@ const DEFAULTS = {
 
 export default function TopMarquee() {
     const pathname = usePathname();
-    const [data, setData] = useState(DEFAULTS);
+    const { settings } = useWebsiteData();
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const { data: settings } = await api.get('/website/settings');
-                if (settings) {
-                    setData({
-                        marqueeTitle: settings.marqueeTitle || DEFAULTS.marqueeTitle,
-                        marqueeTagline: settings.marqueeTagline || DEFAULTS.marqueeTagline,
-                        marqueeEmail: settings.marqueeEmail || DEFAULTS.marqueeEmail,
-                        marqueePhone: settings.marqueePhone || DEFAULTS.marqueePhone,
-                    });
-                }
-            } catch (e) {
-                // Silently fall back to defaults on error
-            }
-        };
-        fetchSettings();
-    }, []);
+    const data = {
+        marqueeTitle: settings?.marqueeTitle || DEFAULTS.marqueeTitle,
+        marqueeTagline: settings?.marqueeTagline || DEFAULTS.marqueeTagline,
+        marqueeEmail: settings?.marqueeEmail || DEFAULTS.marqueeEmail,
+        marqueePhone: settings?.marqueePhone || DEFAULTS.marqueePhone,
+    };
 
     // Hide the marquee on dashboard pages
     if (

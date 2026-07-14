@@ -1,38 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail, MapPin, Phone, Instagram, Facebook, Linkedin, Twitter, ArrowRight } from "lucide-react";
-import { NAV_LINKS, CONTACT_INFO, SERVICES } from "@/data";
 import { Button } from "@/components/ui/Button";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
+
+const NAV_LINKS = [
+    { label: "Home", href: "/" },
+    { label: "About Us", href: "/about" },
+    { label: "Investments", href: "/investments" },
+    { label: "Projects", href: "/projects" },
+    { label: "Contact", href: "/contact" },
+];
 
 const Footer = () => {
-    const [settings, setSettings] = useState(null);
-    const [services, setServices] = useState(SERVICES);
+    const { settings, services } = useWebsiteData();
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) setSettings(data);
-            } catch (e) {
-                console.error("Failed to load settings in Footer:", e);
-            }
-        };
-
-        const fetchServices = async () => {
-            try {
-                const { data } = await api.get('/website/services');
-                if (data && data.length > 0) setServices(data);
-            } catch (e) {
-                console.error("Failed to load services in Footer:", e);
-            }
-        };
-
-        fetchSettings();
-        fetchServices();
-    }, []);
 
     // Helper to resolve social links
     const socialLinks = [
@@ -107,20 +90,24 @@ const Footer = () => {
                                 <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                                     <MapPin size={16} />
                                 </div>
-                                <span>{settings?.address || CONTACT_INFO.address}</span>
+                                <span>{settings?.address}</span>
                             </li>
+                            {settings?.phone && (
                             <li className="flex items-center gap-4 text-sm text-gray-300 group">
                                 <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                                     <Phone size={16} />
                                 </div>
-                                <span>{settings?.phone || CONTACT_INFO.phone}</span>
+                                <span>{settings.phone}</span>
                             </li>
+                            )}
+                            {settings?.email && (
                             <li className="flex items-center gap-4 text-sm text-gray-300 group">
                                 <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                                     <Mail size={16} />
                                 </div>
-                                <span>{settings?.email || CONTACT_INFO.email}</span>
+                                <span>{settings.email}</span>
                             </li>
+                            )}
                         </ul>
                     </div>
                 </div>

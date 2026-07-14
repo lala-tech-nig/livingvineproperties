@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, LandPlot, Building2, Briefcase, Smartphone, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
 
 const iconMap = {
     LandPlot: LandPlot,
@@ -18,43 +17,14 @@ const iconMap = {
 const STATIC_SERVICES = [];
 
 const ServiceGrid = () => {
-    const [services, setServices] = useState(STATIC_SERVICES);
-    const [header, setHeader] = useState({
-        homeServicesBadge: "",
-        homeServicesTitle: "",
-        homeServicesDesc: ""
-    });
+    const { services, settings: rawSettings } = useWebsiteData();
 
-    useEffect(() => {
-        const fetchServices = async () => {
-            try {
-                const { data } = await api.get('/website/services');
-                if (data && data.length > 0) {
-                    setServices(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch website services:", error);
-            }
-        };
+    const header = {
+        homeServicesBadge: rawSettings?.homeServicesBadge || "",
+        homeServicesTitle: rawSettings?.homeServicesTitle || "",
+        homeServicesDesc: rawSettings?.homeServicesDesc || ""
+    };
 
-        const fetchSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) {
-                    setHeader({
-                        homeServicesBadge: data.homeServicesBadge || "",
-                        homeServicesTitle: data.homeServicesTitle || "",
-                        homeServicesDesc: data.homeServicesDesc || ""
-                    });
-                }
-            } catch (error) {
-                // Fail silently
-            }
-        };
-
-        fetchServices();
-        fetchSettings();
-    }, []);
 
     if (services.length === 0 && !header.homeServicesTitle) return null;
 

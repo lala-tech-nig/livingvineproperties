@@ -3,14 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
-// Global crash handlers — log unhandled errors to help diagnose cPanel startup failures
-process.on('uncaughtException', (err) => {
-    console.error('[UNCAUGHT EXCEPTION]', err.message, err.stack);
-});
-process.on('unhandledRejection', (reason) => {
-    console.error('[UNHANDLED REJECTION]', reason);
-});
-
 // Connect to MongoDB
 connectDB().then(() => {
     const seedLedger = require('./config/seedLedger');
@@ -21,18 +13,13 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: true,
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-    credentials: true
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
-// Health check — use this to verify the server is running on production
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -70,6 +57,20 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/ledger', ledgerRoutes);
 
+// Health check / root response
+app.get("/", (req, res) => {
+    res.send("LIVING VINE PROPERTIES INVESTMENT LIMITED server is running successfully.");
+});
+
+// Handle unknown routes
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: `Route not found: ${req.originalUrl}`
+    });
+});
+
+
 // Error Handler Middleware
 const errorHandler = require('./middlewares/errorMiddleware');
 app.use(errorHandler);
@@ -77,3 +78,4 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+

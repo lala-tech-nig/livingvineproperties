@@ -30,15 +30,7 @@ jobs:
           npm ci
           npm run build
 
-      # Step 4: Install server production dependencies in CI
-      # We use --ignore-scripts to skip any binary download steps (e.g. puppeteer-core)
-      # node_modules will be bundled and uploaded so cPanel doesn't need to run npm install
-      - name: Install Server Production Dependencies
-        run: |
-          cd server
-          npm ci --omit=dev --ignore-scripts
-
-      # Step 5: Prepare the Client Deployment Package
+      # Step 4: Prepare the Client Deployment Package
       # We collect only the files required to run the production client app
       - name: Prepare Client Deploy Directory
         run: |
@@ -52,8 +44,8 @@ jobs:
           mkdir -p deploy_client/tmp
           touch deploy_client/tmp/restart.txt
 
-      # Step 6: Prepare the Server (Backend API) Deployment Package
-      # Includes pre-built node_modules so cPanel does not need to run npm install
+      # Step 5: Prepare the Server (Backend API) Deployment Package
+      # We collect only the required runtime folders and files for the Express API
       - name: Prepare Server Deploy Directory
         run: |
           mkdir deploy_server
@@ -64,14 +56,13 @@ jobs:
           cp -r server/routes deploy_server/ || true
           cp -r server/services deploy_server/ || true
           cp -r server/data deploy_server/ || true
-          cp -r server/node_modules deploy_server/
           cp server/index.js deploy_server/
           cp server/package.json deploy_server/
           cp server/package-lock.json deploy_server/
           mkdir -p deploy_server/tmp
           touch deploy_server/tmp/restart.txt
 
-      # Step 7: Upload Client Files to cPanel
+      # Step 6: Upload Client Files to cPanel
       - name: Sync Client to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -83,7 +74,7 @@ jobs:
           server-dir: ${{ secrets.FTP_CLIENT_DIR || './public_html/client/' }}
           dangerous-clean-html: false
 
-      # Step 8: Upload Server Files to cPanel
+      # Step 7: Upload Server Files to cPanel
       - name: Sync Server to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -94,3 +85,4 @@ jobs:
           # Destination path for the API server app (fallback to public_html/server/)
           server-dir: ${{ secrets.FTP_SERVER_DIR || './public_html/server/' }}
           dangerous-clean-html: false
+

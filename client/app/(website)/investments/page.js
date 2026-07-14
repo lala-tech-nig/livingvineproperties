@@ -1,77 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle, Building2, LandPlot, ArrowRight } from "lucide-react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Button } from "@/components/ui/Button";
 import ROICalculator from "@/components/sections/ROICalculator";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
 
 export default function Investments() {
-    const [settings, setSettings] = useState({
-        investmentsPageHeroTitle: "",
-        investmentsPageHeroSubtitle: "",
-        investmentsPageHeroBtnText: "",
-        investmentsPageLandBankingBadge: "",
-        investmentsPageLandBankingTitle: "",
-        investmentsPageLandBankingDesc: "",
-        investmentsPageLandBankingBenefits: [],
-        investmentsPageLandBankingImage: "",
-        investmentsPageLandBankingBtnText: "",
-        investmentsPageDevBadge: "",
-        investmentsPageDevTitle: "",
-        investmentsPageDevDesc: "",
-        investmentsPageDevBenefits: [],
-        investmentsPageDevImage: "",
-        investmentsPageDevBtnText: "",
-        investmentsPageAppreciationTitle: "",
-        investmentsPageAppreciationNote: "",
-        investmentsPageAppreciationYears: [],
-        investmentsPageProcessTitle: "",
-        investmentsPageProcessBtnText: "",
-        investmentsPageProcessSteps: []
-    });
+    const { settings: rawSettings, loading, fetchSettingsOnly } = useWebsiteData();
 
-    const [loading, setLoading] = useState(true);
-
+    // On direct page visit, fetch only settings (not hero/services/projects)
     useEffect(() => {
-        const fetchInvestmentsSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) {
-                    setSettings({
-                        investmentsPageHeroTitle: data.investmentsPageHeroTitle || "",
-                        investmentsPageHeroSubtitle: data.investmentsPageHeroSubtitle || "",
-                        investmentsPageHeroBtnText: data.investmentsPageHeroBtnText || "",
-                        investmentsPageLandBankingBadge: data.investmentsPageLandBankingBadge || "",
-                        investmentsPageLandBankingTitle: data.investmentsPageLandBankingTitle || "",
-                        investmentsPageLandBankingDesc: data.investmentsPageLandBankingDesc || "",
-                        investmentsPageLandBankingBenefits: data.investmentsPageLandBankingBenefits || [],
-                        investmentsPageLandBankingImage: data.investmentsPageLandBankingImage || "",
-                        investmentsPageLandBankingBtnText: data.investmentsPageLandBankingBtnText || "",
-                        investmentsPageDevBadge: data.investmentsPageDevBadge || "",
-                        investmentsPageDevTitle: data.investmentsPageDevTitle || "",
-                        investmentsPageDevDesc: data.investmentsPageDevDesc || "",
-                        investmentsPageDevBenefits: data.investmentsPageDevBenefits || [],
-                        investmentsPageDevImage: data.investmentsPageDevImage || "",
-                        investmentsPageDevBtnText: data.investmentsPageDevBtnText || "",
-                        investmentsPageAppreciationTitle: data.investmentsPageAppreciationTitle || "",
-                        investmentsPageAppreciationNote: data.investmentsPageAppreciationNote || "",
-                        investmentsPageAppreciationYears: data.investmentsPageAppreciationYears || [],
-                        investmentsPageProcessTitle: data.investmentsPageProcessTitle || "",
-                        investmentsPageProcessBtnText: data.investmentsPageProcessBtnText || "",
-                        investmentsPageProcessSteps: data.investmentsPageProcessSteps || []
-                    });
-                }
-            } catch (e) {
-                console.error("Failed to load investments page settings:", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchInvestmentsSettings();
+        fetchSettingsOnly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const settings = {
+        investmentsPageHeroTitle: rawSettings?.investmentsPageHeroTitle || "",
+        investmentsPageHeroSubtitle: rawSettings?.investmentsPageHeroSubtitle || "",
+        investmentsPageHeroBtnText: rawSettings?.investmentsPageHeroBtnText || "",
+        investmentsPageLandBankingBadge: rawSettings?.investmentsPageLandBankingBadge || "",
+        investmentsPageLandBankingTitle: rawSettings?.investmentsPageLandBankingTitle || "",
+        investmentsPageLandBankingDesc: rawSettings?.investmentsPageLandBankingDesc || "",
+        investmentsPageLandBankingBenefits: rawSettings?.investmentsPageLandBankingBenefits || [],
+        investmentsPageLandBankingImage: rawSettings?.investmentsPageLandBankingImage || "",
+        investmentsPageLandBankingBtnText: rawSettings?.investmentsPageLandBankingBtnText || "",
+        investmentsPageDevBadge: rawSettings?.investmentsPageDevBadge || "",
+        investmentsPageDevTitle: rawSettings?.investmentsPageDevTitle || "",
+        investmentsPageDevDesc: rawSettings?.investmentsPageDevDesc || "",
+        investmentsPageDevBenefits: rawSettings?.investmentsPageDevBenefits || [],
+        investmentsPageDevImage: rawSettings?.investmentsPageDevImage || "",
+        investmentsPageDevBtnText: rawSettings?.investmentsPageDevBtnText || "",
+        investmentsPageAppreciationTitle: rawSettings?.investmentsPageAppreciationTitle || "",
+        investmentsPageAppreciationNote: rawSettings?.investmentsPageAppreciationNote || "",
+        investmentsPageAppreciationYears: rawSettings?.investmentsPageAppreciationYears || [],
+        investmentsPageProcessTitle: rawSettings?.investmentsPageProcessTitle || "",
+        investmentsPageProcessBtnText: rawSettings?.investmentsPageProcessBtnText || "",
+        investmentsPageProcessSteps: rawSettings?.investmentsPageProcessSteps || []
+    };
+
+    const isLoading = loading.settings;
 
     // Split title by newlines to render br tags
     const renderTitle = (titleText) => {
@@ -83,7 +53,7 @@ export default function Investments() {
         ));
     };
 
-    if (loading) return (
+    if (isLoading) return (
         <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
@@ -133,7 +103,7 @@ export default function Investments() {
                             ))}
                         </ul>
                         <Button asChild>
-                            <Link href="/projects">{settings.investmentsPageLandBankingBtnText}</Link>
+                            <Link href="/investor/register">{settings.investmentsPageLandBankingBtnText}</Link>
                         </Button>
                     </div>
                     <div className="order-1 md:order-2 h-[400px] bg-gray-200 rounded-2xl overflow-hidden shadow-xl">
@@ -173,7 +143,7 @@ export default function Investments() {
                             ))}
                         </ul>
                         <Button variant="outline" asChild>
-                            <Link href="/projects">{settings.investmentsPageDevBtnText}</Link>
+                            <Link href="/investor/register">{settings.investmentsPageDevBtnText}</Link>
                         </Button>
                     </div>
                 </div>
@@ -216,7 +186,7 @@ export default function Investments() {
                     ))}
                 </div>
                 <Button size="lg" asChild>
-                    <Link href="/contact">{settings.investmentsPageProcessBtnText} <ArrowRight className="ml-2 w-4 h-4" /></Link>
+                    <Link href="/investor/register">{settings.investmentsPageProcessBtnText} <ArrowRight className="ml-2 w-4 h-4" /></Link>
                 </Button>
             </SectionWrapper>
         </div>

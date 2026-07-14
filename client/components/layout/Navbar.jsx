@@ -6,8 +6,15 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_LINKS } from "@/data";
 import { Button } from "@/components/ui/Button";
+
+const NAV_LINKS = [
+    { label: "Home", href: "/" },
+    { label: "About Us", href: "/about" },
+    { label: "Investments", href: "/investments" },
+    { label: "Projects", href: "/projects" },
+    { label: "Contact", href: "/contact" },
+];
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);

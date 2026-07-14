@@ -443,7 +443,7 @@ router.post('/:id/send-documents', protect, authorize('management', 'ceo', 'supe
             </div>
 
             <div style="text-align:center; margin-top:24px;">
-                <a href="${process.env.CLIENT_URL || 'https://livingvineproperties.com'}/investor" 
+                <a href="${process.env.CLIENT_URL || 'https://livingvinepropertiesinvestment.com'}/investor/login" 
                    style="display:inline-block; background:#de1f25; color:white; padding:14px 32px; border-radius:12px; font-weight:700; font-size:14px; text-decoration:none;">
                     View Documents in Portal →
                 </a>

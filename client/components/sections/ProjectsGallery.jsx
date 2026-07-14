@@ -1,50 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
 
 const STATIC_PROJECTS = [];
 
 const ProjectsGallery = () => {
-    const [projects, setProjects] = useState(STATIC_PROJECTS);
-    const [header, setHeader] = useState({
-        homeProjectsBadge: "",
-        homeProjectsTitle: ""
-    });
+    const { projects, settings: rawSettings } = useWebsiteData();
 
-    useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const { data } = await api.get('/website/projects');
-                if (data && data.length > 0) {
-                    setProjects(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch website projects:", error);
-            }
-        };
+    const header = {
+        homeProjectsBadge: rawSettings?.homeProjectsBadge || "",
+        homeProjectsTitle: rawSettings?.homeProjectsTitle || ""
+    };
 
-        const fetchSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) {
-                    setHeader({
-                        homeProjectsBadge: data.homeProjectsBadge || "",
-                        homeProjectsTitle: data.homeProjectsTitle || ""
-                    });
-                }
-            } catch (e) {
-                // Fail silently
-            }
-        };
-
-        fetchProjects();
-        fetchSettings();
-    }, []);
 
     if (projects.length === 0 && !header.homeProjectsTitle) return null;
 

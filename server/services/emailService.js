@@ -493,7 +493,6 @@ function generateCertificateHTML(investment, settings = {}) {
       <img src="${logoUrl}" alt="LVP Logo" class="logo-img" onerror="this.style.display='none'" />
       <div>
         <div class="brand-title">LIVING VINE PROPERTIES INVESTMENT LIMITED</div>
-        <div class="brand-legal">INVESTMENT LIMITED</div>
         <div class="brand-tagline">Building Wealth. Securing Futures.</div>
       </div>
     </div>
@@ -580,14 +579,6 @@ function generateCertificateHTML(investment, settings = {}) {
 function getChromePath() {
     const fs = require('fs');
     const paths = [
-        // Linux / cPanel / Ubuntu paths
-        '/usr/bin/google-chrome',
-        '/usr/bin/google-chrome-stable',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium',
-        '/snap/bin/chromium',
-        '/usr/bin/google-chrome-unstable',
-        // Windows paths
         'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',

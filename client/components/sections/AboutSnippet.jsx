@@ -1,46 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
 
 const AboutSnippet = () => {
-    const [settings, setSettings] = useState({
-        aboutTitle: "Proudly Indigenous. \n Global Standards.",
-        aboutSubtitle: "Who We Are",
-        aboutDescription1: "LIVING VINE PROPERTIES INVESTMENT LIMITED isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.",
-        aboutDescription2: "We exist to prove that trust, transparency, and high returns can coexist in the indigenous market. When you invest with us, you aren't just buying land—you are securing a legacy.",
-        aboutImage: "/lagos.jpg",
-        aboutFeature1: "100% Verified Documentation",
-        aboutFeature2: "Strategic Locations Only",
-        aboutFeature3: "Guaranteed Capital Appreciation"
-    });
+    const { settings: rawSettings } = useWebsiteData();
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) {
-                    setSettings({
-                        aboutTitle: data.aboutTitle || "Proudly Indigenous. \n Global Standards.",
-                        aboutSubtitle: data.aboutSubtitle || "Who We Are",
-                        aboutDescription1: data.aboutDescription1 || "LIVING VINE PROPERTIES INVESTMENT LIMITED isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.",
-                        aboutDescription2: data.aboutDescription2 || "We exist to prove that trust, transparency, and high returns can coexist in the indigenous market. When you invest with us, you aren't just buying land—you are securing a legacy.",
-                        aboutImage: data.aboutImage || "/lagos.jpg",
-                        aboutFeature1: data.aboutFeature1 || "100% Verified Documentation",
-                        aboutFeature2: data.aboutFeature2 || "Strategic Locations Only",
-                        aboutFeature3: data.aboutFeature3 || "Guaranteed Capital Appreciation"
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to load About Us snippet settings:", error);
-            }
-        };
-        fetchSettings();
-    }, []);
+    // Merge API settings with fallback defaults
+    const settings = {
+        aboutTitle: rawSettings?.aboutTitle || "Proudly Indigenous. \n Global Standards.",
+        aboutSubtitle: rawSettings?.aboutSubtitle || "Who We Are",
+        aboutDescription1: rawSettings?.aboutDescription1 || "LIVING VINE PROPERTIES INVESTMENT LIMITED isn't just a real estate company; we are a movement. Born from a deep understanding of the Nigerian land tenure system and the local investment climate, we bridge the gap between ambition and ownership.",
+        aboutDescription2: rawSettings?.aboutDescription2 || "We exist to prove that trust, transparency, and high returns can coexist in the indigenous market. When you invest with us, you aren't just buying land—you are securing a legacy.",
+        aboutImage: rawSettings?.aboutImage || "/lagos.jpg",
+        aboutFeature1: rawSettings?.aboutFeature1 || "100% Verified Documentation",
+        aboutFeature2: rawSettings?.aboutFeature2 || "Strategic Locations Only",
+        aboutFeature3: rawSettings?.aboutFeature3 || "Guaranteed Capital Appreciation"
+    };
 
     // Split title by newlines to render br tags
     const renderTitle = (titleText) => {

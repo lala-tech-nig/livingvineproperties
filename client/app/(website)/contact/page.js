@@ -6,6 +6,7 @@ import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Button } from "@/components/ui/Button";
 import api from "@/lib/axios";
 import { toast } from "react-hot-toast";
+import { useWebsiteData } from "@/lib/websiteData";
 
 const STATIC_CONTACT_INFO = {
     address: "",
@@ -14,7 +15,7 @@ const STATIC_CONTACT_INFO = {
 };
 
 export default function Contact() {
-    const [settings, setSettings] = useState(null);
+    const { settings, fetchSettingsOnly } = useWebsiteData();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
@@ -24,16 +25,10 @@ export default function Contact() {
         message: ""
     });
 
+    // On direct page visit, fetch only settings if not already cached
     useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) setSettings(data);
-            } catch (e) {
-                console.error("Failed to load settings in Contact Page:", e);
-            }
-        };
-        fetchSettings();
+        fetchSettingsOnly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleChange = (e) => {

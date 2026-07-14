@@ -5,48 +5,25 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Button } from "@/components/ui/Button";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
 
 export default function Projects() {
-    const [projects, setProjects] = useState([]);
+    const { projects, settings: rawSettings, loading, fetchLandingData } = useWebsiteData();
     const [filter, setFilter] = useState("All");
-    const [loading, setLoading] = useState(true);
-    const [header, setHeader] = useState({
-        projectsPageHeroTitle: "",
-        projectsPageHeroSubtitle: ""
-    });
 
+    // On direct page visit, trigger a data fetch if not already cached
     useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const { data } = await api.get('/website/projects');
-                if (data) {
-                    setProjects(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch website projects:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        const fetchSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) {
-                    setHeader({
-                        projectsPageHeroTitle: data.projectsPageHeroTitle || "",
-                        projectsPageHeroSubtitle: data.projectsPageHeroSubtitle || ""
-                    });
-                }
-            } catch (e) {
-                // Fail silently
-            }
-        };
-
-        fetchProjects();
-        fetchSettings();
+        fetchLandingData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const header = {
+        projectsPageHeroTitle: rawSettings?.projectsPageHeroTitle || "",
+        projectsPageHeroSubtitle: rawSettings?.projectsPageHeroSubtitle || ""
+    };
+
+    const isLoading = loading.projects || loading.settings;
+
 
     const filteredProjects = filter === "All"
         ? projects
@@ -82,7 +59,7 @@ export default function Projects() {
 
             {/* Projects Grid */}
             <SectionWrapper className="pt-8 pb-24">
-                {loading ? (
+                {isLoading ? (
                     <div className="text-center py-20">Loading our developments...</div>
                 ) : filteredProjects.length > 0 ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

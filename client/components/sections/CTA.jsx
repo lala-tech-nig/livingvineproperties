@@ -60,12 +60,12 @@ const CTA = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center">
                     <Button size="lg" className="bg-white text-primary hover:bg-gray-100 h-16 px-12 text-xl font-bold rounded-full shadow-2xl" asChild>
-                        <Link href="/contact">
+                        <Link href="/investor/register">
                             {cta.homeCTABtnText} <ArrowRight className="ml-2" />
                         </Link>
                     </Button>
                     <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 h-16 px-12 text-xl font-medium rounded-full" asChild>
-                        <Link href="/contact">{cta.homeCTAAltBtnText}</Link>
+                        <Link href="/about">{cta.homeCTAAltBtnText}</Link>
                     </Button>
                 </div>
             </div>

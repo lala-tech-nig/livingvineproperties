@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Award, Briefcase, CheckCircle, Target, Users } from "lucide-react";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import { Card, CardContent } from "@/components/ui/Card";
-import api from "@/lib/axios";
+import { useWebsiteData } from "@/lib/websiteData";
 
 const iconMap = {
     CheckCircle: CheckCircle,
@@ -14,57 +14,34 @@ const iconMap = {
 };
 
 export default function About() {
-    const [settings, setSettings] = useState({
-        aboutPageEstablishedText: "",
-        aboutPageHeroTitle: "",
-        aboutPageHeroSubtitle: "",
-        aboutPageMissionTitle: "",
-        aboutPageMissionDesc: "",
-        aboutPageVisionTitle: "",
-        aboutPageVisionDesc: "",
-        aboutPageCoreValuesTitle: "",
-        aboutPageCoreValuesSubtitle: "",
-        aboutPageCoreValues: [],
-        aboutPageTeamTitle: "",
-        aboutPageTeamSubtitle: "",
-        aboutPageTeam: [],
-        aboutPageCertificationsTitle: "",
-        aboutPageCertifications: []
-    });
+    const { settings: rawSettings, loading, fetchSettingsOnly } = useWebsiteData();
 
-    const [loading, setLoading] = useState(true);
-
+    // On direct page visit, fetch only settings (not hero/services/projects)
     useEffect(() => {
-        const fetchAboutSettings = async () => {
-            try {
-                const { data } = await api.get('/website/settings');
-                if (data) {
-                    setSettings({
-                        aboutPageEstablishedText: data.aboutPageEstablishedText || "",
-                        aboutPageHeroTitle: data.aboutPageHeroTitle || "",
-                        aboutPageHeroSubtitle: data.aboutPageHeroSubtitle || "",
-                        aboutPageMissionTitle: data.aboutPageMissionTitle || "",
-                        aboutPageMissionDesc: data.aboutPageMissionDesc || "",
-                        aboutPageVisionTitle: data.aboutPageVisionTitle || "",
-                        aboutPageVisionDesc: data.aboutPageVisionDesc || "",
-                        aboutPageCoreValuesTitle: data.aboutPageCoreValuesTitle || "",
-                        aboutPageCoreValuesSubtitle: data.aboutPageCoreValuesSubtitle || "",
-                        aboutPageCoreValues: data.aboutPageCoreValues || [],
-                        aboutPageTeamTitle: data.aboutPageTeamTitle || "",
-                        aboutPageTeamSubtitle: data.aboutPageTeamSubtitle || "",
-                        aboutPageTeam: data.aboutPageTeam || [],
-                        aboutPageCertificationsTitle: data.aboutPageCertificationsTitle || "",
-                        aboutPageCertifications: data.aboutPageCertifications || []
-                    });
-                }
-            } catch (e) {
-                console.error("Failed to load about page settings:", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAboutSettings();
+        fetchSettingsOnly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const settings = {
+        aboutPageEstablishedText: rawSettings?.aboutPageEstablishedText || "",
+        aboutPageHeroTitle: rawSettings?.aboutPageHeroTitle || "",
+        aboutPageHeroSubtitle: rawSettings?.aboutPageHeroSubtitle || "",
+        aboutPageMissionTitle: rawSettings?.aboutPageMissionTitle || "",
+        aboutPageMissionDesc: rawSettings?.aboutPageMissionDesc || "",
+        aboutPageVisionTitle: rawSettings?.aboutPageVisionTitle || "",
+        aboutPageVisionDesc: rawSettings?.aboutPageVisionDesc || "",
+        aboutPageCoreValuesTitle: rawSettings?.aboutPageCoreValuesTitle || "",
+        aboutPageCoreValuesSubtitle: rawSettings?.aboutPageCoreValuesSubtitle || "",
+        aboutPageCoreValues: rawSettings?.aboutPageCoreValues || [],
+        aboutPageTeamTitle: rawSettings?.aboutPageTeamTitle || "",
+        aboutPageTeamSubtitle: rawSettings?.aboutPageTeamSubtitle || "",
+        aboutPageTeam: rawSettings?.aboutPageTeam || [],
+        aboutPageCertificationsTitle: rawSettings?.aboutPageCertificationsTitle || "",
+        aboutPageCertifications: rawSettings?.aboutPageCertifications || []
+    };
+
+    const isLoading = loading.settings;
+
 
     // Split title by newlines to render br tags
     const renderTitle = (titleText) => {
@@ -76,7 +53,7 @@ export default function About() {
         ));
     };
 
-    if (loading) return (
+    if (isLoading) return (
         <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
