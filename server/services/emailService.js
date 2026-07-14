@@ -319,7 +319,6 @@ function generateReceiptHTML(investment, settings = {}) {
       <img src="${logoUrl}" alt="LVP Logo" class="brand-logo" onerror="this.style.display='none'" />
       <div class="brand-info">
         <div class="brand-name">LIVING VINE PROPERTIES INVESTMENT LIMITED</div>
-        <div class="brand-legal">INVESTMENT LIMITED</div>
         <div class="brand-tagline">Building Wealth. Securing Futures.</div>
       </div>
     </div>
@@ -605,7 +604,7 @@ async function htmlToPdfBuffer(html, options = {}) {
     
     try {
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
+        await page.setContent(html, { waitUntil: 'load', timeout: 15000 });
         
         const pdfBuffer = await page.pdf({
             format: 'letter',

@@ -165,7 +165,6 @@ function generateReceiptHTML(investment, settings = {}) {
       <img src="${logoUrl}" alt="LVP Logo" class="brand-logo" onerror="this.style.display='none'" />
       <div class="brand-info">
         <div class="brand-name">LIVING VINE PROPERTIES INVESTMENT LIMITED</div>
-        <div class="brand-legal">INVESTMENT LIMITED</div>
         <div class="brand-tagline">Building Wealth. Securing Futures.</div>
       </div>
     </div>
@@ -405,7 +404,6 @@ function generateCertificateHTML(investment, settings = {}) {
       <img src="${logoUrl}" alt="LVP Logo" class="logo-img" onerror="this.style.display='none'" />
       <div>
         <div class="brand-title">LIVING VINE PROPERTIES INVESTMENT LIMITED</div>
-        <div class="brand-legal">INVESTMENT LIMITED</div>
         <div class="brand-tagline">Building Wealth. Securing Futures.</div>
       </div>
     </div>
