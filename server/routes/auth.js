@@ -5,6 +5,13 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const { sendEmail, templates } = require('../services/emailService');
+const { protect } = require('../middlewares/authMiddleware');
+const {
+    notifyInvestorLogin,
+    notifyStaffLogin,
+    notifyManagerLogin,
+    notifyPasswordActivity
+} = require('../services/activityNotificationService');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -223,7 +230,7 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Send login notification email (non-blocking)
+        // Send login notification email to user (non-blocking)
         try {
             const userAgent = req.headers['user-agent'] || 'Unknown Browser';
             const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown';
@@ -236,6 +243,21 @@ router.post('/login', async (req, res) => {
                 'New login to your LIVING VINE PROPERTIES INVESTMENT LIMITED account',
                 templates.loginNotification(`${user.firstName} ${user.surname}`, userAgent, ip, time, 'Nigeria')
             ).catch(err => console.error('Login notification email error:', err));
+        } catch (_) { /* non-blocking */ }
+
+        // Send activity notification email to administrators (non-blocking)
+        try {
+            const rolesList = [user.role, ...(Array.isArray(user.roles) ? user.roles : [])];
+            const isManager = rolesList.some(r => ['superadmin', 'ceo', 'management'].includes(r));
+            const isStaff = !isManager && rolesList.some(r => ['sales', 'marketing', 'hr'].includes(r));
+
+            if (isManager) {
+                notifyManagerLogin(req, user).catch(err => console.error('Manager login activity alert error:', err));
+            } else if (isStaff) {
+                notifyStaffLogin(req, user).catch(err => console.error('Staff login activity alert error:', err));
+            } else {
+                notifyInvestorLogin(req, user).catch(err => console.error('Investor login activity alert error:', err));
+            }
         } catch (_) { /* non-blocking */ }
 
         // Build the full list of roles this user has access to
@@ -296,6 +318,9 @@ router.post('/forgot-password', async (req, res) => {
             templates.passwordResetEmail(`${user.firstName} ${user.surname}`, resetLink)
         );
 
+        // Activity Notification alert
+        notifyPasswordActivity(req, user, 'Password Recovery Requested').catch(err => console.error('Forgot password activity email error:', err));
+
         res.json({ message: 'If that email exists, a reset link has been sent.' });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
@@ -330,7 +355,44 @@ router.post('/reset-password', async (req, res) => {
         user.passwordResetExpiry = null;
         await user.save();
 
+        // Activity Notification alert
+        notifyPasswordActivity(req, user, 'Password Reset Completed').catch(err => console.error('Reset password activity email error:', err));
+
         res.json({ message: 'Password reset successful! You can now login with your new password.' });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   POST /api/auth/change-password
+// @desc    Change password while logged in
+// @access  Private
+router.post('/change-password', protect, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Current and new password are required.' });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        const match = await bcrypt.compare(currentPassword, user.password);
+        if (!match) return res.status(401).json({ message: 'Incorrect current password.' });
+
+        const pwErrors = validatePassword(newPassword);
+        if (pwErrors.length > 0) {
+            return res.status(400).json({ message: `New password too weak: ${pwErrors.join(', ')}.` });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        // Activity Notification alert
+        notifyPasswordActivity(req, user, 'Password Changed').catch(err => console.error('Change password activity email error:', err));
+
+        res.json({ message: 'Password changed successfully.' });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }

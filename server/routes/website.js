@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middlewares/authMiddleware');
+const { notifyWebsiteEditorChanges } = require('../services/activityNotificationService');
 const {
     getHeroSlides,
     getServices,
@@ -66,6 +67,9 @@ router.post('/upload', protect, authorize(...contentAdmins), upload.single('imag
             return res.status(400).json({ message: 'No file uploaded' });
         }
         const result = await uploadBufferToCloudinary(req.file.buffer);
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Media Uploads', 'Uploaded Asset File', { url: result.secure_url }).catch(err => console.error('Upload activity alert error:', err));
+        }
         res.json({ url: result.secure_url });
     } catch (error) {
         console.error('Cloudinary upload error:', error);
@@ -85,6 +89,9 @@ router.post('/upload-image', protect, authorize(...contentAdmins), async (req, r
             folder: uploadFolder,
             allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif'],
         });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Media Uploads', 'Uploaded Base64 Asset Image', { url: result.secure_url, folder: uploadFolder }).catch(err => console.error('Upload activity alert error:', err));
+        }
         res.json({ url: result.secure_url });
     } catch (error) {
         console.error('Cloudinary base64 upload error:', error);

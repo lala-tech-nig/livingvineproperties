@@ -6,6 +6,12 @@ const Investment = require('../models/Investment');
 const InvestmentProduct = require('../models/InvestmentProduct');
 const { protect, authorize } = require('../middlewares/authMiddleware');
 const { sendEmail, templates, baseTemplate, generateReceiptHTML, generateCertificateHTML } = require('../services/emailService');
+const {
+    notifyNewInvestmentInitiation,
+    notifyInvestmentApproval,
+    notifyReceiptUpload,
+    notifyLiquidationRequest
+} = require('../services/activityNotificationService');
 
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
@@ -107,6 +113,9 @@ router.post('/', protect, async (req, res) => {
             userDoc.nin = nin;
             await userDoc.save();
         }
+
+        // Send Activity Alert email to administrators (non-blocking)
+        notifyNewInvestmentInitiation(investment, req.user).catch(err => console.error('New investment activity alert error:', err));
 
         res.status(201).json(investment);
     } catch (error) {
@@ -345,6 +354,15 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
             }
         } catch (_) { /* non-blocking */ }
 
+        // Send Activity Alert email to administrators (non-blocking)
+        try {
+            if (['approved', 'active'].includes(status)) {
+                notifyInvestmentApproval(updatedInvestment, req.user, status).catch(err => console.error('Approval activity alert error:', err));
+            } else if (status === 'liquidated') {
+                notifyLiquidationRequest(updatedInvestment, req.user).catch(err => console.error('Liquidation activity alert error:', err));
+            }
+        } catch (_) { /* non-blocking */ }
+
         res.json(updatedInvestment);
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
@@ -530,6 +548,9 @@ router.put('/:id/receipt', protect, upload.single('receipt'), async (req, res) =
                 })
             ));
         } catch (_) { /* non-blocking */ }
+
+        // Activity Alert email to administrators (non-blocking)
+        notifyReceiptUpload(investment, req.user).catch(err => console.error('Receipt upload activity alert error:', err));
 
         res.json({ message: 'Receipt uploaded successfully.', paymentReceipt: result.secure_url });
     } catch (error) {

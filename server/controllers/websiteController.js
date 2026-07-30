@@ -3,6 +3,7 @@ const WebsiteService = require('../models/WebsiteService');
 const WebsiteProject = require('../models/WebsiteProject');
 const WebsiteSetting = require('../models/WebsiteSetting');
 const WebsiteInquiry = require('../models/WebsiteInquiry');
+const { notifyWebsiteEditorChanges } = require('../services/activityNotificationService');
 
 // --- Public Endpoints ---
 
@@ -82,6 +83,9 @@ exports.addHeroSlide = async (req, res, next) => {
             return res.status(400).json({ message: 'Title, subtitle, and image are required' });
         }
         const slide = await WebsiteHero.create({ title, subtitle, image });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Hero Slides Section', 'Added Hero Slide', { title, subtitle, image }).catch(err => console.error('Hero slide activity alert error:', err));
+        }
         res.status(201).json(slide);
     } catch (error) {
         next(error);
@@ -98,6 +102,9 @@ exports.updateHeroSlide = async (req, res, next) => {
             { new: true, runValidators: true }
         );
         if (!slide) return res.status(404).json({ message: 'Slide not found' });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Hero Slides Section', 'Updated Hero Slide', { id: req.params.id, title, subtitle }).catch(err => console.error('Hero slide activity alert error:', err));
+        }
         res.json(slide);
     } catch (error) {
         next(error);
@@ -109,6 +116,9 @@ exports.deleteHeroSlide = async (req, res, next) => {
     try {
         const slide = await WebsiteHero.findByIdAndDelete(req.params.id);
         if (!slide) return res.status(404).json({ message: 'Slide not found' });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Hero Slides Section', 'Deleted Hero Slide', { id: req.params.id }).catch(err => console.error('Hero slide activity alert error:', err));
+        }
         res.json({ message: 'Slide deleted successfully' });
     } catch (error) {
         next(error);
@@ -123,6 +133,9 @@ exports.addService = async (req, res, next) => {
             return res.status(400).json({ message: 'Title, description, and icon name are required' });
         }
         const service = await WebsiteService.create({ title, description, icon, href });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Services Section', 'Added Service Listing', { title, description }).catch(err => console.error('Service activity alert error:', err));
+        }
         res.status(201).json(service);
     } catch (error) {
         next(error);
@@ -139,6 +152,9 @@ exports.updateService = async (req, res, next) => {
             { new: true, runValidators: true }
         );
         if (!service) return res.status(404).json({ message: 'Service not found' });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Services Section', 'Updated Service Listing', { id: req.params.id, title, description }).catch(err => console.error('Service activity alert error:', err));
+        }
         res.json(service);
     } catch (error) {
         next(error);
@@ -150,6 +166,9 @@ exports.deleteService = async (req, res, next) => {
     try {
         const service = await WebsiteService.findByIdAndDelete(req.params.id);
         if (!service) return res.status(404).json({ message: 'Service not found' });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Services Section', 'Deleted Service Listing', { id: req.params.id }).catch(err => console.error('Service activity alert error:', err));
+        }
         res.json({ message: 'Service deleted successfully' });
     } catch (error) {
         next(error);
@@ -164,6 +183,9 @@ exports.addProject = async (req, res, next) => {
             return res.status(400).json({ message: 'Title, location, and image URL are required' });
         }
         const project = await WebsiteProject.create({ title, location, status, image, category, description });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Projects Section', 'Added Project', { title, location, status }).catch(err => console.error('Project activity alert error:', err));
+        }
         res.status(201).json(project);
     } catch (error) {
         next(error);
@@ -180,6 +202,9 @@ exports.updateProject = async (req, res, next) => {
             { new: true, runValidators: true }
         );
         if (!project) return res.status(404).json({ message: 'Project not found' });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Projects Section', 'Updated Project', { id: req.params.id, title, location, status }).catch(err => console.error('Project activity alert error:', err));
+        }
         res.json(project);
     } catch (error) {
         next(error);
@@ -191,6 +216,9 @@ exports.deleteProject = async (req, res, next) => {
     try {
         const project = await WebsiteProject.findByIdAndDelete(req.params.id);
         if (!project) return res.status(404).json({ message: 'Project not found' });
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Website Projects Section', 'Deleted Project', { id: req.params.id }).catch(err => console.error('Project activity alert error:', err));
+        }
         res.json({ message: 'Project deleted successfully' });
     } catch (error) {
         next(error);
@@ -210,6 +238,9 @@ exports.updateSettings = async (req, res, next) => {
             );
         } else {
             setting = await WebsiteSetting.create(req.body);
+        }
+        if (req.user) {
+            notifyWebsiteEditorChanges(req, req.user, 'Global Website Settings', 'Updated Site Settings', 'Updated global site settings & brand configuration.').catch(err => console.error('Settings activity alert error:', err));
         }
         res.json(setting);
     } catch (error) {
