@@ -100,8 +100,8 @@ export default function NewInvestment() {
                 if (profile.nin) {
                     setHasNinOnFile(true);
                     setExistingNin(profile.nin);
-                    // Skip directly to step 2
-                    setStep(2);
+                    // Identity is pre-verified; form starts at Step 1 of 4 (Product Selection)
+                    setStep(1);
                 }
 
                 // Fetch last investment for NOK + bank reuse

@@ -3,7 +3,31 @@ const Customer = require('../models/Customer');
 const User = require('../models/User');
 const { sendEmail, templates } = require('./emailService');
 
-// Run every day at 9:00 AM
+const { sendDailyActivitiesReport } = require('./activityNotificationService');
+const { sendDailyInvestorUpdates } = require('./investorDailyUpdateService');
+
+// Run every day at 8:00 AM Nigeria Time (WAT / Africa/Lagos)
+cron.schedule('0 8 * * *', async () => {
+    console.log('[Cron Job 8:00 AM WAT] Starting daily automated emails...');
+    try {
+        // 1. Send daily investment updates to all investors
+        await sendDailyInvestorUpdates();
+    } catch (err) {
+        console.error('[Cron Job 8:00 AM WAT] Error sending investor updates:', err);
+    }
+
+    try {
+        // 2. Send daily platform activity report to NOTIFICATION_RECIPIENTS
+        await sendDailyActivitiesReport();
+    } catch (err) {
+        console.error('[Cron Job 8:00 AM WAT] Error sending activity report:', err);
+    }
+}, {
+    scheduled: true,
+    timezone: 'Africa/Lagos'
+});
+
+// Run every day at 9:00 AM Nigeria Time
 cron.schedule('0 9 * * *', async () => {
     console.log('Running daily CRM automated tasks...');
     const today = new Date();
@@ -60,7 +84,6 @@ cron.schedule('0 9 * * *', async () => {
         });
 
         for (const staff of birthdayStaff) {
-            // Internal notification or email
             await sendEmail(
                 staff.email,
                 `Happy Birthday ${staff.firstName}!`,
@@ -71,6 +94,9 @@ cron.schedule('0 9 * * *', async () => {
     } catch (error) {
         console.error('Error in cron jobs:', error);
     }
+}, {
+    scheduled: true,
+    timezone: 'Africa/Lagos'
 });
 
 console.log('CRM Cron jobs initialized.');

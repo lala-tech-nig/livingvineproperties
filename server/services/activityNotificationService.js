@@ -1,4 +1,8 @@
 const { sendEmail } = require('./emailService');
+const User = require('../models/User');
+const Investment = require('../models/Investment');
+const InvestorLoginLog = require('../models/InvestorLoginLog');
+const VisitorLog = require('../models/VisitorLog');
 
 const NOTIFICATION_RECIPIENTS = [
     'livingvineproperties@gmail.com',
@@ -289,6 +293,145 @@ async function notifyWebsiteEditorChanges(req, user, section, action, details) {
     return dispatchActivityEmail(subject, badge, content);
 }
 
+// ── 10. Daily Activities Report Email ───────────────────────────────────────
+async function sendDailyActivitiesReport() {
+    console.log('[Daily Activity Report] Generating daily platform activities report...');
+    try {
+        const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+        // 1. Daily email counts of new registered investors
+        const newInvestorsCount = await User.countDocuments({
+            $or: [{ role: 'investor' }, { roles: 'investor' }],
+            createdAt: { $gte: last24h }
+        });
+
+        // 2. Daily email counts of daily logins of investors
+        const investorLoginsCount = await InvestorLoginLog.countDocuments({
+            createdAt: { $gte: last24h }
+        });
+
+        // 3. Daily email counts of total investment initiated
+        const investmentsInitiated = await Investment.find({
+            createdAt: { $gte: last24h }
+        });
+        const totalInitiatedCount = investmentsInitiated.length;
+        const totalInitiatedAmount = investmentsInitiated.reduce((sum, inv) => sum + Number(inv.amountToInvest || 0), 0);
+
+        // 4. Daily email counts of approved investment
+        const approvedCount = await Investment.countDocuments({
+            $or: [
+                { approvedAt: { $gte: last24h } },
+                { status: { $in: ['approved', 'active'] }, updatedAt: { $gte: last24h } }
+            ]
+        });
+
+        // 5. Daily email counts of liquidated investment
+        const liquidatedCount = await Investment.countDocuments({
+            $or: [
+                { liquidatedAt: { $gte: last24h } },
+                { status: 'liquidated', updatedAt: { $gte: last24h } }
+            ]
+        });
+
+        // 6. Daily email counts of website visitors and location
+        const visitorCount = await VisitorLog.countDocuments({
+            createdAt: { $gte: last24h }
+        });
+
+        const locationAggregation = await VisitorLog.aggregate([
+            { $match: { createdAt: { $gte: last24h } } },
+            { $group: { _id: '$location', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 15 }
+        ]);
+
+        let locationRowsHtml = '';
+        if (locationAggregation.length > 0) {
+            locationAggregation.forEach(loc => {
+                locationRowsHtml += `
+                    <tr>
+                      <td style="padding:8px 12px; border-bottom:1px solid #eee;">${loc._id || 'Unknown Location'}</td>
+                      <td style="padding:8px 12px; border-bottom:1px solid #eee; text-align:right; font-weight:bold; color:${brandColor};">${loc.count}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            locationRowsHtml = `<tr><td colspan="2" style="padding:12px; text-align:center; color:#888;">No website visits recorded in the last 24 hours.</td></tr>`;
+        }
+
+        const subject = `[Daily Activity Report] Summary of Platform Activities (${new Date().toLocaleDateString('en-NG', { timeZone: 'Africa/Lagos' })})`;
+        const badge = `10. Daily Activities Report`;
+
+        const content = `
+            <p style="font-size:14px; color:#444; margin-bottom:20px;">
+                Here is the automated 24-hour daily summary of platform activities across investor registrations, logins, investments, liquidations, and website visitors:
+            </p>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+              <tr style="background:#fef2f2;">
+                <td style="padding:12px; font-weight:bold; color:#555; border-bottom:1px solid #fee2e2;">Metrics Category</td>
+                <td style="padding:12px; font-weight:bold; color:#111; border-bottom:1px solid #fee2e2; text-align:right;">Past 24H Count</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6;">👤 New Registered Investors</td>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6; text-align:right; font-weight:bold; font-size:15px; color:#111;">${newInvestorsCount}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6;">🔑 Daily Investor Logins</td>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6; text-align:right; font-weight:bold; font-size:15px; color:#111;">${investorLoginsCount}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6;">📝 Total Investments Initiated</td>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6; text-align:right; font-weight:bold; font-size:15px; color:#111;">${totalInitiatedCount} <span style="font-size:12px; color:#666; font-weight:normal;">(₦${totalInitiatedAmount.toLocaleString()})</span></td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6;">✅ Approved Investments</td>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6; text-align:right; font-weight:bold; font-size:15px; color:#16a34a;">${approvedCount}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6;">💸 Liquidated Investments</td>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6; text-align:right; font-weight:bold; font-size:15px; color:#9333ea;">${liquidatedCount}</td>
+              </tr>
+              <tr style="background:#fafafa;">
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6;">🌐 Total Website Visitors</td>
+                <td style="padding:10px 12px; border-bottom:1px solid #f3f4f6; text-align:right; font-weight:bold; font-size:16px; color:${brandColor};">${visitorCount}</td>
+              </tr>
+            </table>
+
+            <h3 style="font-size:15px; margin:24px 0 10px; color:#111; border-bottom:2px solid ${brandColor}; padding-bottom:6px; display:inline-block;">
+              🌐 Website Visitors Breakdown by Location
+            </h3>
+            <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;">
+              <thead>
+                <tr style="background:#f9fafb; color:#666;">
+                  <th style="padding:8px 12px; text-align:left; border-bottom:1px solid #ddd;">Location / City / Country / IP</th>
+                  <th style="padding:8px 12px; text-align:right; border-bottom:1px solid #ddd;">Visits</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${locationRowsHtml}
+              </tbody>
+            </table>
+        `;
+
+        await dispatchActivityEmail(subject, badge, content);
+        console.log('[Daily Activity Report] Daily activities report sent successfully to NOTIFICATION_RECIPIENTS.');
+        return {
+            success: true,
+            newInvestorsCount,
+            investorLoginsCount,
+            totalInitiatedCount,
+            approvedCount,
+            liquidatedCount,
+            visitorCount
+        };
+
+    } catch (error) {
+        console.error('[Daily Activity Report Error]', error);
+        throw error;
+    }
+}
+
 module.exports = {
     NOTIFICATION_RECIPIENTS,
     resolveLocation,
@@ -300,5 +443,6 @@ module.exports = {
     notifyPasswordActivity,
     notifyReceiptUpload,
     notifyLiquidationRequest,
-    notifyWebsiteEditorChanges
+    notifyWebsiteEditorChanges,
+    sendDailyActivitiesReport
 };

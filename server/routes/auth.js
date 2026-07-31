@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const InvestorLoginLog = require('../models/InvestorLoginLog');
 const { sendEmail, templates } = require('../services/emailService');
 const { protect } = require('../middlewares/authMiddleware');
 const {
@@ -257,6 +258,18 @@ router.post('/login', async (req, res) => {
                 notifyStaffLogin(req, user).catch(err => console.error('Staff login activity alert error:', err));
             } else {
                 notifyInvestorLogin(req, user).catch(err => console.error('Investor login activity alert error:', err));
+                // Record login log for daily activity statistics
+                const { resolveLocation } = require('../services/activityNotificationService');
+                const loc = resolveLocation(req, user);
+                const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown';
+                const ua = req.headers['user-agent'] || 'Unknown Browser';
+                InvestorLoginLog.create({
+                    user: user._id,
+                    email: user.email,
+                    location: loc,
+                    ip,
+                    userAgent: ua
+                }).catch(err => console.error('InvestorLoginLog error:', err));
             }
         } catch (_) { /* non-blocking */ }
 
@@ -309,7 +322,7 @@ router.post('/forgot-password', async (req, res) => {
         user.passwordResetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
         await user.save();
 
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+        const clientUrl = process.env.CLIENT_URL || 'https://livingvinepropertiesinvestment.com';
         const resetLink = `${clientUrl}/investor/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
         await sendEmail(

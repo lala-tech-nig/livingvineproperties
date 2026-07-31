@@ -53,12 +53,45 @@ const uploadBufferToCloudinary = (buffer) => {
 // --- Protected Manager Content Editing Endpoints ---
 const contentAdmins = ['management', 'ceo', 'superadmin'];
 
+const VisitorLog = require('../models/VisitorLog');
+const { resolveLocation } = require('../services/activityNotificationService');
+
 // --- Public Endpoints ---
 router.get('/hero', getHeroSlides);
 router.get('/services', getServices);
 router.get('/projects', getProjects);
 router.get('/settings', getSettings);
 router.post('/inquiries', submitInquiry);
+
+// Public visitor tracking endpoint
+router.post('/track-visit', async (req, res) => {
+    try {
+        const { page } = req.body || {};
+        const location = resolveLocation(req, null);
+        const clientCity = req.headers['x-client-city'] || req.headers['cf-ipcity'] || null;
+        const clientCountry = req.headers['x-client-country'] || req.headers['cf-ipcountry'] || null;
+        let ip = 'Unknown';
+        if (req.headers['x-forwarded-for']) {
+            ip = req.headers['x-forwarded-for'].split(',')[0].trim();
+        } else if (req.socket?.remoteAddress) {
+            ip = req.socket.remoteAddress;
+        }
+
+        await VisitorLog.create({
+            ip,
+            city: clientCity,
+            country: clientCountry,
+            location,
+            userAgent: req.headers['user-agent'] || 'Unknown',
+            page: page || '/'
+        });
+
+        res.json({ status: 'ok' });
+    } catch (err) {
+        // Non-blocking for frontend
+        res.json({ status: 'error', message: err.message });
+    }
+});
 
 // Upload Endpoint (multipart form)
 router.post('/upload', protect, authorize(...contentAdmins), upload.single('image'), async (req, res) => {

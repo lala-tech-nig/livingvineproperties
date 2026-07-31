@@ -251,9 +251,15 @@ router.put('/:id/status', protect, authorize('management', 'ceo', 'superadmin'),
             }
         }
 
-        // Set startDate to now when investment becomes active
+        // Set startDate, approvedAt, liquidatedAt timestamps
         if (status === 'active' && !wasActive) {
             investment.startDate = new Date();
+        }
+        if ((status === 'approved' || status === 'active') && !investment.approvedAt) {
+            investment.approvedAt = new Date();
+        }
+        if (status === 'liquidated' && !investment.liquidatedAt) {
+            investment.liquidatedAt = new Date();
         }
 
         const updatedInvestment = await investment.save();
@@ -555,6 +561,28 @@ router.put('/:id/receipt', protect, upload.single('receipt'), async (req, res) =
         res.json({ message: 'Receipt uploaded successfully.', paymentReceipt: result.secure_url });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+});
+
+// @route   POST /api/investments/trigger-daily-emails
+// @desc    Manually trigger daily activities report & daily investor update emails (Management/Superadmin)
+// @access  Private
+router.post('/trigger-daily-emails', protect, authorize('management', 'ceo', 'superadmin'), async (req, res) => {
+    try {
+        const { sendDailyActivitiesReport } = require('../services/activityNotificationService');
+        const { sendDailyInvestorUpdates } = require('../services/investorDailyUpdateService');
+
+        const activityReportRes = await sendDailyActivitiesReport();
+        const investorUpdateRes = await sendDailyInvestorUpdates();
+
+        res.json({
+            message: 'Daily emails triggered successfully!',
+            activityReport: activityReportRes,
+            investorUpdates: investorUpdateRes
+        });
+    } catch (error) {
+        console.error('Trigger daily emails error:', error);
+        res.status(500).json({ message: `Failed to trigger daily emails: ${error.message}` });
     }
 });
 

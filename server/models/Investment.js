@@ -40,6 +40,8 @@ const investmentSchema = new mongoose.Schema({
     paymentReceipt: String,
     receiptUploadedAt: Date,
     startDate: Date,
+    approvedAt: Date,
+    liquidatedAt: Date,
     expectedROI: Number,
 }, { timestamps: true });
 
