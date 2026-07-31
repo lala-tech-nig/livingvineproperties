@@ -43,6 +43,8 @@ const investmentSchema = new mongoose.Schema({
     approvedAt: Date,
     liquidatedAt: Date,
     expectedROI: Number,
+    productName: String,
+    roiPercent: Number,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Investment', investmentSchema);

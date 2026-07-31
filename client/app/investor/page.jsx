@@ -74,9 +74,9 @@ function VisaCard({ inv, index, isActive: cardActive }) {
             <div className="flex items-start justify-between mb-3 relative z-10">
                 <div>
                     <p className="text-white/60 text-[10px] font-semibold uppercase tracking-[0.15em]">
-                        {inv.durationInMonths}‑Month Yield Plan
+                        {inv.durationInMonths}‑Month · {inv.roiPercent != null ? `${inv.roiPercent}% ROI` : 'Yield Plan'}
                     </p>
-                    <p className="text-white text-sm font-bold mt-0.5">Wealth Builder Plan</p>
+                    <p className="text-white text-sm font-bold mt-0.5">{inv.productName || `${inv.durationInMonths}-Month Yield Plan`}</p>
                 </div>
                 {/* LVP circular badge */}
                 <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center shadow-lg shrink-0">

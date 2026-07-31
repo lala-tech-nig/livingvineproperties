@@ -11,7 +11,7 @@ async function testRealPdf() {
         contactAddress: "Lagos, Nigeria",
         amountToInvest: 5000000,
         durationInMonths: 12,
-        roiPercent: 26,
+        roiPercent: 24,
         startDate: new Date(),
         expectedROI: 1300000
     };

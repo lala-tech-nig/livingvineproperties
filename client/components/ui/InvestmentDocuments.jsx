@@ -229,8 +229,8 @@ function generateReceiptHTML(investment, settings = {}) {
     <tbody>
       <tr>
         <td>
-          Being Payment for ${investment.durationInMonths || '12'} Month Investment Subscription 
-          at the rate of ${investment.roiPercent || '26'}% Return on Investment
+          ${investment.productName ? `<strong>${investment.productName}</strong> — ` : ''}Being Payment for ${investment.durationInMonths || '12'} Month Investment Subscription 
+          at the rate of ${investment.roiPercent || '24'}% Return on Investment
         </td>
         <td>${formatCurrency(investment.amountToInvest)}</td>
       </tr>
@@ -449,9 +449,9 @@ function generateCertificateHTML(investment, settings = {}) {
     </div>
 
     <div class="investment-declaration">
-      FOR INVESTING THE SUM OF <span class="text-red">${amountInWords}</span> 
+      FOR INVESTING THE SUM OF <span class="text-red">${amountInWords}</span>${investment.productName ? ` UNDER THE <span class="text-red">${investment.productName.toUpperCase()}</span>` : ''} 
       FOR A PERIOD OF <span class="text-red">${investment.durationInMonths || '12'} MONTHS</span> 
-      AT AN INTEREST RATE OF <span class="text-red">${investment.roiPercent || '26'}%</span>
+      AT AN INTEREST RATE OF <span class="text-red">${investment.roiPercent || '24'}%</span>
     </div>
 
     <div class="summary-bar">
@@ -466,8 +466,16 @@ function generateCertificateHTML(investment, settings = {}) {
       <div class="summary-item">
         <span class="summary-icon">💼</span>
         <div class="summary-text-col">
-          <span class="summary-label">From</span>
-          <span class="summary-val">LIVING VINE PROPERTIES INVESTMENT LIMITED</span>
+          <span class="summary-label">Investment Plan</span>
+          <span class="summary-val">${investment.productName || 'LIVING VINE PROPERTIES INVESTMENT LIMITED'}</span>
+        </div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-item">
+        <span class="summary-icon">📈</span>
+        <div class="summary-text-col">
+          <span class="summary-label">ROI</span>
+          <span class="summary-val">${investment.roiPercent || '24'}% / ${investment.durationInMonths || '12'} months</span>
         </div>
       </div>
     </div>

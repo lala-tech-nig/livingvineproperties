@@ -85,12 +85,14 @@ router.post('/', protect, async (req, res) => {
             accountDetails, nextOfKin, date, productId, roiPercent
         } = req.body;
 
-        // Calculate dynamic expected ROI
+        // Resolve product details (name + ROI %) from the selected product
         let actualRoiPercent = roiPercent || 24;
+        let actualProductName = 'Investment Plan';
         if (productId) {
             const product = await InvestmentProduct.findById(productId);
             if (product) {
                 actualRoiPercent = product.roiPercent;
+                actualProductName = product.name || actualProductName;
             }
         }
         
@@ -103,6 +105,8 @@ router.post('/', protect, async (req, res) => {
             accountDetails, nextOfKin,
             startDate: date ? new Date(date) : new Date(),
             expectedROI,
+            productName: actualProductName,
+            roiPercent: actualRoiPercent,
             status: 'reviewing'
         });
 
