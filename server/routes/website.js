@@ -132,6 +132,25 @@ router.post('/upload-image', protect, authorize(...contentAdmins), async (req, r
     }
 });
 
+// Upload PDF Endpoint — for company profile document
+const uploadPdf = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+router.post('/upload-pdf', protect, authorize(...contentAdmins), uploadPdf.single('pdf'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No PDF file uploaded' });
+        const result = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: 'livingvine/documents', resource_type: 'raw', format: 'pdf' },
+                (error, result) => { if (error) return reject(error); resolve(result); }
+            );
+            Readable.from(req.file.buffer).pipe(stream);
+        });
+        res.json({ url: result.secure_url });
+    } catch (error) {
+        console.error('Cloudinary PDF upload error:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 router.route('/hero')
     .post(protect, authorize(...contentAdmins), addHeroSlide);

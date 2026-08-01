@@ -295,6 +295,7 @@ export default function InvestorDashboard() {
     const [loading, setLoading]         = useState(true);
     const [profileCompletion, setProfileCompletion] = useState(null);
     const [activeCardIndex, setActiveCardIndex]     = useState(0);
+    const [siteSettings, setSiteSettings]           = useState({});
 
     /* running = reviewing | approved | active */
     const runningInvestments = investments.filter(i => ['reviewing', 'approved', 'active'].includes(i.status));
@@ -308,15 +309,17 @@ export default function InvestorDashboard() {
 
     const fetchData = async () => {
         try {
-            const [invRes, projRes, completionRes, profileRes] = await Promise.all([
+            const [invRes, projRes, completionRes, profileRes, settingsRes] = await Promise.all([
                 api.get('/investments/my'),
                 api.get('/website/projects'),
                 api.get('/users/profile/completion').catch(() => ({ data: null })),
                 api.get('/users/profile').catch(() => ({ data: null })),
+                api.get('/website/settings').catch(() => ({ data: {} })),
             ]);
             setInvestments(invRes.data);
             setProjects(projRes.data || []);
             if (completionRes.data) setProfileCompletion(completionRes.data);
+            if (settingsRes.data) setSiteSettings(settingsRes.data);
 
             // Sync latest profileImage to authStore so the avatar is always current
             if (profileRes.data?.profileImage) {
@@ -406,8 +409,63 @@ export default function InvestorDashboard() {
                         </motion.div>
                     </div>
                 )}
+                {/* ── Our Profile animated button ── */}
+                {siteSettings?.companyProfilePdf && (
+                    <div className="mx-4 mt-3">
+                        <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="relative overflow-hidden rounded-2xl"
+                        >
+                            {/* Glowing background */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#7d1419] via-[#b0181d] to-[#7d1419] opacity-90" />
+                            <div className="absolute inset-0 bg-[url('/living-logo.png')] bg-center bg-no-repeat opacity-5 bg-contain" />
 
-                {/* ── Current Investment label ── */}
+                            <button
+                                onClick={() => window.open(siteSettings.companyProfilePdf, '_blank')}
+                                className="relative w-full flex items-center justify-between px-4 py-3 group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    {/* Pulsing icon */}
+                                    <div className="relative">
+                                        <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8" fill="none" stroke="white" strokeWidth="2"/>
+                                            </svg>
+                                        </div>
+                                        <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 animate-ping" />
+                                        <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-white font-black text-sm leading-tight">Our Profile</p>
+                                        <p className="text-white/60 text-[10px] font-medium">Company overview & credentials</p>
+                                    </div>
+                                </div>
+
+                                {/* Bouncing hand pointer */}
+                                <div className="flex items-center gap-1.5">
+                                    <motion.span
+                                        animate={{ x: [0, 5, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+                                        className="text-lg"
+                                    >👆</motion.span>
+                                    <motion.div
+                                        animate={{ x: [0, 6, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut', delay: 0.1 }}
+                                        className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center"
+                                    >
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                                        </svg>
+                                    </motion.div>
+                                </div>
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+
                 <div className="px-5 pt-5 pb-2 flex items-center justify-between">
                     <p className="text-xs font-bold text-[#de1f25] uppercase tracking-widest">Current Investment</p>
                     {runningInvestments.length > 0 && (
@@ -579,10 +637,32 @@ export default function InvestorDashboard() {
                         <h2 className="text-2xl font-bold text-gray-900">Hello, {user?.firstName} 👋</h2>
                         <p className="text-gray-400 text-sm mt-0.5">Welcome back to LIVING VINE PROPERTIES INVESTMENT LIMITED</p>
                     </div>
-                    <Link href="/investor/new-investment"
-                        className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] text-white px-5 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-[#de1f25]/20 text-sm">
-                        <PlusCircle size={18} /> Start New Investment
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        {siteSettings?.companyProfilePdf && (
+                            <div className="relative">
+                                <button
+                                    onClick={() => window.open(siteSettings.companyProfilePdf, '_blank')}
+                                    className="relative overflow-hidden flex items-center gap-2.5 bg-gradient-to-r from-[#7d1419] via-[#b0181d] to-[#7d1419] text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-[#b0181d]/30 hover:shadow-[#b0181d]/50 transition-all hover:-translate-y-0.5"
+                                >
+                                    {/* Pulsing dot */}
+                                    <span className="relative flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400" />
+                                    </span>
+                                    Our Profile
+                                    <motion.span
+                                        animate={{ x: [0, 4, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.1, ease: 'easeInOut' }}
+                                        className="text-base"
+                                    >👆</motion.span>
+                                </button>
+                            </div>
+                        )}
+                        <Link href="/investor/new-investment"
+                            className="flex items-center gap-2 bg-[#de1f25] hover:bg-[#b0181d] text-white px-5 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-[#de1f25]/20 text-sm">
+                            <PlusCircle size={18} /> Start New Investment
+                        </Link>
+                    </div>
                 </div>
 
                 {/* KPI summary row */}

@@ -450,6 +450,11 @@ const websiteSettingSchema = new mongoose.Schema({
     receiptSigneeSignature: {
         type: String,
         default: ''
+    },
+    // Company Profile PDF (uploaded from management dashboard)
+    companyProfilePdf: {
+        type: String,
+        default: ''
     }
 }, { timestamps: true });
 

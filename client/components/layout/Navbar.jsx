@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import api from "@/lib/axios";
+import { motion } from "framer-motion";
 
 const NAV_LINKS = [
     { label: "Home", href: "/" },
@@ -19,6 +21,7 @@ const NAV_LINKS = [
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [siteSettings, setSiteSettings] = useState(null);
     const pathname = usePathname();
 
     useEffect(() => {
@@ -33,6 +36,18 @@ const Navbar = () => {
         setIsOpen(false);
     }, [pathname]);
 
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const { data } = await api.get('/website/settings');
+                if (data) setSiteSettings(data);
+            } catch (e) {
+                // silent
+            }
+        };
+        loadSettings();
+    }, []);
+
     return (
         <nav
             className={cn(
@@ -42,9 +57,9 @@ const Navbar = () => {
                     : "bg-white/95 border-transparent py-6"
             )}
         >
-            <div className="container mx-auto px-4 flex justify-between items-center">
+            <div className="container mx-auto px-4 flex justify-between items-center relative">
                 {/* Logo */}
-                <Link href="/" className="flex items-center">
+                <Link href="/" className="flex items-center shrink-0 z-10">
                     <Image
                         src="/living-logo.png"
                         alt="Living Vine Properties"
@@ -55,43 +70,63 @@ const Navbar = () => {
                     />
                 </Link>
 
-                {/* Desktop Nav */}
-                <div className="hidden md:flex items-center space-x-8">
-                    {NAV_LINKS.map((link) => (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            className={cn(
-                                "text-sm font-medium transition-colors relative group",
-                                "text-foreground hover:text-primary",
-                                pathname === link.href ? "text-primary font-bold" : ""
-                            )}
-                        >
-                            {link.label}
-                        </Link>
-                    ))}
-
-                    {/* Auth Buttons */}
-                    <div className="flex items-center gap-2 ml-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                        >
-                            <Link href="/investor/login">Login</Link>
-                        </Button>
-                        <Button
-                            size="sm"
-                            asChild
-                        >
-                            <Link href="/investor/register">Get Started</Link>
-                        </Button>
+                {/* Centered Desktop Nav Links */}
+                <div className="hidden md:flex items-center justify-center space-x-8 absolute inset-x-0 mx-auto pointer-events-none w-max">
+                    <div className="flex items-center space-x-8 pointer-events-auto">
+                        {NAV_LINKS.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className={cn(
+                                    "text-sm font-medium transition-colors relative group",
+                                    "text-foreground hover:text-primary",
+                                    pathname === link.href ? "text-primary font-bold" : ""
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
                     </div>
+                </div>
+
+                {/* Right side: Our Profile button + Auth Buttons */}
+                <div className="hidden md:flex items-center gap-3 shrink-0 z-10">
+                    {siteSettings?.companyProfilePdf && (
+                        <button
+                            onClick={() => window.open(siteSettings.companyProfilePdf, '_blank')}
+                            className="relative overflow-hidden flex items-center gap-2 bg-gradient-to-r from-[#7d1419] via-[#b0181d] to-[#7d1419] text-white text-xs px-3.5 py-2 rounded-xl font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 active:scale-95"
+                        >
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
+                            </span>
+                            <FileText size={14} className="text-amber-300" />
+                            Our Profile
+                            <motion.span
+                                animate={{ x: [0, 3, 0] }}
+                                transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+                                className="text-xs"
+                            >👆</motion.span>
+                        </button>
+                    )}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                    >
+                        <Link href="/investor/login">Login</Link>
+                    </Button>
+                    <Button
+                        size="sm"
+                        asChild
+                    >
+                        <Link href="/investor/register">Get Started</Link>
+                    </Button>
                 </div>
 
                 {/* Mobile Toggle */}
                 <button
-                    className="md:hidden p-2 text-foreground"
+                    className="md:hidden p-2 text-foreground z-10"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label="Toggle menu"
                 >
@@ -117,12 +152,21 @@ const Navbar = () => {
                                 {link.label}
                             </Link>
                         ))}
-                        <div className="grid grid-cols-2 gap-4 mt-4">
+                        {siteSettings?.companyProfilePdf && (
+                            <button
+                                onClick={() => window.open(siteSettings.companyProfilePdf, '_blank')}
+                                className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#7d1419] via-[#b0181d] to-[#7d1419] text-white py-3 rounded-xl font-bold text-sm shadow-md mt-2"
+                            >
+                                <FileText size={16} className="text-amber-300" />
+                                Our Profile ↗
+                            </button>
+                        )}
+                        <div className="grid grid-cols-2 gap-4 mt-2">
                             <Button variant="outline" asChild>
                                 <Link href="/investor/login">Login</Link>
                             </Button>
                             <Button asChild>
-                                <Link href="/investor/register">Register</Link>
+                                <Link href="/investor/register">Get Started</Link>
                             </Button>
                         </div>
                     </div>

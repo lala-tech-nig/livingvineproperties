@@ -405,23 +405,28 @@ function generateReceiptHTML(investment, settings = {}) {
 
 function generateCertificateHTML(investment, settings = {}) {
     const maturity = serverGetMaturityDate(investment);
-    const certNo = `LVP-${investment.startDate ? new Date(investment.startDate).getFullYear() : new Date().getFullYear()}/${investment.durationInMonths || '12'}/${investment._id?.toString().slice(-3).toUpperCase() || '001'}`;
-    const today = serverFormatDate(new Date());
+    const certNo = `LVP/${investment.startDate ? new Date(investment.startDate).getFullYear() : new Date().getFullYear()}/${investment._id?.toString().slice(-6).toUpperCase() || '000001'}`;
+    const issuedDate = serverFormatDate(investment.startDate ? new Date(investment.startDate) : new Date());
+    const maturityDate = maturity ? serverFormatDate(maturity) : '—';
     const clientUrl = process.env.CLIENT_URL || 'https://livingvinepropertiesinvestment.com';
     const logoUrl = `${clientUrl}/living-logo.png`;
     const amountInWords = serverToNairaWords(investment.amountToInvest || 0);
+    const planName = investment.productName || `${investment.durationInMonths || 12}-Month Investment Plan`;
+    const roiPct = investment.roiPercent || 24;
+    const duration = investment.durationInMonths || 12;
 
-    const sigLeftName = settings.certSigneeLeftName || 'ADMIN MANAGER';
-    const sigLeftPos = settings.certSigneeLeftPosition || 'Admin Manager';
-    const sigLeftImage = settings.certSigneeLeftSignature 
-        ? `<img src="${settings.certSigneeLeftSignature}" alt="Admin Signature" class="sig-img" />`
-        : '<div class="sig-placeholder-line"></div>';
+    const sigLeftName    = settings.certSigneeLeftName     || 'AUTHORIZED SIGNATORY';
+    const sigLeftPos     = settings.certSigneeLeftPosition || 'Admin Manager';
+    const sigRightName   = settings.certSigneeRightName    || 'AUTHORIZED SIGNATORY';
+    const sigRightPos    = settings.certSigneeRightPosition|| 'Business Development Manager';
 
-    const sigRightName = settings.certSigneeRightName || 'BDM';
-    const sigRightPos = settings.certSigneeRightPosition || 'BDM';
-    const sigRightImage = settings.certSigneeRightSignature 
-        ? `<img src="${settings.certSigneeRightSignature}" alt="BDM Signature" class="sig-img" />`
-        : '<div class="sig-placeholder-line"></div>';
+    const sigLeftImageHtml = settings.certSigneeLeftSignature
+        ? `<img src="${settings.certSigneeLeftSignature}" alt="${sigLeftName} signature" style="max-height:52px;max-width:160px;object-fit:contain;" />`
+        : `<div style="width:160px;height:1.5px;background:#b8a060;margin:0 auto;"></div>`;
+
+    const sigRightImageHtml = settings.certSigneeRightSignature
+        ? `<img src="${settings.certSigneeRightSignature}" alt="${sigRightName} signature" style="max-height:52px;max-width:160px;object-fit:contain;" />`
+        : `<div style="width:160px;height:1.5px;background:#b8a060;margin:0 auto;"></div>`;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -429,154 +434,306 @@ function generateCertificateHTML(investment, settings = {}) {
   <meta charset="UTF-8" />
   <title>Investment Certificate — ${certNo}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Montserrat', sans-serif; background: #fafafa; color: #111; }
-    .page { width: 1000px; height: 750px; background: #fdfcf7; margin: 20px auto; position: relative; padding: 45px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; border-radius: 12px; }
-    .gold-border-outer { position: absolute; inset: 20px; border: 2.5px solid #d4af37; pointer-events: none; border-radius: 6px; z-index: 10; }
-    .gold-border-inner { position: absolute; inset: 26px; border: 1px solid #d4af37; pointer-events: none; border-radius: 4px; opacity: 0.6; z-index: 10; }
-    .corner-curve { position: absolute; width: 120px; height: 120px; pointer-events: none; z-index: 5; }
-    .curve-tl { top: 0; left: 0; border-top: 25px solid #b0181d; border-left: 25px solid #b0181d; border-top-left-radius: 12px; border-bottom-right-radius: 100%; border-right: 3px solid #d4af37; border-bottom: 3px solid #d4af37; background: #b0181d; }
-    .curve-br { bottom: 0; right: 0; border-bottom: 25px solid #b0181d; border-right: 25px solid #b0181d; border-bottom-right-radius: 12px; border-top-left-radius: 100%; border-left: 3px solid #d4af37; border-top: 3px solid #d4af37; background: #b0181d; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 12px; padding: 0 30px; position: relative; z-index: 15; }
-    .logo-block { display: flex; align-items: center; gap: 14px; }
-    .logo-img { height: 50px; width: auto; }
-    .brand-title { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #b0181d; letter-spacing: 0.5px; line-height: 1.1; }
-    .brand-legal { font-size: 14px; font-weight: 800; color: #111; letter-spacing: 0.5px; }
-    .brand-tagline { font-size: 9px; font-style: italic; color: #777; margin-top: 2px; font-weight: 500; }
-    .certificate-ribbon-seal { text-align: center; position: relative; width: 90px; height: 90px; margin-right: 15px; }
-    .ribbon-img { width: 100%; height: 100%; }
-    .ribbon-text-container { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 8px; color: white; text-align: center; }
-    .ribbon-label { font-size: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #ffd700; }
-    .ribbon-val { font-size: 8px; font-weight: 900; margin-top: 1px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-    .content-center { text-align: center; position: relative; z-index: 15; padding: 0 40px; }
-    .cert-title { font-family: 'Cinzel', serif; font-size: 40px; font-weight: 900; color: #b0181d; letter-spacing: 3px; line-height: 1; }
-    .cert-subtitle { font-size: 10px; font-weight: 800; color: #b0181d; letter-spacing: 5px; text-transform: uppercase; margin-top: 8px; }
-    .divider-dots { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px 0; }
-    .divider-dot { width: 4px; height: 4px; background: #d4af37; transform: rotate(45deg); }
-    .divider-gold-line { width: 80px; height: 1px; background: #d4af37; }
-    .presented-lbl { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 5px; }
-    .name-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 12px; }
-    .name-side-bar { height: 2px; width: 60px; background: #d4af37; }
-    .name-circle { width: 5px; height: 5px; background: #d4af37; border-radius: 50%; }
-    .investor-name { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 800; color: #111; letter-spacing: 1px; text-transform: uppercase; }
-    .investment-declaration { font-size: 11px; color: #444; font-weight: 600; line-height: 1.8; max-width: 750px; margin: 0 auto 18px; }
-    .text-red { color: #b0181d; font-weight: 800; }
-    .summary-bar { display: flex; align-items: center; justify-content: center; gap: 20px; border: 1.5px solid #d4af37; border-radius: 10px; padding: 12px 30px; max-width: 750px; margin: 0 auto 20px; background: #fdfdfb; }
-    .summary-item { display: flex; align-items: center; gap: 10px; font-size: 11px; }
-    .summary-text-col { display: flex; flex-direction: column; text-align: left; }
-    .summary-label { font-size: 9px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .summary-val { font-weight: 800; color: #111; }
-    .summary-divider { width: 1.5px; height: 35px; background: #e5e7eb; }
-    .signatures-row { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 20px; align-items: flex-end; padding: 0 40px; margin-top: 15px; position: relative; z-index: 15; }
-    .sig-block { text-align: center; }
-    .sig-container { height: 50px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 6px; }
-    .sig-img { max-height: 100%; max-width: 100%; object-fit: contain; }
-    .sig-placeholder-line { width: 150px; height: 1.5px; background: #ccc; margin: 0 auto; }
-    .sig-name { font-size: 10px; font-weight: 800; color: #111; margin-bottom: 2px; }
-    .sig-role { font-size: 9px; font-weight: 700; color: #b0181d; text-transform: uppercase; letter-spacing: 0.5px; }
-    .center-logo-stamp { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin-bottom: -5px; }
-    .stamp-logo { height: 40px; width: auto; }
-    .rc-box { background: black; color: white; font-size: 7.5px; font-weight: 900; padding: 2px 8px; border-radius: 4px; }
-    .cert-motto { font-size: 9px; font-style: italic; color: #b0181d; font-weight: 700; margin-top: 4px; }
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700;800;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body { width:100%; height:100%; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #e8e0cc;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 1050px;
+      min-height: 780px;
+      margin: 0 auto;
+      background: #fdfaf2;
+      background-image:
+        radial-gradient(ellipse at 20% 30%, rgba(212,175,55,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 70%, rgba(176,24,29,0.05) 0%, transparent 55%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .border-layer-1 {
+      position: absolute; inset: 0;
+      border: 18px solid #7d1419;
+      pointer-events: none; z-index: 5;
+    }
+    .border-layer-2 {
+      position: absolute; inset: 18px;
+      border: 2.5px solid #c9a84c;
+      pointer-events: none; z-index: 5;
+    }
+    .border-layer-3 {
+      position: absolute; inset: 24px;
+      border: 0.8px solid #c9a84c;
+      pointer-events: none; z-index: 5;
+      opacity: 0.5;
+    }
+    .border-layer-1::before {
+      content: '';
+      position: absolute; inset: 3px;
+      border: 1px solid rgba(201,168,76,0.35);
+      pointer-events: none;
+    }
+
+    .corner { position: absolute; width: 60px; height: 60px; z-index: 10; pointer-events: none; }
+    .corner-tl { top: 6px; left: 6px; }
+    .corner-tr { top: 6px; right: 6px; transform: scaleX(-1); }
+    .corner-bl { bottom: 6px; left: 6px; transform: scaleY(-1); }
+    .corner-br { bottom: 6px; right: 6px; transform: scale(-1,-1); }
+
+    .watermark-seal {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 340px; height: 340px;
+      opacity: 0.045; pointer-events: none; z-index: 1;
+    }
+
+    .cert-header {
+      position: relative; z-index: 15;
+      background: linear-gradient(135deg, #5c0e12 0%, #8b1a1f 40%, #7d1419 60%, #5c0e12 100%);
+      padding: 22px 45px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 3px solid #c9a84c;
+    }
+    .cert-header::after {
+      content: ''; position: absolute; bottom: -6px; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #c9a84c 20%, #c9a84c 80%, transparent);
+    }
+
+    .header-brand { display: flex; align-items: center; gap: 16px; }
+    .header-logo { height: 56px; width: auto; object-fit: contain; filter: brightness(0) invert(1); }
+    .header-text { display: flex; flex-direction: column; }
+    .header-org-name {
+      font-family: 'Cinzel', serif; font-size: 13.5px; font-weight: 900;
+      color: #fff; letter-spacing: 1px; line-height: 1.2;
+    }
+    .header-rc { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 1.5px; margin-top: 2px; text-transform: uppercase; }
+    .header-tagline { font-size: 8.5px; font-style: italic; color: #c9a84c; margin-top: 3px; font-family: 'EB Garamond', serif; letter-spacing: 0.5px; }
+
+    .cert-badge { text-align: right; }
+    .cert-badge-label { font-size: 7.5px; font-weight: 800; color: rgba(255,255,255,0.55); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+    .cert-badge-no { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #c9a84c; letter-spacing: 1.5px; background: rgba(0,0,0,0.25); padding: 5px 14px; border: 1px solid rgba(201,168,76,0.4); border-radius: 4px; display: inline-block; }
+
+    .gold-ribbon { position: relative; z-index: 15; height: 6px; background: linear-gradient(90deg, #5c0e12 0%, #c9a84c 20%, #f0d080 50%, #c9a84c 80%, #5c0e12 100%); }
+
+    .cert-body { position: relative; z-index: 15; padding: 30px 60px 22px; text-align: center; }
+
+    .cert-main-title { font-family: 'Cinzel Decorative', serif; font-size: 38px; font-weight: 900; color: #7d1419; letter-spacing: 4px; line-height: 1.1; margin-bottom: 2px; }
+    .cert-sub-heading { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #c9a84c; letter-spacing: 8px; text-transform: uppercase; margin-bottom: 14px; }
+
+    .ornate-divider { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0 14px; }
+    .od-line { flex: 1; max-width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #c9a84c); }
+    .od-line.right { background: linear-gradient(90deg, #c9a84c, transparent); }
+    .od-diamond { width: 7px; height: 7px; background: #c9a84c; transform: rotate(45deg); }
+    .od-diamond-sm { width: 4px; height: 4px; background: #c9a84c; transform: rotate(45deg); opacity: 0.6; }
+    .od-center-ornament { font-size: 18px; color: #c9a84c; line-height: 1; }
+
+    .presented-label { font-family: 'EB Garamond', serif; font-size: 12px; font-style: italic; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+
+    .investor-name-row { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 14px; }
+    .name-bar { height: 2px; width: 80px; background: linear-gradient(90deg, transparent, #c9a84c); }
+    .name-bar.right { background: linear-gradient(90deg, #c9a84c, transparent); }
+    .name-gem { width: 8px; height: 8px; background: #c9a84c; transform: rotate(45deg); }
+    .investor-name { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 900; color: #1a0a0a; letter-spacing: 2px; text-transform: uppercase; }
+
+    .declaration { font-family: 'EB Garamond', serif; font-size: 14px; color: #3a2a2a; line-height: 1.9; max-width: 760px; margin: 0 auto 18px; letter-spacing: 0.3px; }
+    .decl-highlight { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: #7d1419; }
+
+    .details-table { max-width: 760px; margin: 0 auto 20px; border: 1.5px solid #c9a84c; border-radius: 6px; overflow: hidden; }
+    .details-table table { width: 100%; border-collapse: collapse; }
+    .details-table th { background: linear-gradient(135deg, #5c0e12, #7d1419); color: #c9a84c; font-family: 'Cinzel', serif; font-size: 7.5px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px; text-align: left; }
+    .details-table td { padding: 9px 16px; font-size: 11px; font-weight: 600; color: #2a1a1a; border-bottom: 1px solid rgba(201,168,76,0.2); background: rgba(255,255,255,0.7); }
+    .details-table td:first-child { font-weight: 700; color: #7d1419; width: 200px; font-size: 9.5px; letter-spacing: 0.8px; text-transform: uppercase; font-family: 'Montserrat', sans-serif; border-right: 1px solid rgba(201,168,76,0.2); }
+    .details-table tr:last-child td { border-bottom: none; }
+    .details-table tr:nth-child(even) td { background: rgba(253,250,242,0.9); }
+    .amount-val { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 900; color: #7d1419; }
+
+    .signatures-section { position: relative; z-index: 15; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 70px 24px; margin-top: 4px; }
+    .sig-block { text-align: center; min-width: 200px; }
+    .sig-image-zone { height: 58px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 6px; }
+    .sig-underline { width: 180px; height: 1.5px; background: linear-gradient(90deg, transparent 5%, #b8a060 30%, #b8a060 70%, transparent 95%); margin: 0 auto 5px; }
+    .sig-name { font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #1a0a0a; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+    .sig-role { font-size: 8px; font-weight: 700; color: #7d1419; letter-spacing: 1px; text-transform: uppercase; }
+    .sig-center-seal { text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding-bottom: 8px; }
+    .seal-logo { width: 52px; height: 52px; object-fit: contain; opacity: 0.9; }
+    .seal-rc { font-size: 7px; font-weight: 900; background: #1a0a0a; color: #c9a84c; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px; }
+    .seal-motto { font-family: 'EB Garamond', serif; font-size: 8px; font-style: italic; color: #888; }
+
+    .cert-footer { position: relative; z-index: 15; background: linear-gradient(135deg, #5c0e12, #7d1419); border-top: 3px solid #c9a84c; padding: 10px 45px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-left { font-size: 8px; color: rgba(255,255,255,0.65); font-weight: 600; letter-spacing: 0.5px; }
+    .footer-center { font-family: 'Cinzel', serif; font-size: 8px; font-weight: 800; color: #c9a84c; letter-spacing: 3px; text-transform: uppercase; }
+    .footer-right { font-size: 8px; color: rgba(255,255,255,0.65); font-weight: 600; letter-spacing: 0.5px; text-align: right; }
   </style>
 </head>
 <body>
 <div class="page">
-  <div class="gold-border-outer"></div>
-  <div class="gold-border-inner"></div>
-  <div class="corner-curve curve-tl"></div>
-  <div class="corner-curve curve-br"></div>
-  <div class="header">
-    <div class="logo-block">
-      <img src="${logoUrl}" alt="LVP Logo" class="logo-img" onerror="this.style.display='none'" />
-      <div>
-        <div class="brand-title">LIVING VINE PROPERTIES INVESTMENT LIMITED</div>
-        <div class="brand-tagline">Building Wealth. Securing Futures.</div>
+  <svg class="watermark-seal" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="100,5 120,60 180,60 132,95 152,150 100,118 48,150 68,95 20,60 80,60" fill="#7d1419"/>
+    <circle cx="100" cy="100" r="55" fill="none" stroke="#7d1419" stroke-width="3"/>
+    <circle cx="100" cy="100" r="48" fill="none" stroke="#7d1419" stroke-width="1"/>
+    <text x="100" y="93" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#7d1419" letter-spacing="2">LIVING VINE</text>
+    <text x="100" y="107" text-anchor="middle" font-family="serif" font-size="8" fill="#7d1419" letter-spacing="1">PROPERTIES</text>
+    <text x="100" y="118" text-anchor="middle" font-family="serif" font-size="7" fill="#7d1419">INVESTMENT LTD</text>
+  </svg>
+
+  <div class="border-layer-1"></div>
+  <div class="border-layer-2"></div>
+  <div class="border-layer-3"></div>
+
+  <svg class="corner corner-tl" viewBox="0 0 60 60" fill="none">
+    <path d="M2 2 L20 2 L2 20 Z" fill="#7d1419" opacity="0.4"/>
+    <path d="M2 2 L50 2" stroke="#c9a84c" stroke-width="2"/>
+    <path d="M2 2 L2 50" stroke="#c9a84c" stroke-width="2"/>
+    <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+  </svg>
+  <svg class="corner corner-tr" viewBox="0 0 60 60" fill="none">
+    <path d="M2 2 L20 2 L2 20 Z" fill="#7d1419" opacity="0.4"/>
+    <path d="M2 2 L50 2" stroke="#c9a84c" stroke-width="2"/>
+    <path d="M2 2 L2 50" stroke="#c9a84c" stroke-width="2"/>
+    <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+  </svg>
+  <svg class="corner corner-bl" viewBox="0 0 60 60" fill="none">
+    <path d="M2 2 L20 2 L2 20 Z" fill="#7d1419" opacity="0.4"/>
+    <path d="M2 2 L50 2" stroke="#c9a84c" stroke-width="2"/>
+    <path d="M2 2 L2 50" stroke="#c9a84c" stroke-width="2"/>
+    <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+  </svg>
+  <svg class="corner corner-br" viewBox="0 0 60 60" fill="none">
+    <path d="M2 2 L20 2 L2 20 Z" fill="#7d1419" opacity="0.4"/>
+    <path d="M2 2 L50 2" stroke="#c9a84c" stroke-width="2"/>
+    <path d="M2 2 L2 50" stroke="#c9a84c" stroke-width="2"/>
+    <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+  </svg>
+
+  <div class="cert-header">
+    <div class="header-brand">
+      <img src="${logoUrl}" alt="LVP Logo" class="header-logo" onerror="this.style.display='none'" />
+      <div class="header-text">
+        <div class="header-org-name">LIVING VINE PROPERTIES INVESTMENT LIMITED</div>
+        <div class="header-rc">RC NO: 773931 &nbsp;|&nbsp; CAC REGISTERED</div>
+        <div class="header-tagline">Building Wealth. Securing Futures. Transforming Lives.</div>
       </div>
     </div>
-    <div class="certificate-ribbon-seal">
-      <svg class="ribbon-img" viewBox="0 0 100 100" fill="none">
-        <path d="M50 5L75 22V55L50 82L25 55V22L50 5Z" fill="#b0181d" />
-        <path d="M50 5L75 22V55L50 82V5Z" fill="#991519" />
-        <path d="M50 15L67 27V50L50 70L33 50V27L50 15Z" fill="#d4af37" />
-        <path d="M35 70L20 95L50 82L80 95L65 70" fill="#b0181d" opacity="0.8" />
-        <path d="M50 70L50 82L80 95L65 70" fill="#991519" opacity="0.8" />
-        <circle cx="50" cy="38" r="18" fill="#b0181d" />
-      </svg>
-      <div class="ribbon-text-container">
-        <div class="ribbon-label">CERT NO.</div>
-        <div class="ribbon-val">${certNo}</div>
-      </div>
+    <div class="cert-badge">
+      <div class="cert-badge-label">Certificate No.</div>
+      <div class="cert-badge-no">${certNo}</div>
     </div>
   </div>
-  <div class="content-center">
-    <div class="cert-heading-box">
-      <div class="cert-title">CERTIFICATE</div>
-      <div class="cert-subtitle">of investment</div>
+
+  <div class="gold-ribbon"></div>
+
+  <div class="cert-body">
+    <div class="cert-main-title">Certificate</div>
+    <div class="cert-sub-heading">of Investment</div>
+
+    <div class="ornate-divider">
+      <div class="od-line"></div>
+      <div class="od-diamond-sm"></div>
+      <div class="od-diamond"></div>
+      <div class="od-center-ornament">✦</div>
+      <div class="od-diamond"></div>
+      <div class="od-diamond-sm"></div>
+      <div class="od-line right"></div>
     </div>
-    <div class="divider-dots">
-      <div class="divider-gold-line"></div>
-      <div class="divider-dot"></div>
-      <div class="divider-dot" style="width: 6px; height: 6px;"></div>
-      <div class="divider-dot"></div>
-      <div class="divider-gold-line"></div>
-    </div>
-    <div class="presented-lbl">This Certificate is Proudly Presented To</div>
-    <div class="name-row">
-      <div class="name-side-bar"></div>
-      <div class="name-circle"></div>
+
+    <div class="presented-label">This Certificate is Proudly Presented To</div>
+
+    <div class="investor-name-row">
+      <div class="name-bar"></div>
+      <div class="name-gem"></div>
       <div class="investor-name">${investment.name || '—'}</div>
-      <div class="name-circle"></div>
-      <div class="name-side-bar"></div>
+      <div class="name-gem"></div>
+      <div class="name-bar right"></div>
     </div>
-    <div class="investment-declaration">
-      FOR INVESTING THE SUM OF <span class="text-red">${amountInWords}</span>${investment.productName ? ` UNDER THE <span class="text-red">${investment.productName.toUpperCase()}</span>` : ''} 
-      FOR A PERIOD OF <span class="text-red">${investment.durationInMonths || '12'} MONTHS</span> 
-      AT AN INTEREST RATE OF <span class="text-red">${investment.roiPercent || '24'}%</span>
+
+    <div class="declaration">
+      In recognition of your trust, commitment, and investment of
+      <span class="decl-highlight">${serverFormatCurrency(investment.amountToInvest)}</span>
+      (${amountInWords})
+      under the <span class="decl-highlight">${planName.toUpperCase()}</span>,
+      for a tenure of <span class="decl-highlight">${duration} Months</span>
+      at a guaranteed return of <span class="decl-highlight">${roiPct}% per annum</span>.
+      This certificate serves as official acknowledgment of your participation in LIVING VINE PROPERTIES INVESTMENT LIMITED.
     </div>
-    <div class="summary-bar">
-      <div class="summary-item">
-        <span class="summary-icon">📅</span>
-        <div class="summary-text-col">
-          <span class="summary-label">Period</span>
-          <span class="summary-val">${serverFormatDate(investment.startDate)} - ${maturity ? serverFormatDate(maturity) : '—'}</span>
-        </div>
-      </div>
-      <div class="summary-divider"></div>
-      <div class="summary-item">
-        <span class="summary-icon">💼</span>
-        <div class="summary-text-col">
-          <span class="summary-label">Investment Plan</span>
-          <span class="summary-val">${investment.productName || 'LIVING VINE PROPERTIES INVESTMENT LIMITED'}</span>
-        </div>
-      </div>
-      <div class="summary-divider"></div>
-      <div class="summary-item">
-        <span class="summary-icon">📈</span>
-        <div class="summary-text-col">
-          <span class="summary-label">ROI</span>
-          <span class="summary-val">${investment.roiPercent || '24'}% / ${investment.durationInMonths || '12'} months</span>
-        </div>
-      </div>
+
+    <div class="details-table">
+      <table>
+        <thead>
+          <tr>
+            <th colspan="2">Investment Summary &amp; Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Investor Name</td>
+            <td>${investment.name || '—'}</td>
+          </tr>
+          <tr>
+            <td>Investment Plan</td>
+            <td>${planName}</td>
+          </tr>
+          <tr>
+            <td>Principal Amount</td>
+            <td><span class="amount-val">${serverFormatCurrency(investment.amountToInvest)}</span></td>
+          </tr>
+          <tr>
+            <td>Return on Investment</td>
+            <td>${roiPct}% &nbsp;—&nbsp; Expected Return: ${serverFormatCurrency((investment.amountToInvest || 0) * roiPct / 100)}</td>
+          </tr>
+          <tr>
+            <td>Tenure / Duration</td>
+            <td>${duration} Months</td>
+          </tr>
+          <tr>
+            <td>Investment Start Date</td>
+            <td>${issuedDate}</td>
+          </tr>
+          <tr>
+            <td>Maturity Date</td>
+            <td>${maturityDate}</td>
+          </tr>
+          <tr>
+            <td>Certificate Issued On</td>
+            <td>${serverFormatDate(new Date())}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+
   </div>
-  <div class="signatures-row">
+
+  <div class="signatures-section">
     <div class="sig-block">
-      <div class="sig-container">${sigLeftImage}</div>
+      <div class="sig-image-zone">${sigLeftImageHtml}</div>
+      <div class="sig-underline"></div>
       <div class="sig-name">${sigLeftName}</div>
       <div class="sig-role">${sigLeftPos}</div>
     </div>
-    <div class="center-logo-stamp">
-      <img src="${logoUrl}" alt="Stamp Logo" class="stamp-logo" onerror="this.style.display='none'" />
-      <div class="rc-box">RC: 773931</div>
-      <div class="cert-motto">....quest for uniqueness in service.......</div>
+
+    <div class="sig-center-seal">
+      <img src="${logoUrl}" alt="Company Seal" class="seal-logo" onerror="this.style.display='none'" />
+      <div class="seal-rc">RC: 773931</div>
+      <div class="seal-motto">....quest for uniqueness in service.......</div>
     </div>
+
     <div class="sig-block">
-      <div class="sig-container">${sigRightImage}</div>
+      <div class="sig-image-zone">${sigRightImageHtml}</div>
+      <div class="sig-underline"></div>
       <div class="sig-name">${sigRightName}</div>
       <div class="sig-role">${sigRightPos}</div>
     </div>
+  </div>
+
+  <div class="cert-footer">
+    <div class="footer-left">📞 +234 707 474 4676 | 0707 474 4677</div>
+    <div class="footer-center">Build Wealth &bull; Secure Futures &bull; Live Better</div>
+    <div class="footer-right">✉ info@livingvineproperties.com.ng &nbsp;|&nbsp; 14, Fadare Street, Ogba, Ikeja, Lagos</div>
   </div>
 </div>
 </body>

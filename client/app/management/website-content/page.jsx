@@ -83,7 +83,9 @@ export default function WebsiteContentEditor() {
         certSigneeRightSignature: '',
         receiptSigneeName: '',
         receiptSigneePosition: 'Authorized Signature',
-        receiptSigneeSignature: ''
+        receiptSigneeSignature: '',
+        // Company Profile PDF
+        companyProfilePdf: ''
     });
 
     // Modals / Form States
@@ -227,7 +229,8 @@ export default function WebsiteContentEditor() {
                     certSigneeRightSignature: settingsRes.certSigneeRightSignature || '',
                     receiptSigneeName: settingsRes.receiptSigneeName || '',
                     receiptSigneePosition: settingsRes.receiptSigneePosition || 'Authorized Signature',
-                    receiptSigneeSignature: settingsRes.receiptSigneeSignature || ''
+                    receiptSigneeSignature: settingsRes.receiptSigneeSignature || '',
+                    companyProfilePdf: settingsRes.companyProfilePdf || ''
                 });
             }
         } catch (error) {
@@ -807,6 +810,50 @@ export default function WebsiteContentEditor() {
                                                 </div>
                                             )}
                                         </div>
+                                    </div>
+
+                                    {/* Company Profile PDF */}
+                                    <div className="md:col-span-2 p-5 bg-gray-900/40 rounded-xl border border-amber-800/40 space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
+                                            <FileText size={16} /> Company Profile PDF Document
+                                        </div>
+                                        <p className="text-[11px] text-gray-400">Upload your company profile PDF. Investors will see an animated \"Our Profile\" button in their dashboard that opens this document in a new tab.</p>
+                                        <div className="flex gap-3">
+                                            <input
+                                                type="text"
+                                                value={settings.companyProfilePdf || ''}
+                                                onChange={e => setSettings({...settings, companyProfilePdf: e.target.value})}
+                                                placeholder="Paste PDF URL or upload below"
+                                                className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 text-white outline-none text-xs"
+                                            />
+                                            <label className="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-4 py-2 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 transition-colors shrink-0">
+                                                <UploadCloud size={14} /> Upload PDF
+                                                <input
+                                                    type="file"
+                                                    accept="application/pdf"
+                                                    className="hidden"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files[0];
+                                                        if (!file) return;
+                                                        const formData = new FormData();
+                                                        formData.append('pdf', file);
+                                                        const toastId = toast.loading('Uploading PDF...');
+                                                        try {
+                                                            const { data } = await api.post('/website/upload-pdf', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                                            setSettings(prev => ({ ...prev, companyProfilePdf: data.url }));
+                                                            toast.success('PDF uploaded!', { id: toastId });
+                                                        } catch {
+                                                            toast.error('PDF upload failed', { id: toastId });
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                        {settings.companyProfilePdf && (
+                                            <a href={settings.companyProfilePdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[11px] font-bold text-amber-400 hover:text-amber-300 mt-2">
+                                                <FileText size={13} /> Preview uploaded PDF ↗
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </div>
